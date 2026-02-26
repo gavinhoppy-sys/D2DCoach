@@ -73,6 +73,56 @@ app.post('/scorecard', async (req, res) => {
   }
 });
 
+app.post('/analyze', async (req, res) => {
+  try {
+    if (conversationHistory.length === 0) {
+      return res.status(400).json({ error: 'No conversation to analyze.' });
+    }
+
+    const conversationText = conversationHistory
+      .map(m => `${m.role === 'user' ? 'SALES REP' : 'HOMEOWNER/COACH'}: ${m.content}`)
+      .join('\n\n');
+
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: `You are an expert door-to-door sales coach. Analyze this roofing sales practice session and return ONLY a valid JSON object — no markdown, no extra text.
+
+Conversation:
+${conversationText}
+
+Return exactly this structure:
+{
+  "overall": <integer 0-100>,
+  "breakdown": {
+    "opening":           { "score": <0-100>, "feedback": "<one sentence>" },
+    "objectionHandling": { "score": <0-100>, "feedback": "<one sentence>" },
+    "rapport":           { "score": <0-100>, "feedback": "<one sentence>" },
+    "tonality":          { "score": <0-100>, "feedback": "<one sentence>" },
+    "timing":            { "score": <0-100>, "feedback": "<one sentence>" },
+    "closing":           { "score": <0-100>, "feedback": "<one sentence>" }
+  },
+  "summary": "<2-3 sentences describing how the session went>",
+  "keyStrength": "<one specific thing they did well>",
+  "keyImprovement": "<one specific thing to work on next time>"
+}
+
+Use any [Voice: ...] metrics in the rep's messages to inform tonality and timing scores. Ideal pace is 130-150 WPM.`,
+      }],
+    });
+
+    const raw = response.content[0].text.trim();
+    const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
+    const analysis = JSON.parse(jsonMatch ? jsonMatch[1] : raw);
+    res.json({ analysis });
+  } catch (err) {
+    console.error('Analyze error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/reset', (req, res) => {
   conversationHistory = [];
   res.json({ success: true });

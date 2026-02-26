@@ -40,6 +40,15 @@
     .stop-conv-btn.visible { display: flex; }
     .stop-conv-btn:hover { background: rgba(239,68,68,0.4); }
 
+    .hub-link {
+      color: rgba(255,255,255,0.8); text-decoration: none;
+      font-size: 13px; font-weight: 600;
+      padding: 5px 10px; border-radius: 12px;
+      background: rgba(255,255,255,0.12);
+      white-space: nowrap;
+    }
+    .hub-link:hover { background: rgba(255,255,255,0.22); color: white; }
+
     .end-btn {
       background: #e74c3c; color: white; border: none;
       padding: 7px 14px; border-radius: 18px; font-size: 13px; font-weight: 600;
@@ -203,6 +212,7 @@
     <p>Real-time voice practice</p>
   </div>
   <div class="header-actions">
+    <a href="/hub.html" class="hub-link">📋 Hub</a>
     <button class="icon-btn" id="voiceBtn" onclick="toggleTTS()" title="Mute homeowner voice">🔊</button>
     <button class="stop-conv-btn" id="stopConvBtn" onclick="stopConversation()">■ Stop</button>
     <button class="end-btn" id="endBtn" onclick="endSession()">End Session</button>
@@ -235,6 +245,10 @@
   // convState: 'idle' | 'listening' | 'processing' | 'speaking' | 'ended'
   let convState  = 'idle';
   let ttsEnabled = true;
+
+  // Session tracking (for hub)
+  let sessionStartTime = null;
+  let repMessageCount  = 0;
 
   let sendDebounce    = null;
   let currentTranscript = '';
@@ -325,6 +339,8 @@
   // ── Conversation lifecycle ────────────────────────────────
   async function startConversation() {
     if (convState !== 'idle') return;
+    sessionStartTime = Date.now();
+    repMessageCount  = 0;
     setConvState('listening');
     await openMic();
   }
@@ -422,6 +438,7 @@
   async function sendToServer(text, metrics) {
     const fullMsg = metrics ? `${text}\n\n[Voice: ${metrics}]` : text;
 
+    repMessageCount++;
     appendRepMsg(text, metrics);
     showTyping();
 
@@ -703,11 +720,18 @@
 
     showTyping();
     try {
-      const res  = await fetch('/scorecard', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-      const data = await res.json();
+      // Run scorecard display + deep analysis in parallel
+      const [scorecardRes, analyzeRes] = await Promise.all([
+        fetch('/scorecard', { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
+        fetch('/analyze',   { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
+      ]);
+      const [scorecardData, analyzeData] = await Promise.all([scorecardRes.json(), analyzeRes.json()]);
       removeTyping();
-      if (data.scorecard) appendScorecard(data.scorecard);
-      else showError(data.error || 'Failed to generate scorecard.');
+
+      if (scorecardData.scorecard) appendScorecard(scorecardData.scorecard);
+      else showError(scorecardData.error || 'Failed to generate scorecard.');
+
+      if (analyzeData.analysis) saveSession(analyzeData.analysis);
     } catch (_) {
       removeTyping();
       showError('Could not reach the server.');
@@ -742,6 +766,20 @@
     if (!hit) html += `<div class="scorecard-raw">${esc(text)}</div>`;
     card.innerHTML = html;
     chat.appendChild(card); scrollBottom();
+  }
+
+  // ── Save session to localStorage ─────────────────────────
+  function saveSession(analysis) {
+    const sessions = JSON.parse(localStorage.getItem('d2d_sessions') || '[]');
+    sessions.unshift({
+      id:          Date.now(),
+      date:        new Date().toISOString(),
+      duration:    sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : 0,
+      repMessages: repMessageCount,
+      analysis,
+    });
+    if (sessions.length > 100) sessions.length = 100;
+    localStorage.setItem('d2d_sessions', JSON.stringify(sessions));
   }
 
   // ── New session ───────────────────────────────────────────

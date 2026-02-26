@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D2D Coach — Session Hub</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5; color: #111; min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: #1a1a2e; color: white;
+      padding: 14px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .header h1 { font-size: 18px; font-weight: 700; }
+    .header p  { font-size: 12px; opacity: 0.55; margin-top: 2px; }
+    .practice-btn {
+      background: #0084ff; color: white; text-decoration: none;
+      padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    }
+    .practice-btn:hover { background: #006edb; }
+
+    /* ── Main layout ── */
+    .main { max-width: 700px; margin: 0 auto; padding: 20px 16px 40px; }
+
+    /* ── Progress section ── */
+    .progress-section {
+      background: white; border-radius: 16px; padding: 20px;
+      margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .section-title {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.8px; color: #6b7280; margin-bottom: 16px;
+    }
+
+    .stats-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-box {
+      flex: 1; min-width: 90px;
+      background: #f8f9ff; border-radius: 12px; padding: 14px 12px; text-align: center;
+    }
+    .stat-num  { font-size: 26px; font-weight: 800; color: #1a1a2e; }
+    .stat-num.green  { color: #059669; }
+    .stat-num.orange { color: #d97706; }
+    .stat-num.red    { color: #dc2626; }
+    .stat-label { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+    /* Trend chart */
+    .chart-wrap { position: relative; }
+    .chart-label {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: #9ca3af; margin-top: 4px;
+    }
+    svg.trend { width: 100%; height: 80px; overflow: visible; }
+
+    .no-data {
+      text-align: center; padding: 30px 20px; color: #9ca3af; font-size: 15px;
+    }
+    .no-data strong { display: block; font-size: 18px; color: #374151; margin-bottom: 6px; }
+
+    /* ── Sessions list ── */
+    .sessions-section { display: flex; flex-direction: column; gap: 12px; }
+
+    .session-card {
+      background: white; border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      overflow: hidden; cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    .session-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.12); }
+
+    .card-header {
+      display: flex; align-items: center; gap: 14px; padding: 16px;
+    }
+
+    /* Score circle */
+    .score-circle {
+      width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; font-weight: 800; flex-shrink: 0;
+      color: white;
+    }
+    .score-circle.red    { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .score-circle.orange { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .score-circle.green  { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .score-circle.gold   { background: linear-gradient(135deg, #eab308, #ca8a04); }
+
+    .card-meta { flex: 1; min-width: 0; }
+    .card-date { font-size: 13px; color: #6b7280; }
+    .card-turns { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .card-summary {
+      font-size: 14px; color: #374151; margin-top: 6px;
+      line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .expand-icon {
+      font-size: 18px; color: #9ca3af; flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .session-card.open .expand-icon { transform: rotate(180deg); }
+
+    /* Expanded body */
+    .card-body { display: none; padding: 0 16px 16px; border-top: 1px solid #f3f4f6; }
+    .session-card.open .card-body { display: block; }
+
+    .key-points {
+      display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap;
+    }
+    .key-point {
+      flex: 1; min-width: 140px; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.4;
+    }
+    .key-point.strength   { background: #f0fdf4; color: #166534; border-left: 3px solid #22c55e; }
+    .key-point.improve    { background: #fffbeb; color: #78350f; border-left: 3px solid #f59e0b; }
+    .key-point strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; opacity: 0.7; }
+
+    .breakdown-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .breakdown-row { display: flex; align-items: center; gap: 10px; }
+    .breakdown-label { font-size: 12px; font-weight: 600; color: #374151; width: 120px; flex-shrink: 0; }
+    .bar-track { flex: 1; background: #f3f4f6; border-radius: 4px; height: 8px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+    .bar-fill.red    { background: #ef4444; }
+    .bar-fill.orange { background: #f97316; }
+    .bar-fill.green  { background: #22c55e; }
+    .bar-fill.gold   { background: #eab308; }
+    .breakdown-pct { font-size: 12px; font-weight: 700; width: 34px; text-align: right; }
+
+    .breakdown-feedback {
+      font-size: 12px; color: #6b7280; margin-top: 2px; margin-left: 130px; line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Session Hub</h1>
+    <p>Your roleplay history &amp; progress</p>
+  </div>
+  <a href="/" class="practice-btn">▶ Practice</a>
+</div>
+
+<div class="main">
+
+  <!-- Progress -->
+  <div class="progress-section">
+    <div class="section-title">Your Progress</div>
+    <div class="stats-row" id="statsRow"></div>
+    <div class="chart-wrap" id="chartWrap"></div>
+  </div>
+
+  <!-- Sessions -->
+  <div class="section-title" style="margin-bottom:12px;">Past Sessions</div>
+  <div class="sessions-section" id="sessionsList"></div>
+
+</div>
+
+<script>
+  const sessions = JSON.parse(localStorage.getItem('d2d_sessions') || '[]');
+
+  // ── Helpers ────────────────────────────────────────────────
+  function scoreColor(n) {
+    if (n >= 85) return 'gold';
+    if (n >= 70) return 'green';
+    if (n >= 50) return 'orange';
+    return 'red';
+  }
+
+  function fmt(isoDate) {
+    return new Date(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function fmtDuration(secs) {
+    if (!secs) return '';
+    const m = Math.floor(secs / 60), s = secs % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  }
+
+  function esc(t) {
+    return (t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Stats ──────────────────────────────────────────────────
+  function renderStats() {
+    const el = document.getElementById('statsRow');
+    if (sessions.length === 0) {
+      el.innerHTML = '<p class="no-data" style="width:100%;text-align:center;padding:10px 0;">No sessions yet — start practicing!</p>';
+      return;
+    }
+
+    const scores   = sessions.map(s => s.analysis.overall);
+    const avg      = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
+    const best     = Math.max(...scores);
+    const latest   = scores[0];
+    const trend    = scores.length >= 2 ? latest - scores[1] : null;
+
+    el.innerHTML = `
+      <div class="stat-box">
+        <div class="stat-num ${scoreColor(latest)}">${latest}%</div>
+        <div class="stat-label">Latest</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num ${scoreColor(avg)}">${avg}%</div>
+        <div class="stat-label">Average</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num ${scoreColor(best)}">${best}%</div>
+        <div class="stat-label">Best</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num ${trend === null ? '' : trend >= 0 ? 'green' : 'red'}">
+          ${trend === null ? '—' : (trend >= 0 ? '+' : '') + trend + '%'}
+        </div>
+        <div class="stat-label">vs Last</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:#1a1a2e;">${sessions.length}</div>
+        <div class="stat-label">Sessions</div>
+      </div>`;
+  }
+
+  // ── Trend chart ────────────────────────────────────────────
+  function renderChart() {
+    const wrap = document.getElementById('chartWrap');
+    const pts  = sessions.slice(0, 20).reverse().map(s => s.analysis.overall);
+    if (pts.length < 2) { wrap.innerHTML = ''; return; }
+
+    const W = 600, H = 70, PAD = 6;
+    const xStep = (W - PAD * 2) / (pts.length - 1);
+    const coords = pts.map((v, i) => ({
+      x: PAD + i * xStep,
+      y: PAD + (1 - v / 100) * (H - PAD * 2),
+    }));
+
+    const polyline = coords.map(c => `${c.x},${c.y}`).join(' ');
+    const area = [...coords.map(c => `${c.x},${c.y}`), `${coords[coords.length-1].x},${H}`, `${coords[0].x},${H}`].join(' ');
+
+    const dots = coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3.5" fill="${dotColor(pts[coords.indexOf(c)])}" stroke="white" stroke-width="1.5"/>`).join('');
+
+    wrap.innerHTML = `
+      <svg class="trend" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6366f1" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <polygon points="${area}" fill="url(#grad)"/>
+        <polyline fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linejoin="round" points="${polyline}"/>
+        ${dots}
+      </svg>
+      <div class="chart-label"><span>Oldest</span><span>Most Recent</span></div>`;
+  }
+
+  function dotColor(score) {
+    if (score >= 85) return '#eab308';
+    if (score >= 70) return '#22c55e';
+    if (score >= 50) return '#f97316';
+    return '#ef4444';
+  }
+
+  // ── Sessions list ──────────────────────────────────────────
+  function renderSessions() {
+    const list = document.getElementById('sessionsList');
+    if (sessions.length === 0) {
+      list.innerHTML = `<div class="no-data"><strong>No sessions yet</strong>Head to Practice, finish a session, and it'll appear here.</div>`;
+      return;
+    }
+
+    list.innerHTML = sessions.map((s, i) => {
+      const a     = s.analysis;
+      const color = scoreColor(a.overall);
+      const bd    = a.breakdown || {};
+      const cats  = [
+        ['Opening',            bd.opening],
+        ['Objection Handling', bd.objectionHandling],
+        ['Rapport',            bd.rapport],
+        ['Tonality',           bd.tonality],
+        ['Timing',             bd.timing],
+        ['Closing',            bd.closing],
+      ];
+
+      const barsHtml = cats.filter(([,v]) => v).map(([label, v]) => `
+        <div>
+          <div class="breakdown-row">
+            <div class="breakdown-label">${label}</div>
+            <div class="bar-track"><div class="bar-fill ${scoreColor(v.score)}" style="width:${v.score}%"></div></div>
+            <div class="breakdown-pct" style="color:${pctColor(v.score)}">${v.score}%</div>
+          </div>
+          ${v.feedback ? `<div class="breakdown-feedback">${esc(v.feedback)}</div>` : ''}
+        </div>`).join('');
+
+      const meta = [fmt(s.date), s.repMessages ? `${s.repMessages} turn${s.repMessages !== 1 ? 's' : ''}` : '', fmtDuration(s.duration)].filter(Boolean).join(' · ');
+
+      return `
+        <div class="session-card" id="card-${i}" onclick="toggleCard(${i})">
+          <div class="card-header">
+            <div class="score-circle ${color}">${a.overall}%</div>
+            <div class="card-meta">
+              <div class="card-date">${fmt(s.date)}</div>
+              <div class="card-turns">${meta}</div>
+              <div class="card-summary">${esc(a.summary || '')}</div>
+            </div>
+            <div class="expand-icon">⌄</div>
+          </div>
+          <div class="card-body">
+            <div class="key-points">
+              ${a.keyStrength   ? `<div class="key-point strength"><strong>💪 Strength</strong>${esc(a.keyStrength)}</div>` : ''}
+              ${a.keyImprovement ? `<div class="key-point improve"><strong>🎯 Work On</strong>${esc(a.keyImprovement)}</div>` : ''}
+            </div>
+            <div class="breakdown-grid">${barsHtml}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function pctColor(n) {
+    if (n >= 85) return '#ca8a04';
+    if (n >= 70) return '#16a34a';
+    if (n >= 50) return '#ea580c';
+    return '#dc2626';
+  }
+
+  function toggleCard(i) {
+    document.getElementById(`card-${i}`).classList.toggle('open');
+  }
+
+  // ── Boot ──────────────────────────────────────────────────
+  renderStats();
+  renderChart();
+  renderSessions();
+</script>
+</body>
+</html>
