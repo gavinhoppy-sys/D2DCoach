@@ -163,7 +163,10 @@ Use any [Voice: ...] metrics in the rep's messages to inform tonality and timing
     });
     const raw = response.content[0].text.trim();
     const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
-    const analysis = JSON.parse(jsonMatch ? jsonMatch[1] : raw);
+    const jsonStr = jsonMatch ? jsonMatch[1] : raw;
+    // Strip any leading/trailing non-JSON text by finding the outermost { }
+    const objMatch = jsonStr.match(/\{[\s\S]*\}/);
+    const analysis = JSON.parse(objMatch ? objMatch[0] : jsonStr);
     res.json({ analysis });
   } catch (err) {
     console.error('Analyze error:', err.message);

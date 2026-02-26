@@ -302,7 +302,7 @@
 <body>
 
 <!-- Name modal -->
-<div class="modal-overlay" id="nameModal">
+<div class="modal-overlay hidden" id="nameModal">
   <div class="modal-box">
     <div class="modal-icon">🎯</div>
     <h2>Welcome, Rep</h2>
@@ -736,7 +736,9 @@
       if (analyzeData.analysis) {
         appendCoachSummary(analyzeData.analysis);
         speakCoachFeedback(analyzeData.analysis);
-        saveSession(analyzeData.analysis, sessionDuration);
+        await saveSession(analyzeData.analysis, sessionDuration);
+      } else {
+        showError('Could not generate analysis — session not saved. (' + (analyzeData.error || 'unknown error') + ')');
       }
     } catch (_) { removeTyping(); showError('Could not reach the server.'); }
     const chat = document.getElementById('chatArea');
@@ -803,11 +805,15 @@
 
   async function saveSession(analysis, duration) {
     try {
-      await fetch('/save-session', {
+      const res = await fetch('/save-session', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ repName: repName || 'Unknown', duration: duration || 0, repMessages: repMessageCount, analysis }),
       });
-    } catch (err) { console.error('Failed to save session:', err); }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showError('Session could not be saved: ' + (err.error || res.status));
+      }
+    } catch (err) { showError('Session could not be saved: ' + err.message); }
   }
 
   async function newSession() {
