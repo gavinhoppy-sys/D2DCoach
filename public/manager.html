@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D2D Coach — Manager Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #161616;
+      --bg2:       #1e1e1e;
+      --surface:   rgba(255,255,255,0.04);
+      --surface2:  rgba(255,255,255,0.07);
+      --border:    rgba(255,255,255,0.08);
+      --border2:   rgba(255,255,255,0.14);
+      --text:      #f0f0f0;
+      --text2:     rgba(255,255,255,0.55);
+      --text3:     rgba(255,255,255,0.3);
+      --purple:    #8b5cf6;
+      --purple2:   #7c3aed;
+      --purple-glow: rgba(139,92,246,0.3);
+      --green:     #10b981;
+      --red:       #ef4444;
+      --amber:     #f59e0b;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: rgba(22,22,22,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .brand-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), #ec4899);
+      box-shadow: 0 0 10px var(--purple-glow);
+    }
+    .header-title h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-title p  { font-size: 11px; color: var(--text2); margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+
+    .icon-btn {
+      color: var(--text2); font-family: inherit;
+      font-size: 12px; font-weight: 500;
+      padding: 5px 12px; border-radius: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      white-space: nowrap; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .icon-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+    /* Filter tabs */
+    .filter-tabs {
+      display: flex; gap: 2px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 3px;
+    }
+    .filter-tab {
+      padding: 4px 12px; border-radius: 6px; border: none;
+      background: none; color: var(--text2); font-size: 12px;
+      font-weight: 500; cursor: pointer; font-family: inherit;
+      transition: all 0.15s;
+    }
+    .filter-tab.active {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border2);
+    }
+
+    /* ── Main ── */
+    .main { max-width: 860px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    /* ── PIN Gate ── */
+    .pin-gate {
+      max-width: 400px; margin: 80px auto;
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 20px; padding: 44px 36px; text-align: center;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .pin-icon {
+      width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--purple2), var(--purple));
+      display: flex; align-items: center; justify-content: center; font-size: 26px;
+      box-shadow: 0 8px 24px var(--purple-glow);
+    }
+    .pin-gate h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.4px; }
+    .pin-gate p  { font-size: 13px; color: var(--text2); margin-bottom: 28px; line-height: 1.6; }
+    .pin-row { display: flex; gap: 10px; }
+    .pin-input {
+      flex: 1; background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text); border-radius: 10px;
+      padding: 12px 14px; font-size: 18px; outline: none;
+      font-family: inherit; letter-spacing: 4px; text-align: center;
+    }
+    .pin-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
+    .pin-input.shake {
+      animation: shake 0.35s ease;
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60%  { transform: translateX(-6px); }
+      40%, 80%  { transform: translateX(6px); }
+    }
+    .pin-submit {
+      background: linear-gradient(135deg, var(--purple2), var(--purple));
+      color: white; border: none;
+      padding: 12px 20px; border-radius: 10px; font-size: 14px;
+      font-weight: 600; cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 14px var(--purple-glow);
+    }
+    .pin-submit:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
+    .pin-error { font-size: 12px; color: var(--red); margin-top: 10px; min-height: 16px; }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text3); margin-bottom: 14px;
+    }
+
+    /* ── Team stats row ── */
+    .stats-row { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-box {
+      flex: 1; min-width: 90px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px 14px; text-align: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .stat-box:hover { background: var(--surface2); border-color: var(--border2); }
+    .stat-num { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+    .stat-num.green  { color: var(--green); }
+    .stat-num.orange { color: #fb923c; }
+    .stat-num.red    { color: var(--red); }
+    .stat-num.gold   { color: #fbbf24; }
+    .stat-label { font-size: 10px; color: var(--text3); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+    /* ── Sort bar ── */
+    .sort-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .sort-bar label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
+    .sort-tabs {
+      display: flex; gap: 2px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 3px;
+    }
+    .sort-tab {
+      padding: 4px 10px; border-radius: 5px; border: none;
+      background: none; color: var(--text2); font-size: 11px;
+      font-weight: 500; cursor: pointer; font-family: inherit;
+      transition: all 0.15s;
+    }
+    .sort-tab.active {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border2);
+    }
+
+    /* ── Rep cards ── */
+    .rep-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .rep-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .rep-card:hover { background: var(--surface2); border-color: var(--border2); }
+
+    .rep-card-header { display: flex; align-items: center; gap: 16px; padding: 18px; }
+
+    .rank-badge {
+      width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      background: var(--surface2); border: 1px solid var(--border2); color: var(--text3);
+    }
+    .rank-badge.top { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.3); color: #fbbf24; }
+
+    .score-pill {
+      width: 58px; height: 58px; border-radius: 14px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 800; letter-spacing: -0.5px;
+    }
+    .score-pill.red    { background: rgba(239,68,68,0.15);   border: 1px solid rgba(239,68,68,0.3);   color: #f87171; }
+    .score-pill.orange { background: rgba(251,146,60,0.15);  border: 1px solid rgba(251,146,60,0.3);  color: #fb923c; }
+    .score-pill.green  { background: rgba(16,185,129,0.15);  border: 1px solid rgba(16,185,129,0.3);  color: #34d399; }
+    .score-pill.gold   { background: rgba(251,191,36,0.15);  border: 1px solid rgba(251,191,36,0.3);  color: #fbbf24; }
+
+    .rep-info { flex: 1; min-width: 0; }
+    .rep-name { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .rep-meta { font-size: 12px; color: var(--text3); margin-top: 3px; }
+    .rep-trend {
+      font-size: 12px; font-weight: 600; margin-top: 4px;
+    }
+    .rep-trend.up   { color: var(--green); }
+    .rep-trend.down { color: var(--red); }
+    .rep-trend.flat { color: var(--text3); }
+
+    .rep-chevron { font-size: 16px; color: var(--text3); flex-shrink: 0; }
+
+    .rep-card-body { padding: 0 18px 18px; border-top: 1px solid var(--border); }
+
+    /* Category mini-bars */
+    .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0; }
+    .cat-row { display: flex; flex-direction: column; gap: 4px; }
+    .cat-label-row { display: flex; justify-content: space-between; }
+    .cat-name { font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; }
+    .cat-pct  { font-size: 10px; font-weight: 700; color: var(--text2); }
+    .bar-track { background: rgba(255,255,255,0.06); border-radius: 4px; height: 5px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .bar-fill.red    { background: rgba(239,68,68,0.7); }
+    .bar-fill.orange { background: rgba(251,146,60,0.7); }
+    .bar-fill.green  { background: rgba(16,185,129,0.7); }
+    .bar-fill.gold   { background: rgba(251,191,36,0.7); }
+
+    /* Top issues */
+    .issues-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+    .issue-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 12px; color: #fcd34d; line-height: 1.4; margin-bottom: 5px;
+    }
+    .issue-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); margin-top: 5px; flex-shrink: 0; }
+
+    /* ── Loading / empty ── */
+    .loading {
+      text-align: center; padding: 60px 20px; color: var(--text3); font-size: 14px;
+    }
+    .loading-spinner {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid rgba(139,92,246,0.2); border-top-color: var(--purple);
+      animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .no-data { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 14px; }
+    .no-data strong { display: block; font-size: 17px; color: var(--text2); margin-bottom: 8px; font-weight: 600; }
+
+    /* ── Rep detail view ── */
+    .detail-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+    .back-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text2);
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      cursor: pointer; font-family: inherit; transition: all 0.15s; flex-shrink: 0;
+    }
+    .back-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+    .detail-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .detail-sub  { font-size: 13px; color: var(--text3); margin-top: 3px; }
+
+    /* Trend chart */
+    svg.trend { width: 100%; height: 80px; overflow: visible; }
+    .chart-label {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--text3); margin-top: 6px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+
+    .progress-section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; margin-bottom: 20px;
+    }
+
+    /* Session cards */
+    .sessions-section { display: flex; flex-direction: column; gap: 10px; }
+
+    .session-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .session-card:hover { background: var(--surface2); border-color: var(--border2); }
+
+    .card-header { display: flex; align-items: center; gap: 14px; padding: 16px; }
+
+    .score-circle {
+      width: 52px; height: 52px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; flex-shrink: 0;
+      letter-spacing: -0.5px;
+    }
+    .score-circle.red    { background: rgba(239,68,68,0.2);   border: 1px solid rgba(239,68,68,0.4);   color: #f87171; }
+    .score-circle.orange { background: rgba(251,146,60,0.2);  border: 1px solid rgba(251,146,60,0.4);  color: #fb923c; }
+    .score-circle.green  { background: rgba(16,185,129,0.2);  border: 1px solid rgba(16,185,129,0.4);  color: #34d399; }
+    .score-circle.gold   { background: rgba(251,191,36,0.2);  border: 1px solid rgba(251,191,36,0.4);  color: #fbbf24; }
+
+    .card-meta { flex: 1; min-width: 0; }
+    .card-date    { font-size: 12px; color: var(--text3); }
+    .card-turns   { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .card-summary { font-size: 13px; color: var(--text2); margin-top: 5px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .expand-icon { font-size: 16px; color: var(--text3); flex-shrink: 0; transition: transform 0.2s; }
+    .session-card.open .expand-icon { transform: rotate(180deg); }
+
+    .card-body { display: none; padding: 0 16px 16px; border-top: 1px solid var(--border); }
+    .session-card.open .card-body { display: block; }
+
+    .key-points { display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
+    .key-point {
+      flex: 1; min-width: 140px; border-radius: 10px; padding: 10px 12px;
+      font-size: 12px; line-height: 1.5;
+    }
+    .key-point.strength { background: rgba(16,185,129,0.08); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.2); }
+    .key-point.improve  { background: rgba(245,158,11,0.08); color: #fcd34d; border: 1px solid rgba(245,158,11,0.2); }
+    .key-point strong { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; opacity: 0.6; }
+
+    .breakdown-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .breakdown-row { display: flex; align-items: center; gap: 10px; }
+    .breakdown-label { font-size: 11px; font-weight: 600; color: var(--text2); width: 120px; flex-shrink: 0; }
+    .bar-track-wide { flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 6px; overflow: hidden; }
+    .breakdown-pct { font-size: 11px; font-weight: 700; width: 34px; text-align: right; color: var(--text2); }
+    .breakdown-feedback { font-size: 11px; color: var(--text3); margin-top: 3px; margin-left: 130px; line-height: 1.4; }
+
+    /* Improvement summary card */
+    .improve-section {
+      background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.18);
+      border-radius: 14px; padding: 16px; margin-bottom: 20px;
+    }
+    .improve-title { font-size: 12px; font-weight: 700; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+    .improve-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; font-size: 13px; color: #fcd34d; line-height: 1.5; }
+    .improve-num { width: 20px; height: 20px; border-radius: 6px; background: rgba(245,158,11,0.2); color: #fbbf24; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  </style>
+</head>
+<body>
+
+<!-- ── PIN Gate (full-page, hidden once authed) ── -->
+<div id="pinGate">
+  <div class="header">
+    <div class="header-brand">
+      <div class="brand-dot"></div>
+      <div class="header-title">
+        <h1>D2D Coach</h1>
+        <p>Manager Access</p>
+      </div>
+    </div>
+  </div>
+  <div style="padding: 0 20px;">
+    <div class="pin-gate">
+      <div class="pin-icon">🔒</div>
+      <h2>Manager Dashboard</h2>
+      <p>Enter your manager PIN to view team performance and rep session data.</p>
+      <div class="pin-row">
+        <input class="pin-input" id="pinInput" type="password" maxlength="20" placeholder="••••"
+          onkeydown="if(event.key==='Enter') submitPin()">
+        <button class="pin-submit" onclick="submitPin()">Enter</button>
+      </div>
+      <div class="pin-error" id="pinError"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main App (hidden until authed) ── -->
+<div id="appShell" style="display:none;">
+
+  <div class="header">
+    <div class="header-brand">
+      <div class="brand-dot"></div>
+      <div class="header-title">
+        <h1>D2D Coach</h1>
+        <p id="headerSub">Manager Dashboard</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="filter-tabs" id="dayFilter">
+        <button class="filter-tab active" data-days="" onclick="setDays(this)">All Time</button>
+        <button class="filter-tab" data-days="30" onclick="setDays(this)">30 Days</button>
+        <button class="filter-tab" data-days="7" onclick="setDays(this)">7 Days</button>
+      </div>
+      <button class="icon-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- Leaderboard view -->
+    <div id="leaderboardView">
+      <div class="section-title">Team Overview</div>
+      <div class="stats-row" id="teamStatsRow"></div>
+
+      <div class="sort-bar">
+        <label>Sort by</label>
+        <div class="sort-tabs">
+          <button class="sort-tab active" data-sort="avg" onclick="setSort(this)">Avg Score</button>
+          <button class="sort-tab" data-sort="sessions" onclick="setSort(this)">Sessions</button>
+          <button class="sort-tab" data-sort="recent" onclick="setSort(this)">Most Recent</button>
+          <button class="sort-tab" data-sort="improvement" onclick="setSort(this)">Most Improved</button>
+        </div>
+      </div>
+
+      <div class="rep-list" id="repList"></div>
+    </div>
+
+    <!-- Rep detail view -->
+    <div id="detailView" style="display:none;">
+      <div class="detail-header">
+        <button class="back-btn" onclick="showLeaderboard()">← Team</button>
+        <div>
+          <div class="detail-name" id="detailName"></div>
+          <div class="detail-sub" id="detailSub"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Progress</div>
+      <div class="progress-section">
+        <div class="stats-row" id="detailStatsRow"></div>
+        <div id="detailChart"></div>
+      </div>
+
+      <div class="improve-section" id="detailImprove" style="display:none;">
+        <div class="improve-title">🎯 Key Areas to Work On</div>
+        <div id="detailIssueList"></div>
+      </div>
+
+      <div class="section-title">Past Sessions</div>
+      <div class="sessions-section" id="detailSessionsList"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────
+  let pin       = sessionStorage.getItem('mgr_pin') || '';
+  let allReps   = [];
+  let sortKey   = 'avg';
+  let daysParam = '';
+  let currentRepSessions = [];
+
+  // ── Init ───────────────────────────────────────────────
+  (function init() {
+    if (pin) tryLoadReps();
+  })();
+
+  // ── PIN ────────────────────────────────────────────────
+  async function submitPin() {
+    const val = document.getElementById('pinInput').value.trim();
+    if (!val) return;
+    pin = val;
+    document.getElementById('pinError').textContent = '';
+    const ok = await tryLoadReps();
+    if (!ok) {
+      pin = '';
+      const inp = document.getElementById('pinInput');
+      inp.classList.remove('shake');
+      void inp.offsetWidth; // reflow
+      inp.classList.add('shake');
+      document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
+      inp.value = '';
+      setTimeout(() => inp.classList.remove('shake'), 400);
+    }
+  }
+
+  async function tryLoadReps() {
+    const url = '/manager/reps?pin=' + encodeURIComponent(pin) + (daysParam ? '&days=' + daysParam : '');
+    try {
+      const res  = await fetch(url);
+      if (res.status === 401) return false;
+      const data = await res.json();
+      sessionStorage.setItem('mgr_pin', pin);
+      allReps = data.reps || [];
+      document.getElementById('pinGate').style.display   = 'none';
+      document.getElementById('appShell').style.display  = 'block';
+      renderLeaderboard();
+      return true;
+    } catch (_) { return false; }
+  }
+
+  function logout() {
+    sessionStorage.removeItem('mgr_pin');
+    pin = '';
+    allReps = [];
+    document.getElementById('pinGate').style.display  = 'block';
+    document.getElementById('appShell').style.display = 'none';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinError').textContent = '';
+  }
+
+  // ── Filters & Sort ────────────────────────────────────
+  function setDays(btn) {
+    document.querySelectorAll('#dayFilter .filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    daysParam = btn.dataset.days;
+    tryLoadReps();
+  }
+
+  function setSort(btn) {
+    document.querySelectorAll('.sort-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    sortKey = btn.dataset.sort;
+    renderRepList();
+  }
+
+  // ── Helpers ────────────────────────────────────────────
+  function scoreColor(n) {
+    if (n >= 85) return 'gold';
+    if (n >= 70) return 'green';
+    if (n >= 50) return 'orange';
+    return 'red';
+  }
+  function fmt(isoDate) {
+    if (!isoDate) return '—';
+    return new Date(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function fmtDuration(secs) {
+    if (!secs) return '';
+    const m = Math.floor(secs / 60), s = secs % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  }
+  function esc(t) {
+    return (t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  const CAT_LABELS = {
+    opening: 'Opening', objectionHandling: 'Objections',
+    rapport: 'Rapport', tonality: 'Tonality',
+    timing: 'Timing', closing: 'Closing',
+  };
+
+  // ── Leaderboard ────────────────────────────────────────
+  function renderLeaderboard() {
+    renderTeamStats();
+    renderRepList();
+  }
+
+  function renderTeamStats() {
+    const el = document.getElementById('teamStatsRow');
+    if (allReps.length === 0) {
+      el.innerHTML = '<p style="width:100%;text-align:center;color:var(--text3);padding:10px 0;font-size:13px;">No session data yet.</p>';
+      return;
+    }
+    const totalSessions = allReps.reduce((a, r) => a + r.sessionCount, 0);
+    const teamAvg = Math.round(allReps.reduce((a, r) => a + r.avgScore, 0) / allReps.length);
+    const improved = allReps.filter(r => r.improvement !== null).sort((a, b) => b.improvement - a.improvement)[0];
+    el.innerHTML = `
+      <div class="stat-box"><div class="stat-num">${allReps.length}</div><div class="stat-label">Reps</div></div>
+      <div class="stat-box"><div class="stat-num">${totalSessions}</div><div class="stat-label">Sessions</div></div>
+      <div class="stat-box"><div class="stat-num ${scoreColor(teamAvg)}">${teamAvg}%</div><div class="stat-label">Team Avg</div></div>
+      <div class="stat-box">
+        <div class="stat-num green">${improved ? esc(improved.name) : '—'}</div>
+        <div class="stat-label">Most Improved</div>
+        ${improved && improved.improvement ? `<div class="stat-sub">+${improved.improvement}% trend</div>` : ''}
+      </div>`;
+  }
+
+  function sortedReps() {
+    const r = [...allReps];
+    if (sortKey === 'avg')         return r.sort((a, b) => b.avgScore - a.avgScore);
+    if (sortKey === 'sessions')    return r.sort((a, b) => b.sessionCount - a.sessionCount);
+    if (sortKey === 'recent')      return r.sort((a, b) => new Date(b.lastActive) - new Date(a.lastActive));
+    if (sortKey === 'improvement') return r.sort((a, b) => (b.improvement || -999) - (a.improvement || -999));
+    return r;
+  }
+
+  function renderRepList() {
+    const list = document.getElementById('repList');
+    const reps = sortedReps();
+    if (reps.length === 0) {
+      list.innerHTML = '<div class="no-data"><strong>No reps yet</strong>Sessions will appear here once reps complete practice rounds.</div>';
+      return;
+    }
+    list.innerHTML = reps.map((rep, i) => {
+      const cl = scoreColor(rep.avgScore);
+      const isTop = i === 0;
+      let trendHtml = '';
+      if (rep.improvement !== null) {
+        const tc = rep.improvement > 0 ? 'up' : rep.improvement < 0 ? 'down' : 'flat';
+        const sign = rep.improvement > 0 ? '+' : '';
+        trendHtml = `<div class="rep-trend ${tc}">${sign}${rep.improvement}% trend</div>`;
+      }
+      const catHtml = Object.entries(CAT_LABELS).filter(([k]) => rep.catAvgs[k] != null).map(([k, label]) => {
+        const v = rep.catAvgs[k];
+        return `<div class="cat-row">
+          <div class="cat-label-row"><span class="cat-name">${label}</span><span class="cat-pct">${v}%</span></div>
+          <div class="bar-track"><div class="bar-fill ${scoreColor(v)}" style="width:${v}%"></div></div>
+        </div>`;
+      }).join('');
+      const issuesHtml = rep.topIssues.slice(0, 2).map(t =>
+        `<div class="issue-item"><div class="issue-dot"></div>${esc(t)}</div>`
+      ).join('');
+      return `
+        <div class="rep-card" onclick="openRep('${esc(rep.name)}')">
+          <div class="rep-card-header">
+            <div class="rank-badge ${isTop ? 'top' : ''}">${i + 1}</div>
+            <div class="score-pill ${cl}">${rep.avgScore}%</div>
+            <div class="rep-info">
+              <div class="rep-name">${esc(rep.name)}</div>
+              <div class="rep-meta">${rep.sessionCount} session${rep.sessionCount !== 1 ? 's' : ''} · Last active ${fmt(rep.lastActive)}</div>
+              ${trendHtml}
+            </div>
+            <div class="rep-chevron">›</div>
+          </div>
+          <div class="rep-card-body">
+            ${catHtml ? `<div class="cat-grid">${catHtml}</div>` : ''}
+            ${issuesHtml ? `<div class="issues-label">Top areas to work on</div>${issuesHtml}` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Rep detail ─────────────────────────────────────────
+  async function openRep(name) {
+    document.getElementById('leaderboardView').style.display = 'none';
+    document.getElementById('detailView').style.display      = 'block';
+    document.getElementById('headerSub').textContent = name;
+    document.getElementById('detailName').textContent = name;
+    document.getElementById('detailSub').textContent  = 'Loading sessions…';
+    document.getElementById('detailSessionsList').innerHTML = `
+      <div class="loading"><div class="loading-spinner"></div>Loading…</div>`;
+    document.getElementById('detailImprove').style.display = 'none';
+
+    const rep = allReps.find(r => r.name === name);
+
+    try {
+      const url = '/manager/sessions?pin=' + encodeURIComponent(pin) +
+                  '&rep=' + encodeURIComponent(name) +
+                  (daysParam ? '&days=' + daysParam : '');
+      const res  = await fetch(url);
+      const data = await res.json();
+      currentRepSessions = data.sessions || [];
+      renderDetailView(name, rep, currentRepSessions);
+    } catch (_) {
+      document.getElementById('detailSessionsList').innerHTML =
+        '<div class="no-data"><strong>Could not load sessions</strong>Check your connection.</div>';
+    }
+  }
+
+  function renderDetailView(name, rep, sessions) {
+    // Sub header
+    const avg = rep ? rep.avgScore : '—';
+    document.getElementById('detailSub').textContent =
+      `${sessions.length} session${sessions.length !== 1 ? 's' : ''} · Avg ${avg}%`;
+
+    // Stats row
+    const statsEl = document.getElementById('detailStatsRow');
+    if (sessions.length > 0) {
+      const scores = sessions.map(s => s.analysis.overall);
+      const avgS   = Math.round(scores.reduce((a,b) => a+b,0) / scores.length);
+      const best   = Math.max(...scores);
+      const latest = scores[0];
+      const trend  = scores.length >= 2 ? latest - scores[1] : null;
+      statsEl.innerHTML = `
+        <div class="stat-box"><div class="stat-num ${scoreColor(latest)}">${latest}%</div><div class="stat-label">Latest</div></div>
+        <div class="stat-box"><div class="stat-num ${scoreColor(avgS)}">${avgS}%</div><div class="stat-label">Average</div></div>
+        <div class="stat-box"><div class="stat-num ${scoreColor(best)}">${best}%</div><div class="stat-label">Best</div></div>
+        <div class="stat-box">
+          <div class="stat-num ${trend === null ? '' : trend >= 0 ? 'green' : 'red'}">
+            ${trend === null ? '—' : (trend >= 0 ? '+' : '') + trend + '%'}
+          </div>
+          <div class="stat-label">vs Last</div>
+        </div>
+        <div class="stat-box"><div class="stat-num">${sessions.length}</div><div class="stat-label">Sessions</div></div>`;
+    } else {
+      statsEl.innerHTML = '';
+    }
+
+    // Trend chart
+    renderDetailChart(sessions);
+
+    // Improvement areas
+    if (rep && rep.topIssues && rep.topIssues.length > 0) {
+      document.getElementById('detailImprove').style.display = 'block';
+      document.getElementById('detailIssueList').innerHTML = rep.topIssues.map((t, i) =>
+        `<div class="improve-item"><div class="improve-num">${i+1}</div>${esc(t)}</div>`
+      ).join('');
+    }
+
+    // Session cards
+    renderDetailSessions(sessions);
+  }
+
+  function renderDetailChart(sessions) {
+    const wrap = document.getElementById('detailChart');
+    const pts  = sessions.slice(0, 20).reverse().map(s => s.analysis.overall);
+    if (pts.length < 2) { wrap.innerHTML = ''; return; }
+    const W = 600, H = 70, PAD = 6;
+    const xStep = (W - PAD * 2) / (pts.length - 1);
+    const coords = pts.map((v, i) => ({ x: PAD + i * xStep, y: PAD + (1 - v / 100) * (H - PAD * 2) }));
+    const polyline = coords.map(c => `${c.x},${c.y}`).join(' ');
+    const area = [...coords.map(c => `${c.x},${c.y}`), `${coords[coords.length-1].x},${H}`, `${coords[0].x},${H}`].join(' ');
+    const dots = coords.map((c, idx) => `<circle cx="${c.x}" cy="${c.y}" r="3.5" fill="${dotColor(pts[idx])}" stroke="#161616" stroke-width="2"/>`).join('');
+    wrap.innerHTML = `
+      <svg class="trend" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="grad2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <polygon points="${area}" fill="url(#grad2)"/>
+        <polyline fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="round" points="${polyline}"/>
+        ${dots}
+      </svg>
+      <div class="chart-label"><span>Oldest</span><span>Most Recent</span></div>`;
+  }
+
+  function dotColor(score) {
+    if (score >= 85) return '#fbbf24';
+    if (score >= 70) return '#10b981';
+    if (score >= 50) return '#fb923c';
+    return '#ef4444';
+  }
+
+  function renderDetailSessions(sessions) {
+    const list = document.getElementById('detailSessionsList');
+    if (sessions.length === 0) {
+      list.innerHTML = '<div class="no-data"><strong>No sessions found</strong>This rep has no recorded sessions in the selected time range.</div>';
+      return;
+    }
+    list.innerHTML = sessions.map((s, i) => {
+      const a  = s.analysis;
+      const cl = scoreColor(a.overall);
+      const bd = a.breakdown || {};
+      const cats = [
+        ['Opening',            bd.opening],
+        ['Objection Handling', bd.objectionHandling],
+        ['Rapport',            bd.rapport],
+        ['Tonality',           bd.tonality],
+        ['Timing',             bd.timing],
+        ['Closing',            bd.closing],
+      ];
+      const barsHtml = cats.filter(([,v]) => v).map(([label, v]) => `
+        <div>
+          <div class="breakdown-row">
+            <div class="breakdown-label">${label}</div>
+            <div class="bar-track-wide"><div class="bar-fill ${scoreColor(v.score)}" style="width:${v.score}%"></div></div>
+            <div class="breakdown-pct">${v.score}%</div>
+          </div>
+          ${v.feedback ? `<div class="breakdown-feedback">${esc(v.feedback)}</div>` : ''}
+        </div>`).join('');
+      const meta = [fmt(s.date), s.repMessages ? `${s.repMessages} turn${s.repMessages !== 1 ? 's' : ''}` : '', fmtDuration(s.duration)].filter(Boolean).join(' · ');
+      return `
+        <div class="session-card" id="dc-${i}" onclick="toggleDetail(${i})">
+          <div class="card-header">
+            <div class="score-circle ${cl}">${a.overall}%</div>
+            <div class="card-meta">
+              <div class="card-date">${fmt(s.date)}</div>
+              <div class="card-turns">${meta}</div>
+              <div class="card-summary">${esc(a.summary || '')}</div>
+            </div>
+            <div class="expand-icon">⌄</div>
+          </div>
+          <div class="card-body">
+            <div class="key-points">
+              ${a.keyStrength    ? `<div class="key-point strength"><strong>💪 Strength</strong>${esc(a.keyStrength)}</div>` : ''}
+              ${a.keyImprovement ? `<div class="key-point improve"><strong>🎯 Work On</strong>${esc(a.keyImprovement)}</div>` : ''}
+            </div>
+            <div class="breakdown-grid">${barsHtml}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function toggleDetail(i) {
+    document.getElementById(`dc-${i}`).classList.toggle('open');
+  }
+
+  function showLeaderboard() {
+    document.getElementById('detailView').style.display      = 'none';
+    document.getElementById('leaderboardView').style.display = 'block';
+    document.getElementById('headerSub').textContent = 'Manager Dashboard';
+  }
+</script>
+</body>
+</html>

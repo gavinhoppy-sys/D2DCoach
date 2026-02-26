@@ -250,6 +250,98 @@ app.delete('/knowledge-file/:id', async (req, res) => {
   }
 });
 
+// ── Manager endpoints ─────────────────────────────────────
+function checkPin(req, res) {
+  const pin = process.env.MANAGER_PIN || '1234';
+  if (req.query.pin !== pin) {
+    res.status(401).json({ error: 'Invalid PIN.' });
+    return false;
+  }
+  return true;
+}
+
+app.get('/manager/reps', async (req, res) => {
+  if (!checkPin(req, res)) return;
+  try {
+    const days = parseInt(req.query.days) || null;
+    const result = await pool.query(
+      `SELECT
+         rep_name,
+         COUNT(*)::int AS session_count,
+         ROUND(AVG((analysis->>'overall')::numeric))::int AS avg_score,
+         MAX((analysis->>'overall')::numeric)::int AS best_score,
+         MAX(created_at) AS last_active,
+         json_agg(analysis ORDER BY created_at DESC) AS all_analyses
+       FROM sessions
+       ${days ? `WHERE created_at >= NOW() - ($1 || ' days')::interval` : ''}
+       GROUP BY rep_name
+       ORDER BY avg_score DESC`,
+      days ? [days] : []
+    );
+    const reps = result.rows.map(row => {
+      const analyses = row.all_analyses || [];
+      const scores = analyses.map(a => a.overall || 0);
+      const latestScore = scores[0] || 0;
+      // Trend: avg of newer half vs older half
+      let improvement = null;
+      if (scores.length >= 4) {
+        const half = Math.floor(scores.length / 2);
+        const newer = scores.slice(0, half).reduce((a, b) => a + b, 0) / half;
+        const older = scores.slice(-half).reduce((a, b) => a + b, 0) / half;
+        improvement = Math.round(newer - older);
+      }
+      // Aggregate category averages
+      const catKeys = ['opening', 'objectionHandling', 'rapport', 'tonality', 'timing', 'closing'];
+      const catAvgs = {};
+      catKeys.forEach(k => {
+        const vals = analyses.map(a => a.breakdown?.[k]?.score).filter(v => v != null);
+        catAvgs[k] = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+      });
+      // Top improvement areas
+      const issues = analyses.map(a => a.keyImprovement).filter(Boolean);
+      return {
+        name: row.rep_name,
+        sessionCount: row.session_count,
+        avgScore: row.avg_score,
+        bestScore: row.best_score,
+        latestScore,
+        lastActive: row.last_active,
+        improvement,
+        catAvgs,
+        topIssues: issues.slice(0, 3),
+      };
+    });
+    res.json({ reps });
+  } catch (err) {
+    console.error('Manager reps error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/manager/sessions', async (req, res) => {
+  if (!checkPin(req, res)) return;
+  try {
+    const { rep, days } = req.query;
+    if (!rep) return res.status(400).json({ error: 'rep query param required.' });
+    const daysInt = parseInt(days) || null;
+    const result = await pool.query(
+      `SELECT * FROM sessions
+       WHERE LOWER(rep_name) = LOWER($1)
+       ${daysInt ? `AND created_at >= NOW() - ($2 || ' days')::interval` : ''}
+       ORDER BY created_at DESC LIMIT 100`,
+      daysInt ? [rep.trim(), daysInt] : [rep.trim()]
+    );
+    const sessions = result.rows.map(row => ({
+      id: row.id, date: row.created_at, duration: row.duration,
+      repMessages: row.rep_messages, analysis: row.analysis,
+    }));
+    res.json({ sessions });
+  } catch (err) {
+    console.error('Manager sessions error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Reset ─────────────────────────────────────────────────
 app.post('/reset', (req, res) => {
   conversationHistory = [];
