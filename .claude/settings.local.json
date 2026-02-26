@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(claude-developer-platform)",
+      "Bash(cd \"C:/Users/Gavin/OneDrive/D2DCoach\" && npm install 2>&1)",
+      "Bash(cd:*)"
+    ]
+  }
+}

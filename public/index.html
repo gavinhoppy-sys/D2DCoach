@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>D2D Roofing Sales Coach</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: #1a1a2e;
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .header-title h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.2px; }
+    .header-title p  { font-size: 12px; opacity: 0.6; margin-top: 2px; }
+
+    .end-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .end-btn:hover:not(:disabled) { background: #c0392b; }
+    .end-btn:disabled { background: #888; cursor: not-allowed; }
+
+    /* ── Chat area ── */
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── Welcome card ── */
+    .welcome {
+      background: #e8eaf6;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      color: #3730a3;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .welcome strong { display: block; font-size: 16px; margin-bottom: 6px; }
+
+    /* ── Rep bubble (right) ── */
+    .rep-bubble {
+      align-self: flex-end;
+      max-width: 78%;
+      background: #0084ff;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 18px 18px 4px 18px;
+      font-size: 15px;
+      line-height: 1.45;
+      word-wrap: break-word;
+    }
+    .rep-label {
+      align-self: flex-end;
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 2px;
+      padding-right: 4px;
+    }
+
+    /* ── Homeowner bubble (left) ── */
+    .hw-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .hw-bubble {
+      align-self: flex-start;
+      max-width: 78%;
+      background: white;
+      color: #111;
+      padding: 10px 14px;
+      border-radius: 18px 18px 18px 4px;
+      font-size: 15px;
+      line-height: 1.45;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      word-wrap: break-word;
+    }
+
+    /* ── Coach note ── */
+    .coach-note {
+      background: #fffbeb;
+      border-left: 3px solid #f59e0b;
+      border-radius: 0 8px 8px 0;
+      padding: 9px 13px;
+      font-size: 13.5px;
+      color: #78350f;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+    .coach-note .coach-tag {
+      display: inline-block;
+      background: #f59e0b;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-bottom: 5px;
+    }
+
+    /* ── Scorecard ── */
+    .scorecard {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      border: 2px solid #6366f1;
+    }
+    .scorecard h2 {
+      font-size: 17px;
+      color: #4338ca;
+      margin-bottom: 16px;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+    .score-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 11px;
+    }
+    .score-badge {
+      background: #6366f1;
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .score-body .score-cat  { font-weight: 600; font-size: 14px; color: #111; }
+    .score-body .score-text { font-size: 13px; color: #555; margin-top: 2px; line-height: 1.4; }
+    .overall-row {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+    .overall-label { font-weight: 700; font-size: 15px; color: #111; }
+    .overall-badge {
+      background: #059669;
+      color: white;
+      font-size: 22px;
+      font-weight: 800;
+      padding: 6px 20px;
+      border-radius: 20px;
+    }
+    .scorecard-raw { font-size: 14px; color: #444; line-height: 1.6; white-space: pre-wrap; }
+
+    /* ── Typing indicator ── */
+    .typing {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      padding: 10px 14px;
+      background: white;
+      border-radius: 18px 18px 18px 4px;
+      align-self: flex-start;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      width: fit-content;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      background: #aaa;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30%            { transform: translateY(-6px); }
+    }
+
+    /* ── Error chip ── */
+    .error-msg {
+      background: #fee2e2;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #991b1b;
+      font-size: 13px;
+    }
+
+    /* ── Input area ── */
+    .input-area {
+      background: white;
+      padding: 10px 12px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+    .input-area textarea {
+      flex: 1;
+      border: 1.5px solid #d1d5db;
+      border-radius: 22px;
+      padding: 10px 15px;
+      font-size: 15px;
+      line-height: 1.4;
+      resize: none;
+      outline: none;
+      max-height: 120px;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      overflow-y: auto;
+    }
+    .input-area textarea:focus { border-color: #0084ff; }
+    .input-area textarea:disabled { background: #f3f4f6; }
+
+    .send-btn {
+      background: #0084ff;
+      color: white;
+      border: none;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .send-btn:hover:not(:disabled) { background: #006edb; }
+    .send-btn:disabled { background: #b0c8e8; cursor: not-allowed; }
+
+    /* ── New session button ── */
+    .new-session-area {
+      text-align: center;
+      padding: 6px 0 2px;
+    }
+    .new-btn {
+      background: none;
+      border: 1.5px solid #6366f1;
+      color: #6366f1;
+      padding: 7px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .new-btn:hover { background: #ede9fe; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">
+    <h1>D2D Roofing Sales Coach</h1>
+    <p>Practice your pitch with AI</p>
+  </div>
+  <button class="end-btn" id="endBtn" onclick="endSession()">End Session</button>
+</div>
+
+<div class="chat-area" id="chatArea">
+  <div class="welcome">
+    <strong>Welcome, Sales Rep!</strong>
+    You've just knocked on a homeowner's door. Type your opening line below and hit Send.
+    Claude will respond as the homeowner and give you real-time coaching feedback.
+  </div>
+</div>
+
+<div class="input-area">
+  <textarea
+    id="msgInput"
+    placeholder="What do you say to the homeowner..."
+    rows="1"
+    onkeydown="handleKey(event)"
+    oninput="autoResize(this)"
+  ></textarea>
+  <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">&#9658;</button>
+</div>
+
+<script>
+  let busy = false;
+  let ended = false;
+
+  /* ── Helpers ── */
+  function esc(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function scrollBottom() {
+    const c = document.getElementById('chatArea');
+    c.scrollTop = c.scrollHeight;
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function setControls(disabled) {
+    document.getElementById('sendBtn').disabled = disabled;
+    document.getElementById('endBtn').disabled  = disabled;
+    document.getElementById('msgInput').disabled = disabled;
+  }
+
+  /* ── DOM builders ── */
+  function appendRepMsg(text) {
+    const chat = document.getElementById('chatArea');
+    const lbl = document.createElement('div');
+    lbl.className = 'rep-label';
+    lbl.textContent = 'You';
+    const bub = document.createElement('div');
+    bub.className = 'rep-bubble';
+    bub.textContent = text;
+    chat.appendChild(lbl);
+    chat.appendChild(bub);
+    scrollBottom();
+  }
+
+  function appendHomeownerResponse(raw) {
+    const chat = document.getElementById('chatArea');
+    const coachIdx = raw.indexOf('COACH:');
+    const hwText   = coachIdx === -1 ? raw.trim() : raw.slice(0, coachIdx).trim();
+    const coachTxt = coachIdx === -1 ? null : raw.slice(coachIdx + 6).trim();
+
+    const group = document.createElement('div');
+    group.className = 'hw-group';
+
+    const bub = document.createElement('div');
+    bub.className = 'hw-bubble';
+    bub.textContent = hwText;
+    group.appendChild(bub);
+
+    if (coachTxt) {
+      const note = document.createElement('div');
+      note.className = 'coach-note';
+      note.innerHTML = `<span class="coach-tag">Coach</span><div>${esc(coachTxt)}</div>`;
+      group.appendChild(note);
+    }
+
+    chat.appendChild(group);
+    scrollBottom();
+  }
+
+  function showTyping() {
+    const chat = document.getElementById('chatArea');
+    const el = document.createElement('div');
+    el.className = 'typing';
+    el.id = 'typing';
+    el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+    chat.appendChild(el);
+    scrollBottom();
+    return el;
+  }
+  function removeTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  function showError(msg) {
+    const chat = document.getElementById('chatArea');
+    const el = document.createElement('div');
+    el.className = 'error-msg';
+    el.textContent = 'Error: ' + msg;
+    chat.appendChild(el);
+    scrollBottom();
+  }
+
+  /* ── Send message ── */
+  async function sendMessage() {
+    if (busy || ended) return;
+    const input = document.getElementById('msgInput');
+    const text  = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    busy = true;
+    setControls(true);
+
+    appendRepMsg(text);
+    showTyping();
+
+    try {
+      const res  = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      });
+      const data = await res.json();
+      removeTyping();
+      if (data.error) { showError(data.error); }
+      else            { appendHomeownerResponse(data.response); }
+    } catch (err) {
+      removeTyping();
+      showError('Could not reach the server. Is it running?');
+    }
+
+    busy = false;
+    setControls(ended);
+    if (!ended) document.getElementById('msgInput').focus();
+  }
+
+  /* ── End session / scorecard ── */
+  async function endSession() {
+    if (busy || ended) return;
+    busy   = true;
+    ended  = true;
+    setControls(true);
+    document.getElementById('msgInput').disabled = true;
+
+    showTyping();
+
+    try {
+      const res  = await fetch('/scorecard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      removeTyping();
+      if (data.scorecard) { appendScorecard(data.scorecard); }
+      else                { showError(data.error || 'Failed to generate scorecard.'); }
+    } catch (err) {
+      removeTyping();
+      showError('Could not reach the server.');
+    }
+
+    // Show "Start New Session" button
+    const chat = document.getElementById('chatArea');
+    const area = document.createElement('div');
+    area.className = 'new-session-area';
+    area.innerHTML = '<button class="new-btn" onclick="newSession()">Start New Session</button>';
+    chat.appendChild(area);
+    scrollBottom();
+
+    busy = false;
+  }
+
+  /* ── Scorecard renderer ── */
+  function appendScorecard(text) {
+    const chat = document.getElementById('chatArea');
+    const card = document.createElement('div');
+    card.className = 'scorecard';
+
+    const rows = text.split('\n').filter(l => l.trim());
+    let bodyHtml = '<h2>Session Scorecard</h2>';
+    let parsedAny = false;
+
+    for (const line of rows) {
+      // Match: "Category: 7/10 — feedback"
+      const m = line.match(/^(Opening|Objection Handling|Rapport|Closing Attempt|Overall)[:\s]+(\d+)\/10\s*[—–-]+\s*(.+)$/i);
+      if (!m) continue;
+      const [, cat, score, feedback] = m;
+      parsedAny = true;
+
+      if (cat.toLowerCase() === 'overall') {
+        bodyHtml += `
+          <div class="overall-row">
+            <span class="overall-label">Overall Score</span>
+            <span class="overall-badge">${score}/10</span>
+          </div>
+          <div style="text-align:center;font-size:13px;color:#555;margin-top:8px;">${esc(feedback)}</div>`;
+      } else {
+        bodyHtml += `
+          <div class="score-row">
+            <span class="score-badge">${score}/10</span>
+            <div class="score-body">
+              <div class="score-cat">${esc(cat)}</div>
+              <div class="score-text">${esc(feedback)}</div>
+            </div>
+          </div>`;
+      }
+    }
+
+    if (!parsedAny) {
+      // Fallback: display raw text
+      bodyHtml += `<div class="scorecard-raw">${esc(text)}</div>`;
+    }
+
+    card.innerHTML = bodyHtml;
+    chat.appendChild(card);
+    scrollBottom();
+  }
+
+  /* ── New session ── */
+  async function newSession() {
+    try { await fetch('/reset', { method: 'POST' }); } catch (_) {}
+    ended = false;
+    busy  = false;
+    document.getElementById('chatArea').innerHTML = `
+      <div class="welcome">
+        <strong>New Session Started!</strong>
+        You've knocked on a new door. Type your opening line below.
+      </div>`;
+    setControls(false);
+    document.getElementById('msgInput').disabled = false;
+    document.getElementById('msgInput').focus();
+  }
+</script>
+</body>
+</html>
