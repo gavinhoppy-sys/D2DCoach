@@ -3,173 +3,228 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D2D Coach — Session Hub</title>
+  <title>D2D Coach — Hub</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg:        #161616;
+      --bg2:       #1e1e1e;
+      --surface:   rgba(255,255,255,0.04);
+      --surface2:  rgba(255,255,255,0.07);
+      --border:    rgba(255,255,255,0.08);
+      --border2:   rgba(255,255,255,0.14);
+      --text:      #f0f0f0;
+      --text2:     rgba(255,255,255,0.55);
+      --text3:     rgba(255,255,255,0.3);
+      --purple:    #8b5cf6;
+      --purple2:   #7c3aed;
+      --purple-glow: rgba(139,92,246,0.3);
+      --green:     #10b981;
+      --red:       #ef4444;
+      --amber:     #f59e0b;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f0f2f5; color: #111; min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
     }
 
     /* ── Header ── */
     .header {
-      background: #1a1a2e; color: white;
-      padding: 14px 20px;
+      background: rgba(22,22,22,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
       display: flex; justify-content: space-between; align-items: center;
       position: sticky; top: 0; z-index: 10;
     }
-    .header h1 { font-size: 18px; font-weight: 700; }
-    .header p  { font-size: 12px; opacity: 0.55; margin-top: 2px; }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .brand-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), #ec4899);
+      box-shadow: 0 0 10px var(--purple-glow);
+    }
+    .header-title h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-title p  { font-size: 11px; color: var(--text2); margin-top: 1px; }
     .header-right { display: flex; align-items: center; gap: 10px; }
     .rep-badge {
-      font-size: 12px; color: rgba(255,255,255,0.7);
-      background: rgba(255,255,255,0.12); padding: 4px 12px; border-radius: 12px;
+      font-size: 12px; color: var(--text2);
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 4px 12px; border-radius: 8px;
     }
     .practice-btn {
-      background: #0084ff; color: white; text-decoration: none;
-      padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
-    }
-    .practice-btn:hover { background: #006edb; }
-
-    /* ── Main layout ── */
-    .main { max-width: 700px; margin: 0 auto; padding: 20px 16px 40px; }
-
-    /* ── Name prompt (shown when no name in storage) ── */
-    .name-prompt {
-      background: white; border-radius: 16px; padding: 32px 24px;
-      text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      margin-bottom: 20px;
-    }
-    .name-prompt h2 { font-size: 20px; margin-bottom: 10px; }
-    .name-prompt p  { color: #6b7280; font-size: 14px; margin-bottom: 20px; }
-    .name-row { display: flex; gap: 10px; max-width: 320px; margin: 0 auto; }
-    .name-input {
-      flex: 1; border: 1.5px solid #d1d5db; border-radius: 10px;
-      padding: 10px 14px; font-size: 15px; outline: none; font-family: inherit;
-    }
-    .name-input:focus { border-color: #6366f1; }
-    .name-submit {
-      background: #6366f1; color: white; border: none;
-      padding: 10px 18px; border-radius: 10px; font-size: 15px;
-      font-weight: 600; cursor: pointer;
-    }
-    .name-submit:hover { background: #4f46e5; }
-
-    /* ── Progress section ── */
-    .progress-section {
-      background: white; border-radius: 16px; padding: 20px;
-      margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
-    .section-title {
-      font-size: 13px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.8px; color: #6b7280; margin-bottom: 16px;
-    }
-
-    .stats-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    .stat-box {
-      flex: 1; min-width: 90px;
-      background: #f8f9ff; border-radius: 12px; padding: 14px 12px; text-align: center;
-    }
-    .stat-num  { font-size: 26px; font-weight: 800; color: #1a1a2e; }
-    .stat-num.green  { color: #059669; }
-    .stat-num.orange { color: #d97706; }
-    .stat-num.red    { color: #dc2626; }
-    .stat-label { font-size: 11px; color: #6b7280; margin-top: 2px; }
-
-    /* Trend chart */
-    .chart-wrap { position: relative; }
-    .chart-label {
-      display: flex; justify-content: space-between;
-      font-size: 10px; color: #9ca3af; margin-top: 4px;
-    }
-    svg.trend { width: 100%; height: 80px; overflow: visible; }
-
-    .no-data {
-      text-align: center; padding: 30px 20px; color: #9ca3af; font-size: 15px;
-    }
-    .no-data strong { display: block; font-size: 18px; color: #374151; margin-bottom: 6px; }
-
-    /* ── Sessions list ── */
-    .sessions-section { display: flex; flex-direction: column; gap: 12px; }
-
-    .session-card {
-      background: white; border-radius: 14px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      overflow: hidden; cursor: pointer;
+      background: linear-gradient(135deg, var(--purple2), var(--purple));
+      color: white; text-decoration: none;
+      padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      box-shadow: 0 4px 14px var(--purple-glow);
       transition: box-shadow 0.15s;
     }
-    .session-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.12); }
+    .practice-btn:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
 
-    .card-header {
-      display: flex; align-items: center; gap: 14px; padding: 16px;
+    /* ── Main ── */
+    .main { max-width: 720px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    /* ── Name prompt ── */
+    .name-prompt {
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 20px; padding: 40px 32px; text-align: center;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .name-prompt-icon {
+      width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--purple2), var(--purple));
+      display: flex; align-items: center; justify-content: center; font-size: 24px;
+      box-shadow: 0 8px 24px var(--purple-glow);
+    }
+    .name-prompt h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.4px; }
+    .name-prompt p  { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
+    .name-row { display: flex; gap: 10px; max-width: 340px; margin: 0 auto; }
+    .name-input {
+      flex: 1; background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text); border-radius: 10px;
+      padding: 11px 14px; font-size: 15px; outline: none; font-family: inherit;
+    }
+    .name-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
+    .name-input::placeholder { color: var(--text3); }
+    .name-submit {
+      background: linear-gradient(135deg, var(--purple2), var(--purple));
+      color: white; border: none;
+      padding: 11px 20px; border-radius: 10px; font-size: 14px;
+      font-weight: 600; cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 14px var(--purple-glow);
+    }
+    .name-submit:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text3); margin-bottom: 14px;
     }
 
-    /* Score circle */
+    /* ── Stats row ── */
+    .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-box {
+      flex: 1; min-width: 90px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px 14px; text-align: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .stat-box:hover { background: var(--surface2); border-color: var(--border2); }
+    .stat-num { font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -1px; }
+    .stat-num.green  { color: var(--green); }
+    .stat-num.orange { color: #fb923c; }
+    .stat-num.red    { color: var(--red); }
+    .stat-num.gold   { color: #fbbf24; }
+    .stat-label { font-size: 10px; color: var(--text3); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Progress card ── */
+    .progress-section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; margin-bottom: 20px;
+    }
+
+    /* Trend chart */
+    svg.trend { width: 100%; height: 80px; overflow: visible; }
+    .chart-label {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--text3); margin-top: 6px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+
+    .no-data { text-align: center; padding: 32px 20px; color: var(--text3); font-size: 14px; }
+    .no-data strong { display: block; font-size: 17px; color: var(--text2); margin-bottom: 8px; font-weight: 600; }
+
+    /* ── Session cards ── */
+    .sessions-section { display: flex; flex-direction: column; gap: 10px; }
+
+    .session-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .session-card:hover { background: var(--surface2); border-color: var(--border2); }
+
+    .card-header { display: flex; align-items: center; gap: 14px; padding: 16px; }
+
     .score-circle {
-      width: 56px; height: 56px; border-radius: 50%;
+      width: 52px; height: 52px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 17px; font-weight: 800; flex-shrink: 0;
-      color: white;
+      font-size: 14px; font-weight: 800; flex-shrink: 0; color: white;
+      letter-spacing: -0.5px;
     }
-    .score-circle.red    { background: linear-gradient(135deg, #ef4444, #dc2626); }
-    .score-circle.orange { background: linear-gradient(135deg, #f97316, #ea580c); }
-    .score-circle.green  { background: linear-gradient(135deg, #22c55e, #16a34a); }
-    .score-circle.gold   { background: linear-gradient(135deg, #eab308, #ca8a04); }
+    .score-circle.red    { background: rgba(239,68,68,0.2);   border: 1px solid rgba(239,68,68,0.4);   color: #f87171; }
+    .score-circle.orange { background: rgba(251,146,60,0.2);  border: 1px solid rgba(251,146,60,0.4);  color: #fb923c; }
+    .score-circle.green  { background: rgba(16,185,129,0.2);  border: 1px solid rgba(16,185,129,0.4);  color: #34d399; }
+    .score-circle.gold   { background: rgba(251,191,36,0.2);  border: 1px solid rgba(251,191,36,0.4);  color: #fbbf24; }
 
     .card-meta { flex: 1; min-width: 0; }
-    .card-date { font-size: 13px; color: #6b7280; }
-    .card-turns { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .card-date  { font-size: 12px; color: var(--text3); }
+    .card-turns { font-size: 11px; color: var(--text3); margin-top: 2px; }
     .card-summary {
-      font-size: 14px; color: #374151; margin-top: 6px;
+      font-size: 13px; color: var(--text2); margin-top: 5px;
       line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    .expand-icon {
-      font-size: 18px; color: #9ca3af; flex-shrink: 0;
-      transition: transform 0.2s;
-    }
+    .expand-icon { font-size: 16px; color: var(--text3); flex-shrink: 0; transition: transform 0.2s; }
     .session-card.open .expand-icon { transform: rotate(180deg); }
 
-    /* Expanded body */
-    .card-body { display: none; padding: 0 16px 16px; border-top: 1px solid #f3f4f6; }
+    .card-body { display: none; padding: 0 16px 16px; border-top: 1px solid var(--border); }
     .session-card.open .card-body { display: block; }
 
-    .key-points {
-      display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap;
-    }
+    .key-points { display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
     .key-point {
-      flex: 1; min-width: 140px; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.4;
+      flex: 1; min-width: 140px; border-radius: 10px; padding: 10px 12px;
+      font-size: 12px; line-height: 1.5;
     }
-    .key-point.strength   { background: #f0fdf4; color: #166534; border-left: 3px solid #22c55e; }
-    .key-point.improve    { background: #fffbeb; color: #78350f; border-left: 3px solid #f59e0b; }
-    .key-point strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; opacity: 0.7; }
+    .key-point.strength {
+      background: rgba(16,185,129,0.08); color: #6ee7b7;
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .key-point.improve  {
+      background: rgba(245,158,11,0.08); color: #fcd34d;
+      border: 1px solid rgba(245,158,11,0.2);
+    }
+    .key-point strong {
+      display: block; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.6px; margin-bottom: 4px; opacity: 0.6;
+    }
 
     .breakdown-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
     .breakdown-row { display: flex; align-items: center; gap: 10px; }
-    .breakdown-label { font-size: 12px; font-weight: 600; color: #374151; width: 120px; flex-shrink: 0; }
-    .bar-track { flex: 1; background: #f3f4f6; border-radius: 4px; height: 8px; overflow: hidden; }
-    .bar-fill  { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
-    .bar-fill.red    { background: #ef4444; }
-    .bar-fill.orange { background: #f97316; }
-    .bar-fill.green  { background: #22c55e; }
-    .bar-fill.gold   { background: #eab308; }
-    .breakdown-pct { font-size: 12px; font-weight: 700; width: 34px; text-align: right; }
-
-    .breakdown-feedback {
-      font-size: 12px; color: #6b7280; margin-top: 2px; margin-left: 130px; line-height: 1.4;
-    }
+    .breakdown-label { font-size: 11px; font-weight: 600; color: var(--text2); width: 120px; flex-shrink: 0; }
+    .bar-track { flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 6px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .bar-fill.red    { background: rgba(239,68,68,0.7); }
+    .bar-fill.orange { background: rgba(251,146,60,0.7); }
+    .bar-fill.green  { background: rgba(16,185,129,0.7); }
+    .bar-fill.gold   { background: rgba(251,191,36,0.7); }
+    .breakdown-pct { font-size: 11px; font-weight: 700; width: 34px; text-align: right; color: var(--text2); }
+    .breakdown-feedback { font-size: 11px; color: var(--text3); margin-top: 3px; margin-left: 130px; line-height: 1.4; }
 
     /* Loading */
-    .loading { text-align: center; padding: 40px; color: #9ca3af; font-size: 15px; }
+    .loading {
+      text-align: center; padding: 60px 20px; color: var(--text3); font-size: 14px;
+    }
+    .loading-spinner {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid rgba(139,92,246,0.2); border-top-color: var(--purple);
+      animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
 <div class="header">
-  <div>
-    <h1>Session Hub</h1>
-    <p>Your roleplay history &amp; progress</p>
+  <div class="header-brand">
+    <div class="brand-dot"></div>
+    <div class="header-title">
+      <h1>D2D Coach</h1>
+      <p>Session Hub</p>
+    </div>
   </div>
   <div class="header-right">
     <span class="rep-badge" id="repBadge"></span>
@@ -179,26 +234,31 @@
 
 <div class="main">
 
-  <!-- Name prompt (shown if no name stored) -->
-  <div id="namePrompt" class="name-prompt" style="display:none;">
-    <h2>Who are you?</h2>
-    <p>Enter the name you used during practice to load your sessions.</p>
-    <div class="name-row">
-      <input class="name-input" id="hubNameInput" type="text" placeholder="Your first name" maxlength="40"
-        onkeydown="if(event.key==='Enter') hubSubmitName()">
-      <button class="name-submit" onclick="hubSubmitName()">Load</button>
+  <!-- Name prompt -->
+  <div id="namePrompt" style="display:none;">
+    <div class="name-prompt">
+      <div class="name-prompt-icon">📊</div>
+      <h2>Load your sessions</h2>
+      <p>Enter the name you used during practice to view your history and progress.</p>
+      <div class="name-row">
+        <input class="name-input" id="hubNameInput" type="text" placeholder="Your first name" maxlength="40"
+          onkeydown="if(event.key==='Enter') hubSubmitName()">
+        <button class="name-submit" onclick="hubSubmitName()">Load</button>
+      </div>
     </div>
   </div>
 
   <!-- Progress -->
-  <div class="progress-section" id="progressSection" style="display:none;">
+  <div id="progressSection" style="display:none; margin-bottom: 20px;">
     <div class="section-title">Your Progress</div>
-    <div class="stats-row" id="statsRow"></div>
-    <div class="chart-wrap" id="chartWrap"></div>
+    <div class="progress-section">
+      <div class="stats-row" id="statsRow"></div>
+      <div id="chartWrap"></div>
+    </div>
   </div>
 
   <!-- Sessions -->
-  <div class="section-title" style="margin-bottom:12px;" id="sessionsTitle" style="display:none;">Past Sessions</div>
+  <div id="sessionsHeader" style="display:none;" class="section-title">Past Sessions</div>
   <div class="sessions-section" id="sessionsList"></div>
 
 </div>
@@ -207,7 +267,6 @@
   let sessions = [];
   let repName  = localStorage.getItem('d2d_rep_name') || '';
 
-  // ── Init ───────────────────────────────────────────────────
   (function init() {
     if (repName) {
       document.getElementById('repBadge').textContent = repName;
@@ -223,31 +282,34 @@
     if (!val) return;
     repName = val;
     localStorage.setItem('d2d_rep_name', repName);
-    document.getElementById('namePrompt').style.display = 'none';
-    document.getElementById('repBadge').textContent = repName;
+    document.getElementById('namePrompt').style.display  = 'none';
+    document.getElementById('repBadge').textContent      = repName;
     loadSessions(repName);
   }
 
   async function loadSessions(name) {
-    document.getElementById('sessionsList').innerHTML = '<div class="loading">Loading your sessions…</div>';
+    document.getElementById('sessionsList').innerHTML = `
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        Loading sessions…
+      </div>`;
     try {
       const res  = await fetch('/sessions?name=' + encodeURIComponent(name));
       const data = await res.json();
       sessions = data.sessions || [];
       render();
     } catch (_) {
-      document.getElementById('sessionsList').innerHTML = '<div class="no-data"><strong>Could not load sessions</strong>Check your connection and refresh.</div>';
+      document.getElementById('sessionsList').innerHTML =
+        '<div class="no-data"><strong>Could not load sessions</strong>Check your connection and refresh.</div>';
     }
   }
 
   function render() {
     if (sessions.length > 0) {
       document.getElementById('progressSection').style.display = 'block';
-      document.getElementById('sessionsTitle').style.display   = 'block';
+      document.getElementById('sessionsHeader').style.display  = 'block';
     }
-    renderStats();
-    renderChart();
-    renderSessions();
+    renderStats(); renderChart(); renderSessions();
   }
 
   // ── Helpers ────────────────────────────────────────────────
@@ -257,17 +319,14 @@
     if (n >= 50) return 'orange';
     return 'red';
   }
-
   function fmt(isoDate) {
     return new Date(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
-
   function fmtDuration(secs) {
     if (!secs) return '';
     const m = Math.floor(secs / 60), s = secs % 60;
     return m > 0 ? `${m}m ${s}s` : `${s}s`;
   }
-
   function esc(t) {
     return (t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
@@ -276,39 +335,25 @@
   function renderStats() {
     const el = document.getElementById('statsRow');
     if (sessions.length === 0) {
-      el.innerHTML = '<p class="no-data" style="width:100%;text-align:center;padding:10px 0;">No sessions yet — start practicing!</p>';
+      el.innerHTML = '<p style="width:100%;text-align:center;color:var(--text3);padding:10px 0;font-size:13px;">No sessions yet — start practicing!</p>';
       return;
     }
-
     const scores = sessions.map(s => s.analysis.overall);
     const avg    = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
     const best   = Math.max(...scores);
     const latest = scores[0];
     const trend  = scores.length >= 2 ? latest - scores[1] : null;
-
     el.innerHTML = `
-      <div class="stat-box">
-        <div class="stat-num ${scoreColor(latest)}">${latest}%</div>
-        <div class="stat-label">Latest</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-num ${scoreColor(avg)}">${avg}%</div>
-        <div class="stat-label">Average</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-num ${scoreColor(best)}">${best}%</div>
-        <div class="stat-label">Best</div>
-      </div>
+      <div class="stat-box"><div class="stat-num ${scoreColor(latest)}">${latest}%</div><div class="stat-label">Latest</div></div>
+      <div class="stat-box"><div class="stat-num ${scoreColor(avg)}">${avg}%</div><div class="stat-label">Average</div></div>
+      <div class="stat-box"><div class="stat-num ${scoreColor(best)}">${best}%</div><div class="stat-label">Best</div></div>
       <div class="stat-box">
         <div class="stat-num ${trend === null ? '' : trend >= 0 ? 'green' : 'red'}">
           ${trend === null ? '—' : (trend >= 0 ? '+' : '') + trend + '%'}
         </div>
         <div class="stat-label">vs Last</div>
       </div>
-      <div class="stat-box">
-        <div class="stat-num" style="color:#1a1a2e;">${sessions.length}</div>
-        <div class="stat-label">Sessions</div>
-      </div>`;
+      <div class="stat-box"><div class="stat-num">${sessions.length}</div><div class="stat-label">Sessions</div></div>`;
   }
 
   // ── Trend chart ────────────────────────────────────────────
@@ -316,37 +361,31 @@
     const wrap = document.getElementById('chartWrap');
     const pts  = sessions.slice(0, 20).reverse().map(s => s.analysis.overall);
     if (pts.length < 2) { wrap.innerHTML = ''; return; }
-
     const W = 600, H = 70, PAD = 6;
     const xStep = (W - PAD * 2) / (pts.length - 1);
-    const coords = pts.map((v, i) => ({
-      x: PAD + i * xStep,
-      y: PAD + (1 - v / 100) * (H - PAD * 2),
-    }));
-
+    const coords = pts.map((v, i) => ({ x: PAD + i * xStep, y: PAD + (1 - v / 100) * (H - PAD * 2) }));
     const polyline = coords.map(c => `${c.x},${c.y}`).join(' ');
     const area = [...coords.map(c => `${c.x},${c.y}`), `${coords[coords.length-1].x},${H}`, `${coords[0].x},${H}`].join(' ');
-    const dots = coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3.5" fill="${dotColor(pts[coords.indexOf(c)])}" stroke="white" stroke-width="1.5"/>`).join('');
-
+    const dots = coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3.5" fill="${dotColor(pts[coords.indexOf(c)])}" stroke="#161616" stroke-width="2"/>`).join('');
     wrap.innerHTML = `
       <svg class="trend" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
         <defs>
           <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#6366f1" stop-opacity="0.25"/>
-            <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+            <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
           </linearGradient>
         </defs>
         <polygon points="${area}" fill="url(#grad)"/>
-        <polyline fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linejoin="round" points="${polyline}"/>
+        <polyline fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="round" points="${polyline}"/>
         ${dots}
       </svg>
       <div class="chart-label"><span>Oldest</span><span>Most Recent</span></div>`;
   }
 
   function dotColor(score) {
-    if (score >= 85) return '#eab308';
-    if (score >= 70) return '#22c55e';
-    if (score >= 50) return '#f97316';
+    if (score >= 85) return '#fbbf24';
+    if (score >= 70) return '#10b981';
+    if (score >= 50) return '#fb923c';
     return '#ef4444';
   }
 
@@ -357,12 +396,11 @@
       list.innerHTML = `<div class="no-data"><strong>No sessions yet</strong>Head to Practice, finish a session, and it'll appear here.</div>`;
       return;
     }
-
     list.innerHTML = sessions.map((s, i) => {
-      const a     = s.analysis;
-      const color = scoreColor(a.overall);
-      const bd    = a.breakdown || {};
-      const cats  = [
+      const a  = s.analysis;
+      const cl = scoreColor(a.overall);
+      const bd = a.breakdown || {};
+      const cats = [
         ['Opening',            bd.opening],
         ['Objection Handling', bd.objectionHandling],
         ['Rapport',            bd.rapport],
@@ -370,23 +408,20 @@
         ['Timing',             bd.timing],
         ['Closing',            bd.closing],
       ];
-
       const barsHtml = cats.filter(([,v]) => v).map(([label, v]) => `
         <div>
           <div class="breakdown-row">
             <div class="breakdown-label">${label}</div>
             <div class="bar-track"><div class="bar-fill ${scoreColor(v.score)}" style="width:${v.score}%"></div></div>
-            <div class="breakdown-pct" style="color:${pctColor(v.score)}">${v.score}%</div>
+            <div class="breakdown-pct">${v.score}%</div>
           </div>
           ${v.feedback ? `<div class="breakdown-feedback">${esc(v.feedback)}</div>` : ''}
         </div>`).join('');
-
       const meta = [fmt(s.date), s.repMessages ? `${s.repMessages} turn${s.repMessages !== 1 ? 's' : ''}` : '', fmtDuration(s.duration)].filter(Boolean).join(' · ');
-
       return `
         <div class="session-card" id="card-${i}" onclick="toggleCard(${i})">
           <div class="card-header">
-            <div class="score-circle ${color}">${a.overall}%</div>
+            <div class="score-circle ${cl}">${a.overall}%</div>
             <div class="card-meta">
               <div class="card-date">${fmt(s.date)}</div>
               <div class="card-turns">${meta}</div>
@@ -396,20 +431,13 @@
           </div>
           <div class="card-body">
             <div class="key-points">
-              ${a.keyStrength   ? `<div class="key-point strength"><strong>💪 Strength</strong>${esc(a.keyStrength)}</div>` : ''}
+              ${a.keyStrength    ? `<div class="key-point strength"><strong>💪 Strength</strong>${esc(a.keyStrength)}</div>` : ''}
               ${a.keyImprovement ? `<div class="key-point improve"><strong>🎯 Work On</strong>${esc(a.keyImprovement)}</div>` : ''}
             </div>
             <div class="breakdown-grid">${barsHtml}</div>
           </div>
         </div>`;
     }).join('');
-  }
-
-  function pctColor(n) {
-    if (n >= 85) return '#ca8a04';
-    if (n >= 70) return '#16a34a';
-    if (n >= 50) return '#ea580c';
-    return '#dc2626';
   }
 
   function toggleCard(i) {
