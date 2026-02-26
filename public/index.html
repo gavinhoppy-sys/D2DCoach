@@ -202,14 +202,71 @@
     .new-session-area { text-align: center; padding: 6px 0 2px; }
     .new-btn { background: none; border: 1.5px solid #6366f1; color: #6366f1; padding: 7px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
     .new-btn:hover { background: #ede9fe; }
+
+    /* ── Name modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; padding: 20px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-box {
+      background: white; border-radius: 20px; padding: 32px 28px;
+      max-width: 360px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      text-align: center;
+    }
+    .modal-box h2 { font-size: 22px; color: #1a1a2e; margin-bottom: 8px; }
+    .modal-box p  { font-size: 14px; color: #6b7280; margin-bottom: 24px; line-height: 1.5; }
+    .modal-input {
+      width: 100%; border: 1.5px solid #d1d5db; border-radius: 12px;
+      padding: 12px 16px; font-size: 16px; outline: none; font-family: inherit;
+      margin-bottom: 16px;
+    }
+    .modal-input:focus { border-color: #6366f1; }
+    .modal-submit {
+      width: 100%; background: #6366f1; color: white; border: none;
+      padding: 13px; border-radius: 12px; font-size: 16px; font-weight: 700;
+      cursor: pointer;
+    }
+    .modal-submit:hover { background: #4f46e5; }
+
+    /* ── Coach summary card ── */
+    .coach-summary {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: white; border-radius: 16px; padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .coach-summary h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; margin-bottom: 14px; }
+    .cs-score { font-size: 52px; font-weight: 900; text-align: center; margin-bottom: 4px; }
+    .cs-score.red    { color: #ef4444; }
+    .cs-score.orange { color: #fb923c; }
+    .cs-score.green  { color: #34d399; }
+    .cs-score.gold   { color: #fbbf24; }
+    .cs-label { text-align: center; font-size: 12px; opacity: 0.5; margin-bottom: 16px; }
+    .cs-summary { font-size: 14px; line-height: 1.55; opacity: 0.85; margin-bottom: 16px; }
+    .cs-row { display: flex; gap: 10px; margin-top: 10px; }
+    .cs-box { flex: 1; background: rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; }
+    .cs-box-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.5; margin-bottom: 6px; }
+    .cs-box-text  { font-size: 13px; line-height: 1.4; }
   </style>
 </head>
 <body>
 
+<!-- Rep name modal -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal-box">
+    <h2>Welcome! 👋</h2>
+    <p>Enter your name so we can track your progress over time.</p>
+    <input class="modal-input" id="nameInput" type="text" placeholder="Your first name" maxlength="40"
+      onkeydown="if(event.key==='Enter') submitName()">
+    <button class="modal-submit" onclick="submitName()">Let's Practice</button>
+  </div>
+</div>
+
 <div class="header">
   <div class="header-title">
     <h1>D2D Roofing Sales Coach</h1>
-    <p>Real-time voice practice</p>
+    <p id="repNameDisplay">Real-time voice practice</p>
   </div>
   <div class="header-actions">
     <a href="/hub.html" class="hub-link">📋 Hub</a>
@@ -241,12 +298,24 @@
 </div>
 
 <script>
+  // ── Rep name ──────────────────────────────────────────────
+  let repName = localStorage.getItem('d2d_rep_name') || '';
+
+  function submitName() {
+    const val = document.getElementById('nameInput').value.trim();
+    if (!val) return;
+    repName = val;
+    localStorage.setItem('d2d_rep_name', repName);
+    document.getElementById('nameModal').classList.add('hidden');
+    document.getElementById('repNameDisplay').textContent = 'Hey, ' + repName + ' 👋';
+  }
+
   // ── State ────────────────────────────────────────────────
   // convState: 'idle' | 'listening' | 'processing' | 'speaking' | 'ended'
   let convState  = 'idle';
   let ttsEnabled = true;
 
-  // Session tracking (for hub)
+  // Session tracking
   let sessionStartTime = null;
   let repMessageCount  = 0;
 
@@ -270,12 +339,19 @@
 
   // ── Boot ─────────────────────────────────────────────────
   (function boot() {
+    // Show name modal if name not set
+    if (!repName) {
+      document.getElementById('nameModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('nameInput').focus(), 100);
+    } else {
+      document.getElementById('nameModal').classList.add('hidden');
+      document.getElementById('repNameDisplay').textContent = 'Hey, ' + repName + ' 👋';
+    }
+
     if (hasSpeech) {
       setupRecognition();
-      // Hide text fallback — voice is primary
       document.getElementById('textFallback').style.display = 'none';
     } else {
-      // Voice unavailable: show text fallback, hide voice button
       document.getElementById('textFallback').style.display = 'flex';
       document.getElementById('mainBtn').style.display = 'none';
       document.getElementById('statusBar').style.display = 'none';
@@ -720,6 +796,8 @@
 
     showTyping();
     try {
+      const sessionDuration = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : 0;
+
       // Run scorecard display + deep analysis in parallel
       const [scorecardRes, analyzeRes] = await Promise.all([
         fetch('/scorecard', { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
@@ -731,7 +809,11 @@
       if (scorecardData.scorecard) appendScorecard(scorecardData.scorecard);
       else showError(scorecardData.error || 'Failed to generate scorecard.');
 
-      if (analyzeData.analysis) saveSession(analyzeData.analysis);
+      if (analyzeData.analysis) {
+        appendCoachSummary(analyzeData.analysis);
+        speakCoachFeedback(analyzeData.analysis);
+        saveSession(analyzeData.analysis, sessionDuration);
+      }
     } catch (_) {
       removeTyping();
       showError('Could not reach the server.');
@@ -768,18 +850,73 @@
     chat.appendChild(card); scrollBottom();
   }
 
-  // ── Save session to localStorage ─────────────────────────
-  function saveSession(analysis) {
-    const sessions = JSON.parse(localStorage.getItem('d2d_sessions') || '[]');
-    sessions.unshift({
-      id:          Date.now(),
-      date:        new Date().toISOString(),
-      duration:    sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : 0,
-      repMessages: repMessageCount,
-      analysis,
-    });
-    if (sessions.length > 100) sessions.length = 100;
-    localStorage.setItem('d2d_sessions', JSON.stringify(sessions));
+  // ── Coach summary card ────────────────────────────────────
+  function appendCoachSummary(analysis) {
+    const chat = document.getElementById('chatArea');
+    const color = scoreColor(analysis.overall);
+    const card = document.createElement('div');
+    card.className = 'coach-summary';
+    card.innerHTML = `
+      <h3>Coach Analysis</h3>
+      <div class="cs-score ${color}">${analysis.overall}%</div>
+      <div class="cs-label">Overall Score</div>
+      <div class="cs-summary">${esc(analysis.summary || '')}</div>
+      <div class="cs-row">
+        ${analysis.keyStrength   ? `<div class="cs-box"><div class="cs-box-title">💪 Strength</div><div class="cs-box-text">${esc(analysis.keyStrength)}</div></div>` : ''}
+        ${analysis.keyImprovement ? `<div class="cs-box"><div class="cs-box-title">🎯 Work On</div><div class="cs-box-text">${esc(analysis.keyImprovement)}</div></div>` : ''}
+      </div>`;
+    chat.appendChild(card);
+    scrollBottom();
+  }
+
+  function scoreColor(n) {
+    if (n >= 85) return 'gold';
+    if (n >= 70) return 'green';
+    if (n >= 50) return 'orange';
+    return 'red';
+  }
+
+  // ── Coach verbal feedback (TTS) ───────────────────────────
+  function speakCoachFeedback(analysis) {
+    if (!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+
+    const score = analysis.overall;
+    const opener = score >= 85 ? 'Outstanding session!' : score >= 70 ? 'Good work today.' : score >= 50 ? 'Decent effort.' : 'Tough session, but every rep is a lesson.';
+    const strength  = analysis.keyStrength    ? `Your biggest strength was: ${analysis.keyStrength}` : '';
+    const improve   = analysis.keyImprovement ? `For next time, focus on: ${analysis.keyImprovement}` : '';
+    const fullText  = [opener, strength, improve].filter(Boolean).join(' ');
+
+    const utt = new SpeechSynthesisUtterance(fullText);
+    utt.rate = 0.9; utt.pitch = 1.0;
+
+    // Use a different (male) voice for coach if available, else fall back to same pool
+    const coachVoice =
+      voices.find(v => v.name === 'Google UK English Male') ||
+      voices.find(v => v.name === 'Microsoft David - English (United States)') ||
+      voices.find(v => v.lang === 'en-US' && /male/i.test(v.name)) ||
+      voices.find(v => v.lang.startsWith('en'));
+    if (coachVoice) utt.voice = coachVoice;
+
+    speechSynthesis.speak(utt);
+  }
+
+  // ── Save session to database ──────────────────────────────
+  async function saveSession(analysis, duration) {
+    try {
+      await fetch('/save-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          repName:     repName || 'Unknown',
+          duration:    duration || 0,
+          repMessages: repMessageCount,
+          analysis,
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to save session:', err);
+    }
   }
 
   // ── New session ───────────────────────────────────────────

@@ -21,6 +21,11 @@
     }
     .header h1 { font-size: 18px; font-weight: 700; }
     .header p  { font-size: 12px; opacity: 0.55; margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .rep-badge {
+      font-size: 12px; color: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.12); padding: 4px 12px; border-radius: 12px;
+    }
     .practice-btn {
       background: #0084ff; color: white; text-decoration: none;
       padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
@@ -29,6 +34,27 @@
 
     /* ── Main layout ── */
     .main { max-width: 700px; margin: 0 auto; padding: 20px 16px 40px; }
+
+    /* ── Name prompt (shown when no name in storage) ── */
+    .name-prompt {
+      background: white; border-radius: 16px; padding: 32px 24px;
+      text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+    .name-prompt h2 { font-size: 20px; margin-bottom: 10px; }
+    .name-prompt p  { color: #6b7280; font-size: 14px; margin-bottom: 20px; }
+    .name-row { display: flex; gap: 10px; max-width: 320px; margin: 0 auto; }
+    .name-input {
+      flex: 1; border: 1.5px solid #d1d5db; border-radius: 10px;
+      padding: 10px 14px; font-size: 15px; outline: none; font-family: inherit;
+    }
+    .name-input:focus { border-color: #6366f1; }
+    .name-submit {
+      background: #6366f1; color: white; border: none;
+      padding: 10px 18px; border-radius: 10px; font-size: 15px;
+      font-weight: 600; cursor: pointer;
+    }
+    .name-submit:hover { background: #4f46e5; }
 
     /* ── Progress section ── */
     .progress-section {
@@ -133,6 +159,9 @@
     .breakdown-feedback {
       font-size: 12px; color: #6b7280; margin-top: 2px; margin-left: 130px; line-height: 1.4;
     }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px; color: #9ca3af; font-size: 15px; }
   </style>
 </head>
 <body>
@@ -142,26 +171,84 @@
     <h1>Session Hub</h1>
     <p>Your roleplay history &amp; progress</p>
   </div>
-  <a href="/" class="practice-btn">▶ Practice</a>
+  <div class="header-right">
+    <span class="rep-badge" id="repBadge"></span>
+    <a href="/" class="practice-btn">▶ Practice</a>
+  </div>
 </div>
 
 <div class="main">
 
+  <!-- Name prompt (shown if no name stored) -->
+  <div id="namePrompt" class="name-prompt" style="display:none;">
+    <h2>Who are you?</h2>
+    <p>Enter the name you used during practice to load your sessions.</p>
+    <div class="name-row">
+      <input class="name-input" id="hubNameInput" type="text" placeholder="Your first name" maxlength="40"
+        onkeydown="if(event.key==='Enter') hubSubmitName()">
+      <button class="name-submit" onclick="hubSubmitName()">Load</button>
+    </div>
+  </div>
+
   <!-- Progress -->
-  <div class="progress-section">
+  <div class="progress-section" id="progressSection" style="display:none;">
     <div class="section-title">Your Progress</div>
     <div class="stats-row" id="statsRow"></div>
     <div class="chart-wrap" id="chartWrap"></div>
   </div>
 
   <!-- Sessions -->
-  <div class="section-title" style="margin-bottom:12px;">Past Sessions</div>
+  <div class="section-title" style="margin-bottom:12px;" id="sessionsTitle" style="display:none;">Past Sessions</div>
   <div class="sessions-section" id="sessionsList"></div>
 
 </div>
 
 <script>
-  const sessions = JSON.parse(localStorage.getItem('d2d_sessions') || '[]');
+  let sessions = [];
+  let repName  = localStorage.getItem('d2d_rep_name') || '';
+
+  // ── Init ───────────────────────────────────────────────────
+  (function init() {
+    if (repName) {
+      document.getElementById('repBadge').textContent = repName;
+      loadSessions(repName);
+    } else {
+      document.getElementById('namePrompt').style.display = 'block';
+      setTimeout(() => document.getElementById('hubNameInput').focus(), 100);
+    }
+  })();
+
+  function hubSubmitName() {
+    const val = document.getElementById('hubNameInput').value.trim();
+    if (!val) return;
+    repName = val;
+    localStorage.setItem('d2d_rep_name', repName);
+    document.getElementById('namePrompt').style.display = 'none';
+    document.getElementById('repBadge').textContent = repName;
+    loadSessions(repName);
+  }
+
+  async function loadSessions(name) {
+    document.getElementById('sessionsList').innerHTML = '<div class="loading">Loading your sessions…</div>';
+    try {
+      const res  = await fetch('/sessions?name=' + encodeURIComponent(name));
+      const data = await res.json();
+      sessions = data.sessions || [];
+      render();
+    } catch (_) {
+      document.getElementById('sessionsList').innerHTML = '<div class="no-data"><strong>Could not load sessions</strong>Check your connection and refresh.</div>';
+    }
+  }
+
+  function render() {
+    if (sessions.length > 0) {
+      document.getElementById('progressSection').style.display = 'block';
+      document.getElementById('sessionsTitle').style.display   = 'block';
+    }
+    renderStats();
+    renderChart();
+    renderSessions();
+  }
 
   // ── Helpers ────────────────────────────────────────────────
   function scoreColor(n) {
@@ -193,11 +280,11 @@
       return;
     }
 
-    const scores   = sessions.map(s => s.analysis.overall);
-    const avg      = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
-    const best     = Math.max(...scores);
-    const latest   = scores[0];
-    const trend    = scores.length >= 2 ? latest - scores[1] : null;
+    const scores = sessions.map(s => s.analysis.overall);
+    const avg    = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
+    const best   = Math.max(...scores);
+    const latest = scores[0];
+    const trend  = scores.length >= 2 ? latest - scores[1] : null;
 
     el.innerHTML = `
       <div class="stat-box">
@@ -239,7 +326,6 @@
 
     const polyline = coords.map(c => `${c.x},${c.y}`).join(' ');
     const area = [...coords.map(c => `${c.x},${c.y}`), `${coords[coords.length-1].x},${H}`, `${coords[0].x},${H}`].join(' ');
-
     const dots = coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3.5" fill="${dotColor(pts[coords.indexOf(c)])}" stroke="white" stroke-width="1.5"/>`).join('');
 
     wrap.innerHTML = `
@@ -329,11 +415,6 @@
   function toggleCard(i) {
     document.getElementById(`card-${i}`).classList.toggle('open');
   }
-
-  // ── Boot ──────────────────────────────────────────────────
-  renderStats();
-  renderChart();
-  renderSessions();
 </script>
 </body>
 </html>

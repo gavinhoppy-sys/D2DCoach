@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const Anthropic = require('@anthropic-ai/sdk');
+const { Pool } = require('pg');
 
 const app = express();
 app.use(express.json());
@@ -8,6 +9,28 @@ app.use(express.static('public'));
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// ── PostgreSQL setup ──────────────────────────────────────
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+});
+
+async function initDB() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id           SERIAL PRIMARY KEY,
+      rep_name     TEXT NOT NULL,
+      created_at   TIMESTAMPTZ DEFAULT NOW(),
+      duration     INTEGER,
+      rep_messages INTEGER,
+      analysis     JSONB NOT NULL
+    )
+  `);
+  console.log('Database ready.');
+}
+initDB().catch(err => console.error('DB init error:', err.message));
+
+// ── Prompts ───────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are roleplaying as a skeptical homeowner. A door-to-door roofing sales rep has just knocked on your door. You are mildly annoyed but willing to listen. After each rep message, respond in character as the homeowner, then on a new line add: COACH: [1-2 sentences of direct, specific feedback on the rep's technique and vocal delivery. If the message includes voice metrics (WPM, energy, pitch, filler words), address them explicitly — ideal sales pace is 130-150 WPM, energy should be warm and confident, filler words undermine credibility, monotone delivery kills rapport. Always say what to do differently.]`;
 
 const SCORECARD_PROMPT = `You are an expert sales coach. Review this door-to-door roofing sales practice conversation and rate the rep 1-10 on each category with one sentence of feedback. Use exactly this format:
@@ -18,9 +41,10 @@ Rapport: [score]/10 — [one sentence of feedback]
 Closing Attempt: [score]/10 — [one sentence of feedback]
 Overall: [score]/10 — [one sentence summarizing performance]`;
 
-// In-memory conversation history for the session
+// ── In-memory conversation history (single session) ───────
 let conversationHistory = [];
 
+// ── Chat ──────────────────────────────────────────────────
 app.post('/chat', async (req, res) => {
   try {
     const { message } = req.body;
@@ -47,6 +71,7 @@ app.post('/chat', async (req, res) => {
   }
 });
 
+// ── Scorecard ─────────────────────────────────────────────
 app.post('/scorecard', async (req, res) => {
   try {
     if (conversationHistory.length === 0) {
@@ -73,6 +98,7 @@ app.post('/scorecard', async (req, res) => {
   }
 });
 
+// ── Analyze ───────────────────────────────────────────────
 app.post('/analyze', async (req, res) => {
   try {
     if (conversationHistory.length === 0) {
@@ -123,6 +149,51 @@ Use any [Voice: ...] metrics in the rep's messages to inform tonality and timing
   }
 });
 
+// ── Save session ──────────────────────────────────────────
+app.post('/save-session', async (req, res) => {
+  try {
+    const { repName, duration, repMessages, analysis } = req.body;
+    if (!repName || !analysis) {
+      return res.status(400).json({ error: 'repName and analysis are required.' });
+    }
+    await pool.query(
+      'INSERT INTO sessions (rep_name, duration, rep_messages, analysis) VALUES ($1, $2, $3, $4)',
+      [repName.trim(), duration || 0, repMessages || 0, JSON.stringify(analysis)]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Save session error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Get sessions ──────────────────────────────────────────
+app.get('/sessions', async (req, res) => {
+  try {
+    const { name } = req.query;
+    if (!name) return res.status(400).json({ error: 'name query param required.' });
+
+    const result = await pool.query(
+      'SELECT * FROM sessions WHERE LOWER(rep_name) = LOWER($1) ORDER BY created_at DESC LIMIT 100',
+      [name.trim()]
+    );
+
+    const sessions = result.rows.map(row => ({
+      id:          row.id,
+      date:        row.created_at,
+      duration:    row.duration,
+      repMessages: row.rep_messages,
+      analysis:    row.analysis,
+    }));
+
+    res.json({ sessions });
+  } catch (err) {
+    console.error('Get sessions error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Reset ─────────────────────────────────────────────────
 app.post('/reset', (req, res) => {
   conversationHistory = [];
   res.json({ success: true });
