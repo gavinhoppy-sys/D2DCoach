@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>D2D Roofing Sales Coach</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D2D Coach</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -11,920 +11,245 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:          #161616;
-      --bg2:         #1e1e1e;
-      --surface:     rgba(255,255,255,0.04);
-      --surface2:    rgba(255,255,255,0.07);
-      --border:      rgba(255,255,255,0.08);
-      --border2:     rgba(255,255,255,0.14);
-      --text:        #f0f0f0;
-      --text2:       rgba(255,255,255,0.55);
-      --text3:       rgba(255,255,255,0.3);
-      --purple:      #8b5cf6;
-      --purple2:     #7c3aed;
-      --purple-glow: rgba(139,92,246,0.35);
-      --green:       #10b981;
-      --green-glow:  rgba(16,185,129,0.3);
-      --red:         #ef4444;
-      --amber:       #f59e0b;
+      --bg:        #161616;
+      --bg2:       #1e1e1e;
+      --surface:   rgba(255,255,255,0.04);
+      --surface2:  rgba(255,255,255,0.07);
+      --border:    rgba(255,255,255,0.08);
+      --border2:   rgba(255,255,255,0.14);
+      --text:      #f0f0f0;
+      --text2:     rgba(255,255,255,0.55);
+      --text3:     rgba(255,255,255,0.3);
+      --purple:    #8b5cf6;
+      --purple2:   #7c3aed;
+      --purple-glow: rgba(139,92,246,0.3);
+      --green:     #10b981;
+      --green2:    #059669;
+      --green-glow: rgba(16,185,129,0.3);
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg); color: var(--text);
-      height: 100vh; height: 100dvh;
-      display: flex; flex-direction: column; overflow: hidden;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px 20px;
     }
 
-    /* ── Header ── */
-    .header {
-      background: rgba(22,22,22,0.95);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 20px;
-      display: flex; justify-content: space-between; align-items: center; gap: 10px;
-      flex-shrink: 0; z-index: 10;
-    }
-    .header-brand { display: flex; align-items: center; gap: 10px; }
-    .brand-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--purple), #ec4899);
-      box-shadow: 0 0 10px var(--purple-glow); flex-shrink: 0;
-    }
-    .header-title h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
-    .header-title p  { font-size: 11px; color: var(--text2); margin-top: 1px; }
-    .header-actions  { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-
-    .icon-btn {
-      background: var(--surface); border: 1px solid var(--border);
-      color: var(--text2); width: 32px; height: 32px; border-radius: 8px;
-      font-size: 14px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .icon-btn:hover { background: var(--surface2); border-color: var(--border2); color: var(--text); }
-
-    .stop-conv-btn {
-      background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5;
-      padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
-      cursor: pointer; display: none; align-items: center; gap: 5px; font-family: inherit;
-    }
-    .stop-conv-btn.visible { display: flex; }
-    .stop-conv-btn:hover { background: rgba(239,68,68,0.2); }
-
-    .hub-link, .kb-btn {
-      color: var(--text2); text-decoration: none; font-family: inherit;
-      font-size: 12px; font-weight: 500;
-      padding: 5px 12px; border-radius: 8px;
-      background: var(--surface); border: 1px solid var(--border);
-      white-space: nowrap; cursor: pointer;
-      transition: all 0.15s;
-    }
-    .hub-link:hover, .kb-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
-
-    .end-btn {
-      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171;
-      padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
-      cursor: pointer; white-space: nowrap; font-family: inherit; transition: all 0.15s;
-    }
-    .end-btn:hover:not(:disabled) { background: rgba(239,68,68,0.2); }
-    .end-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    /* ── Chat ── */
-    .chat-area {
-      flex: 1; overflow-y: auto;
-      padding: 20px 16px; display: flex; flex-direction: column; gap: 12px;
-      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
-    }
-    .chat-area::-webkit-scrollbar { width: 4px; }
-    .chat-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-
-    .welcome {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 20px;
-      text-align: center; color: var(--text2); font-size: 14px; line-height: 1.6;
-    }
-    .welcome strong { display: block; font-size: 17px; color: var(--text); font-weight: 700; margin-bottom: 8px; letter-spacing: -0.3px; }
-    .welcome .key { color: var(--purple); font-weight: 600; }
-
-    /* Rep bubbles */
-    .rep-label { align-self: flex-end; font-size: 11px; color: var(--text3); padding-right: 4px; }
-    .rep-wrap  { align-self: flex-end; max-width: 76%; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-    .rep-bubble {
-      background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white;
-      padding: 10px 15px; border-radius: 16px 16px 4px 16px;
-      font-size: 14px; line-height: 1.5; word-wrap: break-word;
-      box-shadow: 0 4px 20px rgba(139,92,246,0.25);
-    }
-    .rep-metrics { font-size: 11px; color: var(--text3); padding-right: 4px; }
-
-    .live-preview {
-      align-self: flex-end; max-width: 76%;
-      background: rgba(139,92,246,0.08); border: 1px dashed rgba(139,92,246,0.35);
-      color: var(--text2); padding: 10px 15px;
-      border-radius: 16px 16px 4px 16px;
-      font-size: 14px; font-style: italic; word-wrap: break-word; min-width: 48px;
+    /* Subtle background glow */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 60% 50% at 30% 40%, rgba(139,92,246,0.08) 0%, transparent 70%),
+                  radial-gradient(ellipse 50% 40% at 70% 65%, rgba(16,185,129,0.06) 0%, transparent 70%);
     }
 
-    /* Homeowner bubbles */
-    .hw-group { display: flex; flex-direction: column; gap: 8px; }
-    .hw-bubble {
-      align-self: flex-start; max-width: 76%;
-      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-      padding: 10px 15px; border-radius: 16px 16px 16px 4px;
-      font-size: 14px; line-height: 1.5; word-wrap: break-word; backdrop-filter: blur(10px);
+    /* ── Brand ── */
+    .brand {
+      text-align: center; margin-bottom: 48px; position: relative;
     }
-    .coach-note {
-      background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
-      border-left: 3px solid var(--amber); border-radius: 4px 12px 12px 4px;
-      padding: 10px 14px; font-size: 13px; color: #fcd34d; line-height: 1.55; word-wrap: break-word;
+    .brand-logo {
+      width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 16px;
+      background: linear-gradient(135deg, var(--purple2), var(--purple));
+      display: flex; align-items: center; justify-content: center; font-size: 30px;
+      box-shadow: 0 12px 32px var(--purple-glow);
     }
-    .coach-tag {
-      display: inline-block; background: rgba(245,158,11,0.2); color: var(--amber);
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.8px; padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;
+    .brand h1 {
+      font-size: 32px; font-weight: 900; letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.6));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .brand p {
+      font-size: 15px; color: var(--text2); margin-top: 6px; line-height: 1.5;
     }
 
-    /* Scorecard */
-    .scorecard { background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; padding: 20px; }
-    .scorecard h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 16px; text-align: center; }
-    .score-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
-    .score-badge { background: var(--surface2); border: 1px solid var(--border2); color: var(--purple); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
-    .score-body .score-cat  { font-weight: 600; font-size: 13px; color: var(--text); }
-    .score-body .score-text { font-size: 12px; color: var(--text2); margin-top: 2px; line-height: 1.4; }
-    .overall-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 14px; }
-    .overall-label { font-weight: 600; font-size: 14px; color: var(--text2); }
-    .overall-badge { background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; font-size: 20px; font-weight: 800; padding: 6px 20px; border-radius: 12px; box-shadow: 0 4px 16px var(--purple-glow); }
-    .scorecard-raw { font-size: 13px; color: var(--text2); line-height: 1.6; white-space: pre-wrap; }
-
-    /* Coach summary */
-    .coach-summary {
-      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(139,92,246,0.08));
-      border: 1px solid rgba(139,92,246,0.3); border-radius: 16px; padding: 20px;
+    /* ── Role cards ── */
+    .cards {
+      display: flex; gap: 16px; width: 100%; max-width: 680px;
+      flex-wrap: wrap;
     }
-    .coach-summary h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--purple); margin-bottom: 14px; font-weight: 600; }
-    .cs-score { font-size: 52px; font-weight: 900; text-align: center; margin-bottom: 4px; letter-spacing: -2px; }
-    .cs-score.red    { color: #ef4444; text-shadow: 0 0 20px rgba(239,68,68,0.4); }
-    .cs-score.orange { color: #fb923c; text-shadow: 0 0 20px rgba(251,146,60,0.4); }
-    .cs-score.green  { color: var(--green); text-shadow: 0 0 20px var(--green-glow); }
-    .cs-score.gold   { color: #fbbf24; text-shadow: 0 0 20px rgba(251,191,36,0.4); }
-    .cs-label { text-align: center; font-size: 11px; color: var(--text3); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.8px; }
-    .cs-summary { font-size: 13px; line-height: 1.65; color: var(--text2); margin-bottom: 16px; }
-    .cs-row { display: flex; gap: 10px; }
-    .cs-box { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
-    .cs-box-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); margin-bottom: 6px; }
-    .cs-box-text  { font-size: 12px; line-height: 1.45; color: var(--text2); }
 
-    /* Typing */
-    .typing { display: flex; gap: 5px; align-items: center; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px 16px 16px 4px; align-self: flex-start; }
-    .dot { width: 7px; height: 7px; background: var(--text3); border-radius: 50%; animation: bounce 1.2s infinite; }
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
-    .error-msg { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 10px 14px; color: #fca5a5; font-size: 13px; }
-
-    /* ── Conv bar ── */
-    .conv-bar {
-      background: rgba(22,22,22,0.95); backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border);
-      padding: 16px 20px; padding-bottom: max(16px, env(safe-area-inset-bottom));
-      flex-shrink: 0; display: flex; flex-direction: column; gap: 12px;
+    .role-card {
+      flex: 1; min-width: 280px;
+      background: var(--bg2); border-radius: 22px; padding: 32px 28px;
+      border: 1px solid var(--border2);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden;
     }
-    .status-bar { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 20px; font-size: 13px; font-weight: 500; color: var(--text3); }
-    .status-bar.listening  { color: var(--red); }
-    .status-bar.speaking   { color: var(--green); }
-    .status-bar.processing { color: var(--purple); }
-
-    .conv-main-btn {
-      width: 100%; padding: 14px; border-radius: 12px; border: none;
-      font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
-      transition: all 0.15s; letter-spacing: -0.2px;
+    .role-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
     }
-    .conv-main-btn:active { transform: scale(0.98); }
-    .conv-main-btn.idle       { background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; box-shadow: 0 4px 20px var(--purple-glow); }
-    .conv-main-btn.idle:hover { box-shadow: 0 6px 28px rgba(139,92,246,0.5); }
-    .conv-main-btn.send-now   { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
-    .conv-main-btn.send-now:hover { background: rgba(239,68,68,0.18); }
-    .conv-main-btn.interrupt  { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
-    .conv-main-btn.interrupt:hover { background: rgba(16,185,129,0.18); }
-    .conv-main-btn:disabled   { background: var(--surface); color: var(--text3); cursor: not-allowed; transform: none; box-shadow: none; border: 1px solid var(--border); }
+    .role-card.rep::before    { background: linear-gradient(90deg, var(--purple2), var(--purple)); }
+    .role-card.manager::before { background: linear-gradient(90deg, var(--green2), var(--green)); }
 
-    .wave-bars { display: flex; align-items: center; gap: 3px; height: 16px; }
-    .wave-bar  { width: 2.5px; border-radius: 2px; animation: wavebar 0.9s ease-in-out infinite; }
-    .wave-bar:nth-child(1) { animation-delay: 0.0s;  height: 6px; }
-    .wave-bar:nth-child(2) { animation-delay: 0.15s; height: 12px; }
-    .wave-bar:nth-child(3) { animation-delay: 0.3s;  height: 16px; }
-    .wave-bar:nth-child(4) { animation-delay: 0.15s; height: 12px; }
-    .wave-bar:nth-child(5) { animation-delay: 0.0s;  height: 6px; }
-    @keyframes wavebar { 0%,100%{transform:scaleY(0.4)} 50%{transform:scaleY(1)} }
-    .wave-bar.red   { background: var(--red); }
-    .wave-bar.green { background: var(--green); }
-
-    .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(139,92,246,0.2); border-top-color: var(--purple); animation: spin 0.7s linear infinite; flex-shrink: 0; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .text-fallback { display: none; gap: 8px; align-items: flex-end; }
-    .text-fallback textarea { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px 14px; font-size: 14px; line-height: 1.4; resize: none; outline: none; font-family: inherit; }
-    .text-fallback textarea:focus { border-color: var(--purple); }
-    .text-fallback textarea::placeholder { color: var(--text3); }
-    .send-text-btn { background: var(--purple); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
-
-    .new-session-area { text-align: center; padding: 6px 0 2px; }
-    .new-btn { background: none; border: 1px solid var(--border2); color: var(--text2); padding: 8px 22px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-    .new-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--purple); }
-
-    /* ── Name modal ── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-    .modal-overlay.hidden { display: none; }
-    .modal-box { background: #1e1e1e; border: 1px solid var(--border2); border-radius: 20px; padding: 36px 32px; max-width: 380px; width: 100%; box-shadow: 0 32px 80px rgba(0,0,0,0.6); text-align: center; }
-    .modal-icon { width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 20px; background: linear-gradient(135deg, var(--purple2), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 8px 24px var(--purple-glow); }
-    .modal-box h2 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; letter-spacing: -0.4px; }
-    .modal-box p  { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
-    .modal-input { width: 100%; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 12px 16px; font-size: 15px; outline: none; font-family: inherit; margin-bottom: 12px; }
-    .modal-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
-    .modal-input::placeholder { color: var(--text3); }
-    .modal-submit { width: 100%; background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px var(--purple-glow); }
-    .modal-submit:hover { box-shadow: 0 6px 24px rgba(139,92,246,0.5); }
-
-    /* ── Knowledge modal ── */
-    .k-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-    .k-overlay.hidden { display: none; }
-    .k-modal { background: #1e1e1e; border: 1px solid var(--border2); border-radius: 20px; padding: 28px; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,0.6); }
-    .k-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-    .k-header h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
-    .k-header p  { font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.5; }
-    .k-close { background: var(--surface); border: 1px solid var(--border); color: var(--text2); width: 30px; height: 30px; border-radius: 8px; font-size: 14px; cursor: pointer; flex-shrink: 0; }
-    .k-close:hover { background: var(--surface2); color: var(--text); }
-
-    .k-tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 18px; }
-    .k-tab { flex: 1; padding: 8px; border-radius: 7px; border: none; background: none; color: var(--text2); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-    .k-tab.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
-
-    .k-panel { display: none; }
-    .k-panel.active { display: block; }
-
-    /* Upload tab */
-    .k-drop-zone {
-      border: 2px dashed var(--border2); border-radius: 12px; padding: 32px 20px;
-      text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 12px;
+    .card-icon {
+      width: 50px; height: 50px; border-radius: 14px; margin-bottom: 18px;
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
     }
-    .k-drop-zone:hover, .k-drop-zone.drag-over { border-color: var(--purple); background: rgba(139,92,246,0.05); }
-    .k-drop-icon { font-size: 32px; margin-bottom: 10px; }
-    .k-drop-text { font-size: 14px; color: var(--text2); }
-    .k-drop-sub  { font-size: 12px; color: var(--text3); margin-top: 4px; }
+    .rep    .card-icon { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.25); }
+    .manager .card-icon { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.22); }
 
-    /* Paste tab */
-    .k-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .k-input { width: 100%; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 11px 14px; font-size: 14px; outline: none; font-family: inherit; margin-bottom: 12px; }
-    .k-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
-    .k-input::placeholder { color: var(--text3); }
-    .k-textarea { width: 100%; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 11px 14px; font-size: 13px; line-height: 1.55; outline: none; font-family: inherit; resize: vertical; min-height: 120px; margin-bottom: 12px; }
-    .k-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
-    .k-textarea::placeholder { color: var(--text3); }
-    .k-add-btn { width: 100%; background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px var(--purple-glow); }
-    .k-add-btn:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
-    .k-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .card-title { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 6px; }
+    .card-desc  { font-size: 13px; color: var(--text2); line-height: 1.55; margin-bottom: 24px; }
 
-    /* Files list */
-    .k-divider { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); font-weight: 600; margin: 20px 0 12px; }
-    .k-file-list { display: flex; flex-direction: column; gap: 8px; }
-    .k-file-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start; }
-    .k-file-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
-    .k-file-info { flex: 1; min-width: 0; }
-    .k-file-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .k-file-preview { font-size: 11px; color: var(--text3); margin-top: 3px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .k-file-del { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; flex-shrink: 0; padding: 0 2px; line-height: 1; }
-    .k-file-del:hover { color: var(--red); }
-    .k-empty { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
-    .k-loading { text-align: center; padding: 16px; color: var(--text3); font-size: 13px; }
+    /* Inputs */
+    .field-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--text3); margin-bottom: 7px;
+    }
+    .field-input {
+      width: 100%; background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text); border-radius: 11px;
+      padding: 12px 14px; font-size: 15px; outline: none;
+      font-family: inherit; margin-bottom: 12px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .field-input::placeholder { color: var(--text3); }
+    .field-input.pin-field { letter-spacing: 4px; font-size: 18px; text-align: center; }
+
+    .rep .field-input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+    }
+    .manager .field-input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+    }
+    .field-input.shake {
+      animation: shake 0.35s ease;
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60%  { transform: translateX(-6px); }
+      40%, 80%  { transform: translateX(6px); }
+    }
+
+    /* Buttons */
+    .enter-btn {
+      width: 100%; padding: 13px; border-radius: 11px;
+      border: none; font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: box-shadow 0.15s, opacity 0.15s;
+    }
+    .enter-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .rep .enter-btn {
+      background: linear-gradient(135deg, var(--purple2), var(--purple));
+      color: white;
+      box-shadow: 0 4px 16px var(--purple-glow);
+    }
+    .rep .enter-btn:hover:not(:disabled) { box-shadow: 0 6px 22px rgba(139,92,246,0.5); }
+
+    .manager .enter-btn {
+      background: linear-gradient(135deg, var(--green2), var(--green));
+      color: white;
+      box-shadow: 0 4px 16px var(--green-glow);
+    }
+    .manager .enter-btn:hover:not(:disabled) { box-shadow: 0 6px 22px rgba(16,185,129,0.4); }
+
+    .field-error {
+      font-size: 12px; color: #f87171; margin-top: -6px;
+      margin-bottom: 10px; min-height: 16px;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 36px; font-size: 12px; color: var(--text3); text-align: center;
+    }
   </style>
 </head>
 <body>
 
-<!-- Name modal -->
-<div class="modal-overlay hidden" id="nameModal">
-  <div class="modal-box">
-    <div class="modal-icon">🎯</div>
-    <h2>Welcome, Rep</h2>
-    <p>Enter your name so we can track your progress over time.</p>
-    <input class="modal-input" id="nameInput" type="text" placeholder="Your first name" maxlength="40"
-      onkeydown="if(event.key==='Enter') submitName()">
-    <button class="modal-submit" onclick="submitName()">Start Training</button>
+  <div class="brand">
+    <div class="brand-logo">🏠</div>
+    <h1>D2D Coach</h1>
+    <p>AI-powered door-to-door sales training</p>
   </div>
-</div>
 
-<!-- Knowledge base modal -->
-<div class="k-overlay hidden" id="kbModal">
-  <div class="k-modal">
-    <div class="k-header">
-      <div>
-        <h2>Knowledge Base</h2>
-        <p>Upload scripts and training docs — the coach will reference them during sessions.</p>
-      </div>
-      <button class="k-close" onclick="closeKB()">✕</button>
+  <div class="cards">
+
+    <!-- Rep card -->
+    <div class="role-card rep">
+      <div class="card-icon">🧑‍💼</div>
+      <div class="card-title">Sales Rep</div>
+      <div class="card-desc">Practice your pitch against an AI homeowner, get live coaching, and track your progress over time.</div>
+      <div class="field-label">Your name</div>
+      <input class="field-input" id="repName" type="text" placeholder="First name" maxlength="40"
+        onkeydown="if(event.key==='Enter') enterAsRep()">
+      <button class="enter-btn" onclick="enterAsRep()">Enter as Rep →</button>
     </div>
 
-    <div class="k-tabs">
-      <button class="k-tab active" id="tabUpload" onclick="switchTab('upload')">📁 Upload File</button>
-      <button class="k-tab" id="tabPaste"  onclick="switchTab('paste')">✏️ Paste Text</button>
+    <!-- Manager card -->
+    <div class="role-card manager">
+      <div class="card-icon">📊</div>
+      <div class="card-title">Sales Manager</div>
+      <div class="card-desc">View your team's performance, track rep progress, and identify areas for improvement across all sessions.</div>
+      <div class="field-label">Manager PIN</div>
+      <input class="field-input pin-field" id="managerPin" type="password" placeholder="••••" maxlength="20"
+        onkeydown="if(event.key==='Enter') enterAsManager()">
+      <div class="field-error" id="pinError"></div>
+      <button class="enter-btn" id="managerBtn" onclick="enterAsManager()">Enter as Manager →</button>
     </div>
 
-    <!-- Upload panel -->
-    <div class="k-panel active" id="panelUpload">
-      <div class="k-drop-zone" id="dropZone"
-        onclick="document.getElementById('fileInput').click()"
-        ondragover="event.preventDefault(); this.classList.add('drag-over')"
-        ondragleave="this.classList.remove('drag-over')"
-        ondrop="handleDrop(event)">
-        <div class="k-drop-icon">📄</div>
-        <div class="k-drop-text">Drop a .txt or .md file here</div>
-        <div class="k-drop-sub">or click to browse</div>
-      </div>
-      <input type="file" id="fileInput" accept=".txt,.md,.csv" style="display:none" onchange="handleFileSelect(event)">
-    </div>
-
-    <!-- Paste panel -->
-    <div class="k-panel" id="panelPaste">
-      <div class="k-label">Document name</div>
-      <input class="k-input" id="pasteFilename" type="text" placeholder="e.g. Cold Door Script, Objection Guide…" maxlength="80">
-      <div class="k-label">Content</div>
-      <textarea class="k-textarea" id="pasteContent" placeholder="Paste your sales script, training notes, or any reference material…"></textarea>
-      <button class="k-add-btn" id="pasteAddBtn" onclick="savePasted()">Add Document</button>
-    </div>
-
-    <!-- Files list -->
-    <div class="k-divider">Saved Documents</div>
-    <div class="k-file-list" id="kbFileList"><div class="k-loading">Loading…</div></div>
   </div>
-</div>
 
-<div class="header">
-  <div class="header-brand">
-    <div class="brand-dot"></div>
-    <div class="header-title">
-      <h1>D2D Coach</h1>
-      <p id="repNameDisplay">Roofing Sales Training</p>
-    </div>
-  </div>
-  <div class="header-actions">
-    <a href="/hub.html" class="hub-link">📋 Hub</a>
-    <button class="kb-btn" onclick="openKB()">📚 Scripts</button>
-    <button class="icon-btn" id="voiceBtn" onclick="toggleTTS()" title="Mute homeowner voice">🔊</button>
-    <button class="stop-conv-btn" id="stopConvBtn" onclick="stopConversation()">■ Stop</button>
-    <button class="end-btn" id="endBtn" onclick="endSession()">End Session</button>
-  </div>
-</div>
-
-<div class="chat-area" id="chatArea">
-  <div class="welcome">
-    <strong>Ready to practice?</strong>
-    Tap <span class="key">Start Conversation</span> — the mic opens, pitch the homeowner, and Claude responds in real time.
-    Your pace, energy, and delivery are graded after every turn.
-  </div>
-</div>
-
-<div class="conv-bar">
-  <div class="status-bar" id="statusBar"></div>
-  <button class="conv-main-btn idle" id="mainBtn" onclick="handleMainBtn()">▶ Start Conversation</button>
-  <div class="text-fallback" id="textFallback">
-    <textarea id="msgInput" placeholder="Type your pitch…" rows="2"
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTextMessage();}"></textarea>
-    <button class="send-text-btn" onclick="sendTextMessage()">Send</button>
-  </div>
-</div>
+  <div class="footer">D2D Coach &mdash; Roofing Sales Training</div>
 
 <script>
-  // ── Rep name ──────────────────────────────────────────────
-  let repName = localStorage.getItem('d2d_rep_name') || '';
-
-  function submitName() {
-    const val = document.getElementById('nameInput').value.trim();
-    if (!val) return;
-    repName = val;
-    localStorage.setItem('d2d_rep_name', repName);
-    document.getElementById('nameModal').classList.add('hidden');
-    document.getElementById('repNameDisplay').textContent = 'Hey, ' + repName;
-  }
-
-  // ── State ─────────────────────────────────────────────────
-  let convState        = 'idle';
-  let ttsEnabled       = true;
-  let sessionStartTime = null;
-  let repMessageCount  = 0;
-  let sendDebounce     = null;
-  let currentTranscript = '';
-
-  let audioCtx = null, analyser = null, micStream = null, analysisInterval = null;
-  let energySamples = [], freqSamples = [], recordStart = 0;
-
-  const hasSpeech = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-  let recognition = null;
-
-  let voices = [];
-  if (window.speechSynthesis) {
-    speechSynthesis.onvoiceschanged = () => { voices = speechSynthesis.getVoices(); };
-    setTimeout(() => { voices = speechSynthesis.getVoices(); }, 300);
-  }
-
-  // ── Boot ──────────────────────────────────────────────────
-  (function boot() {
-    if (!repName) {
-      document.getElementById('nameModal').classList.remove('hidden');
-      setTimeout(() => document.getElementById('nameInput').focus(), 100);
-    } else {
-      document.getElementById('nameModal').classList.add('hidden');
-      document.getElementById('repNameDisplay').textContent = 'Hey, ' + repName;
+  function enterAsRep() {
+    const name = document.getElementById('repName').value.trim();
+    if (!name) {
+      const inp = document.getElementById('repName');
+      inp.focus();
+      inp.classList.remove('shake');
+      void inp.offsetWidth;
+      inp.classList.add('shake');
+      setTimeout(() => inp.classList.remove('shake'), 400);
+      return;
     }
-    if (hasSpeech) {
-      setupRecognition();
-      document.getElementById('textFallback').style.display = 'none';
-    } else {
-      document.getElementById('textFallback').style.display = 'flex';
-      document.getElementById('mainBtn').style.display = 'none';
-      document.getElementById('statusBar').style.display = 'none';
-      document.getElementById('voiceBtn').style.display = 'none';
+    localStorage.setItem('d2d_rep_name', name);
+    window.location.href = '/hub.html';
+  }
+
+  async function enterAsManager() {
+    const pin = document.getElementById('managerPin').value.trim();
+    const errEl = document.getElementById('pinError');
+    const btn   = document.getElementById('managerBtn');
+    if (!pin) {
+      shakePin();
+      return;
     }
-  })();
-
-  // ── Speech recognition ────────────────────────────────────
-  function setupRecognition() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SR();
-    recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-US';
-
-    recognition.onresult = (e) => {
-      let final = '', interim = '';
-      for (let i = 0; i < e.results.length; i++) {
-        e.results[i].isFinal ? (final += e.results[i][0].transcript + ' ') : (interim += e.results[i][0].transcript);
-      }
-      currentTranscript = (final + interim).trim();
-      updateLivePreview(currentTranscript);
-
-      // ── Silence-based auto-send ──
-      // Reset the timer on ANY speech activity (interim or final).
-      // Only fires after 5 seconds of true silence — won't cut you off mid-sentence.
-      const wordCount = currentTranscript.trim().split(/\s+/).filter(Boolean).length;
-      if (wordCount >= 3) {
-        clearTimeout(sendDebounce);
-        sendDebounce = setTimeout(() => {
-          if (convState === 'listening') triggerAutoSend();
-        }, 5000);
-      }
-    };
-
-    recognition.onerror = (e) => { if (e.error !== 'no-speech' && e.error !== 'aborted') console.error('SR:', e.error); };
-    recognition.onend   = () => { if (convState === 'listening') { try { recognition.start(); } catch (_) {} } };
-  }
-
-  // ── Main button ───────────────────────────────────────────
-  function handleMainBtn() {
-    switch (convState) {
-      case 'idle':      startConversation(); break;
-      case 'listening': triggerAutoSend();   break;
-      case 'speaking':  interruptHomeowner(); break;
-    }
-  }
-
-  // ── Lifecycle ─────────────────────────────────────────────
-  async function startConversation() {
-    if (convState !== 'idle') return;
-    sessionStartTime = Date.now(); repMessageCount = 0;
-    setConvState('listening'); await openMic();
-  }
-
-  function stopConversation() {
-    clearTimeout(sendDebounce);
-    if (window.speechSynthesis) speechSynthesis.cancel();
-    closeMic(); clearLivePreview(); currentTranscript = '';
-    setConvState('idle');
-  }
-
-  function interruptHomeowner() {
-    if (window.speechSynthesis) speechSynthesis.cancel();
-    setConvState('listening'); openMic();
-  }
-
-  // ── Mic ───────────────────────────────────────────────────
-  async function openMic() {
+    errEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
     try {
-      micStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false,
-      });
-    } catch (_) { alert('Microphone access denied.'); setConvState('idle'); return; }
-
-    audioCtx = new AudioContext(); analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048;
-    audioCtx.createMediaStreamSource(micStream).connect(analyser);
-    energySamples = []; freqSamples = []; recordStart = Date.now(); currentTranscript = '';
-    try { recognition.start(); } catch (_) {}
-    analysisInterval = setInterval(sampleAudio, 150);
-  }
-
-  function closeMic() {
-    clearInterval(analysisInterval);
-    try { recognition.stop(); } catch (_) {}
-    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-    if (audioCtx)  { audioCtx.close().catch(() => {}); audioCtx = null; }
-    analyser = null;
-  }
-
-  // ── Audio sampling ────────────────────────────────────────
-  function sampleAudio() {
-    if (!analyser) return;
-    const td = new Float32Array(analyser.fftSize);
-    analyser.getFloatTimeDomainData(td);
-    const rms = Math.sqrt(td.reduce((s, v) => s + v * v, 0) / td.length);
-    if (rms > 0.003) energySamples.push(rms);
-    const fd = new Uint8Array(analyser.frequencyBinCount);
-    analyser.getByteFrequencyData(fd);
-    const binHz = (audioCtx ? audioCtx.sampleRate : 44100) / analyser.fftSize;
-    const minBin = Math.floor(80 / binHz), maxBin = Math.min(Math.floor(1000 / binHz), fd.length - 1);
-    let maxVal = 0, maxIdx = 0;
-    for (let i = minBin; i <= maxBin; i++) { if (fd[i] > maxVal) { maxVal = fd[i]; maxIdx = i; } }
-    if (maxVal > 20) freqSamples.push(maxIdx * binHz);
-  }
-
-  // ── Auto-send ─────────────────────────────────────────────
-  function triggerAutoSend() {
-    clearTimeout(sendDebounce);
-    const text = currentTranscript.trim();
-    if (!text || convState !== 'listening') return;
-    const duration = (Date.now() - recordStart) / 1000;
-    const metrics  = buildMetrics(text, duration);
-    closeMic(); clearLivePreview(); currentTranscript = '';
-    setConvState('processing'); sendToServer(text, metrics);
-  }
-
-  async function sendToServer(text, metrics) {
-    const fullMsg = metrics ? `${text}\n\n[Voice: ${metrics}]` : text;
-    repMessageCount++;
-    appendRepMsg(text, metrics); showTyping();
-    try {
-      const res  = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: fullMsg }) });
-      const data = await res.json();
-      removeTyping();
-      if (data.error) { showError(data.error); setConvState('idle'); }
-      else { appendHomeownerResponse(data.response); setConvState('speaking'); speakHomeowner(data.response); }
-    } catch (_) { removeTyping(); showError('Could not reach the server.'); setConvState('idle'); }
-  }
-
-  // ── Metrics ───────────────────────────────────────────────
-  function buildMetrics(transcript, duration) {
-    const words = transcript.split(/\s+/).filter(w => w.length > 0);
-    const wpm   = duration > 1 ? Math.round((words.length / duration) * 60) : 0;
-    let energy  = '';
-    if (energySamples.length > 0) {
-      const avg = energySamples.reduce((a, b) => a + b, 0) / energySamples.length;
-      energy = avg < 0.025 ? 'Soft energy' : avg < 0.06 ? 'Moderate energy' : 'Strong energy';
-    }
-    let pitch = '';
-    if (freqSamples.length > 5) {
-      const mean = freqSamples.reduce((a, b) => a + b, 0) / freqSamples.length;
-      const sd   = Math.sqrt(freqSamples.reduce((s, v) => s + (v - mean) ** 2, 0) / freqSamples.length);
-      pitch = sd < 35 ? 'Monotone' : sd < 85 ? 'Natural variation' : 'Dynamic pitch';
-    }
-    const fillers = (transcript.match(/\b(um+|uh+|like|you know|basically|literally|right\?|so+)\b/gi) || []).length;
-    const parts = [];
-    if (wpm > 0)      parts.push(`${wpm} WPM`);
-    if (energy)       parts.push(energy);
-    if (pitch)        parts.push(pitch);
-    if (fillers > 0)  parts.push(`${fillers} filler word${fillers !== 1 ? 's' : ''}`);
-    if (duration > 0) parts.push(`${Math.round(duration)}s`);
-    return parts.join(' · ');
-  }
-
-  // ── TTS homeowner ─────────────────────────────────────────
-  function speakHomeowner(rawText) {
-    const coachIdx = rawText.indexOf('COACH:');
-    const text = (coachIdx !== -1 ? rawText.slice(0, coachIdx) : rawText).trim();
-    const resume = () => { if (convState === 'speaking') setTimeout(() => { setConvState('listening'); openMic(); }, 500); };
-    if (!text || !ttsEnabled || !window.speechSynthesis) { resume(); return; }
-    speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.rate = 0.92; utt.pitch = 1.0;
-    const preferred =
-      voices.find(v => v.name === 'Google UK English Female') ||
-      voices.find(v => v.name === 'Google US English')        ||
-      voices.find(v => v.name === 'Microsoft Zira - English (United States)') ||
-      voices.find(v => v.lang.startsWith('en') && /natural|neural|online/i.test(v.name)) ||
-      voices.find(v => v.lang === 'en-US') ||
-      voices.find(v => v.lang.startsWith('en'));
-    if (preferred) utt.voice = preferred;
-    utt.onend = resume; utt.onerror = resume;
-    speechSynthesis.speak(utt);
-  }
-
-  function toggleTTS() {
-    ttsEnabled = !ttsEnabled;
-    document.getElementById('voiceBtn').textContent = ttsEnabled ? '🔊' : '🔇';
-    if (!ttsEnabled && window.speechSynthesis) {
-      speechSynthesis.cancel();
-      if (convState === 'speaking') { setConvState('listening'); openMic(); }
-    }
-  }
-
-  // ── State UI ──────────────────────────────────────────────
-  function setConvState(state) {
-    convState = state;
-    const statusEl = document.getElementById('statusBar');
-    const btn      = document.getElementById('mainBtn');
-    const stopBtn  = document.getElementById('stopConvBtn');
-    const endBtn   = document.getElementById('endBtn');
-    const waveBars = (c) => `<div class="wave-bars">${Array(5).fill(`<div class="wave-bar ${c}"></div>`).join('')}</div>`;
-    const inConv = state !== 'idle' && state !== 'ended';
-    stopBtn.classList.toggle('visible', inConv);
-    endBtn.disabled = state === 'processing';
-    switch (state) {
-      case 'idle':
-        statusEl.innerHTML = ''; statusEl.className = 'status-bar';
-        btn.textContent = '▶ Start Conversation'; btn.className = 'conv-main-btn idle'; btn.disabled = false;
-        break;
-      case 'listening':
-        statusEl.innerHTML = `${waveBars('red')} <span>Listening…</span>`; statusEl.className = 'status-bar listening';
-        btn.textContent = '⏎ Send Now'; btn.className = 'conv-main-btn send-now'; btn.disabled = false;
-        break;
-      case 'processing':
-        statusEl.innerHTML = '<div class="spinner"></div><span>Processing…</span>'; statusEl.className = 'status-bar processing';
-        btn.textContent = 'Processing…'; btn.className = 'conv-main-btn'; btn.disabled = true;
-        break;
-      case 'speaking':
-        statusEl.innerHTML = `${waveBars('green')} <span>Homeowner speaking…</span>`; statusEl.className = 'status-bar speaking';
-        btn.textContent = '⏭ Interrupt'; btn.className = 'conv-main-btn interrupt'; btn.disabled = false;
-        break;
-      case 'ended':
-        statusEl.innerHTML = ''; statusEl.className = 'status-bar';
-        btn.textContent = 'Session Ended'; btn.className = 'conv-main-btn'; btn.disabled = true;
-        break;
-    }
-  }
-
-  // ── Live preview ──────────────────────────────────────────
-  function updateLivePreview(text) {
-    let el = document.getElementById('livePreview');
-    if (!el) { el = document.createElement('div'); el.id = 'livePreview'; el.className = 'live-preview'; document.getElementById('chatArea').appendChild(el); }
-    el.textContent = text || '…'; scrollBottom();
-  }
-  function clearLivePreview() { const el = document.getElementById('livePreview'); if (el) el.remove(); }
-
-  // ── Text fallback ─────────────────────────────────────────
-  async function sendTextMessage() {
-    const input = document.getElementById('msgInput');
-    const text  = (input.value || '').trim();
-    if (!text) return;
-    input.value = ''; appendRepMsg(text, ''); showTyping();
-    try {
-      const res  = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
-      const data = await res.json();
-      removeTyping();
-      if (data.error) showError(data.error);
-      else appendHomeownerResponse(data.response);
-    } catch (_) { removeTyping(); showError('Could not reach the server.'); }
-  }
-
-  // ── DOM helpers ───────────────────────────────────────────
-  function esc(t) { return (t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function scrollBottom() { const c = document.getElementById('chatArea'); c.scrollTop = c.scrollHeight; }
-
-  function appendRepMsg(text, metrics) {
-    const chat = document.getElementById('chatArea');
-    const lbl = document.createElement('div'); lbl.className = 'rep-label'; lbl.textContent = 'You';
-    const wrap = document.createElement('div'); wrap.className = 'rep-wrap';
-    const bub  = document.createElement('div'); bub.className = 'rep-bubble'; bub.textContent = text;
-    wrap.appendChild(bub);
-    if (metrics) { const m = document.createElement('div'); m.className = 'rep-metrics'; m.textContent = '🎤 ' + metrics; wrap.appendChild(m); }
-    chat.appendChild(lbl); chat.appendChild(wrap); scrollBottom();
-  }
-
-  function appendHomeownerResponse(raw) {
-    const chat     = document.getElementById('chatArea');
-    const coachIdx = raw.indexOf('COACH:');
-    const hwText   = coachIdx !== -1 ? raw.slice(0, coachIdx).trim() : raw.trim();
-    const coachTxt = coachIdx !== -1 ? raw.slice(coachIdx + 6).trim() : null;
-    const group = document.createElement('div'); group.className = 'hw-group';
-    const bub   = document.createElement('div'); bub.className = 'hw-bubble'; bub.textContent = hwText;
-    group.appendChild(bub);
-    if (coachTxt) {
-      const note = document.createElement('div'); note.className = 'coach-note';
-      note.innerHTML = `<span class="coach-tag">Coach</span><div>${esc(coachTxt)}</div>`;
-      group.appendChild(note);
-    }
-    chat.appendChild(group); scrollBottom();
-  }
-
-  function showTyping() { const chat = document.getElementById('chatArea'); const el = document.createElement('div'); el.className = 'typing'; el.id = 'typing'; el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>'; chat.appendChild(el); scrollBottom(); }
-  function removeTyping() { const el = document.getElementById('typing'); if (el) el.remove(); }
-  function showError(msg) { const chat = document.getElementById('chatArea'); const el = document.createElement('div'); el.className = 'error-msg'; el.textContent = '⚠ ' + msg; chat.appendChild(el); scrollBottom(); }
-
-  // ── End session ───────────────────────────────────────────
-  async function endSession() {
-    if (convState === 'ended') return;
-    clearTimeout(sendDebounce);
-    if (window.speechSynthesis) speechSynthesis.cancel();
-    closeMic(); clearLivePreview();
-    setConvState('ended');
-    document.getElementById('endBtn').disabled = true;
-    showTyping();
-    try {
-      const sessionDuration = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : 0;
-      const [scorecardRes, analyzeRes] = await Promise.all([
-        fetch('/scorecard', { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
-        fetch('/analyze',   { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
-      ]);
-      const [scorecardData, analyzeData] = await Promise.all([scorecardRes.json(), analyzeRes.json()]);
-      removeTyping();
-      if (scorecardData.scorecard) appendScorecard(scorecardData.scorecard);
-      else showError(scorecardData.error || 'Failed to generate scorecard.');
-      if (analyzeData.analysis) {
-        appendCoachSummary(analyzeData.analysis);
-        speakCoachFeedback(analyzeData.analysis);
-        await saveSession(analyzeData.analysis, sessionDuration);
+      const res = await fetch('/manager/reps?pin=' + encodeURIComponent(pin));
+      if (res.status === 401) {
+        shakePin();
+        errEl.textContent = 'Incorrect PIN.';
       } else {
-        showError('Could not generate analysis — session not saved. (' + (analyzeData.error || 'unknown error') + ')');
+        sessionStorage.setItem('mgr_pin', pin);
+        window.location.href = '/manager.html';
       }
-    } catch (_) { removeTyping(); showError('Could not reach the server.'); }
-    const chat = document.getElementById('chatArea');
-    const area = document.createElement('div'); area.className = 'new-session-area';
-    area.innerHTML = '<button class="new-btn" onclick="newSession()">↩ Start New Session</button>';
-    chat.appendChild(area); scrollBottom();
-  }
-
-  function appendScorecard(text) {
-    const chat = document.getElementById('chatArea');
-    const card = document.createElement('div'); card.className = 'scorecard';
-    let html = '<h2>Session Scorecard</h2>', hit = false;
-    for (const line of text.split('\n').filter(l => l.trim())) {
-      const m = line.match(/^(Opening|Objection Handling|Rapport|Closing Attempt|Overall)[:\s]+(\d+)\/10\s*[—–-]+\s*(.+)$/i);
-      if (!m) continue;
-      const [, cat, score, feedback] = m; hit = true;
-      if (cat.toLowerCase() === 'overall') {
-        html += `<div class="overall-row"><span class="overall-label">Overall Score</span><span class="overall-badge">${score}/10</span></div>
-                 <div style="text-align:center;font-size:12px;color:var(--text2);margin-top:8px;">${esc(feedback)}</div>`;
-      } else {
-        html += `<div class="score-row"><span class="score-badge">${score}/10</span><div class="score-body"><div class="score-cat">${esc(cat)}</div><div class="score-text">${esc(feedback)}</div></div></div>`;
-      }
-    }
-    if (!hit) html += `<div class="scorecard-raw">${esc(text)}</div>`;
-    card.innerHTML = html; chat.appendChild(card); scrollBottom();
-  }
-
-  function appendCoachSummary(analysis) {
-    const chat = document.getElementById('chatArea');
-    const color = scoreColor(analysis.overall);
-    const card = document.createElement('div'); card.className = 'coach-summary';
-    card.innerHTML = `
-      <h3>Coach Analysis</h3>
-      <div class="cs-score ${color}">${analysis.overall}%</div>
-      <div class="cs-label">Overall Score</div>
-      <div class="cs-summary">${esc(analysis.summary || '')}</div>
-      <div class="cs-row">
-        ${analysis.keyStrength    ? `<div class="cs-box"><div class="cs-box-title">💪 Strength</div><div class="cs-box-text">${esc(analysis.keyStrength)}</div></div>` : ''}
-        ${analysis.keyImprovement ? `<div class="cs-box"><div class="cs-box-title">🎯 Work On</div><div class="cs-box-text">${esc(analysis.keyImprovement)}</div></div>` : ''}
-      </div>`;
-    chat.appendChild(card); scrollBottom();
-  }
-
-  function scoreColor(n) { return n >= 85 ? 'gold' : n >= 70 ? 'green' : n >= 50 ? 'orange' : 'red'; }
-
-  function speakCoachFeedback(analysis) {
-    if (!window.speechSynthesis) return;
-    speechSynthesis.cancel();
-    const score  = analysis.overall;
-    const opener = score >= 85 ? 'Outstanding session!' : score >= 70 ? 'Good work today.' : score >= 50 ? 'Decent effort.' : 'Tough session, but every rep is a lesson.';
-    const parts  = [opener];
-    if (analysis.keyStrength)    parts.push('Your biggest strength was: ' + analysis.keyStrength);
-    if (analysis.keyImprovement) parts.push('For next time, focus on: ' + analysis.keyImprovement);
-    const utt = new SpeechSynthesisUtterance(parts.join(' '));
-    utt.rate = 0.9; utt.pitch = 1.0;
-    const coachVoice =
-      voices.find(v => v.name === 'Google UK English Male') ||
-      voices.find(v => v.name === 'Microsoft David - English (United States)') ||
-      voices.find(v => v.lang === 'en-US' && /male/i.test(v.name)) ||
-      voices.find(v => v.lang.startsWith('en'));
-    if (coachVoice) utt.voice = coachVoice;
-    speechSynthesis.speak(utt);
-  }
-
-  async function saveSession(analysis, duration) {
-    try {
-      const res = await fetch('/save-session', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repName: repName || 'Unknown', duration: duration || 0, repMessages: repMessageCount, analysis }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        showError('Session could not be saved: ' + (err.error || res.status));
-      }
-    } catch (err) { showError('Session could not be saved: ' + err.message); }
-  }
-
-  async function newSession() {
-    try { await fetch('/reset', { method: 'POST' }); } catch (_) {}
-    if (window.speechSynthesis) speechSynthesis.cancel();
-    document.getElementById('chatArea').innerHTML = `
-      <div class="welcome">
-        <strong>New session started</strong>
-        A fresh door is waiting. Tap <span class="key">Start Conversation</span> and begin your pitch.
-      </div>`;
-    document.getElementById('endBtn').disabled = false;
-    setConvState('idle');
-  }
-
-  // ── Knowledge base modal ──────────────────────────────────
-  function openKB() {
-    document.getElementById('kbModal').classList.remove('hidden');
-    loadKBFiles();
-  }
-  function closeKB() { document.getElementById('kbModal').classList.add('hidden'); }
-
-  function switchTab(tab) {
-    document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
-    document.getElementById('tabPaste').classList.toggle('active',  tab === 'paste');
-    document.getElementById('panelUpload').classList.toggle('active', tab === 'upload');
-    document.getElementById('panelPaste').classList.toggle('active',  tab === 'paste');
-  }
-
-  async function loadKBFiles() {
-    const list = document.getElementById('kbFileList');
-    list.innerHTML = '<div class="k-loading">Loading…</div>';
-    try {
-      const res  = await fetch('/knowledge-files');
-      const data = await res.json();
-      if (!data.files || data.files.length === 0) {
-        list.innerHTML = '<div class="k-empty">No documents yet. Upload one above.</div>';
-        return;
-      }
-      list.innerHTML = data.files.map(f => `
-        <div class="k-file-item" id="kf-${f.id}">
-          <div class="k-file-icon">📄</div>
-          <div class="k-file-info">
-            <div class="k-file-name">${esc(f.filename)}</div>
-            <div class="k-file-preview">${esc(f.preview)}…</div>
-          </div>
-          <button class="k-file-del" onclick="deleteKBFile(${f.id})" title="Delete">✕</button>
-        </div>`).join('');
     } catch (_) {
-      list.innerHTML = '<div class="k-empty">Could not load files.</div>';
+      errEl.textContent = 'Connection error. Try again.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Enter as Manager →';
     }
   }
 
-  async function deleteKBFile(id) {
-    if (!confirm('Delete this document?')) return;
-    try {
-      await fetch('/knowledge-file/' + id, { method: 'DELETE' });
-      const el = document.getElementById('kf-' + id);
-      if (el) el.remove();
-      const list = document.getElementById('kbFileList');
-      if (!list.querySelector('.k-file-item')) list.innerHTML = '<div class="k-empty">No documents yet.</div>';
-    } catch (_) { alert('Failed to delete.'); }
-  }
-
-  function handleDrop(e) {
-    e.preventDefault();
-    document.getElementById('dropZone').classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file);
-  }
-
-  function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (file) processFile(file);
-    e.target.value = '';
-  }
-
-  function processFile(file) {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const content = e.target.result;
-      await uploadKBFile(file.name, content);
-    };
-    reader.readAsText(file);
-  }
-
-  async function savePasted() {
-    const filename = document.getElementById('pasteFilename').value.trim();
-    const content  = document.getElementById('pasteContent').value.trim();
-    if (!filename || !content) { alert('Please fill in both the name and content.'); return; }
-    await uploadKBFile(filename, content);
-    document.getElementById('pasteFilename').value = '';
-    document.getElementById('pasteContent').value  = '';
-  }
-
-  async function uploadKBFile(filename, content) {
-    const btn = document.getElementById('pasteAddBtn');
-    if (btn) btn.disabled = true;
-    try {
-      const res  = await fetch('/knowledge-file', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename, content }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        await loadKBFiles();
-        switchTab('upload');
-      } else {
-        alert('Failed to save: ' + (data.error || 'Unknown error'));
-      }
-    } catch (_) { alert('Failed to upload file.'); }
-    finally { if (btn) btn.disabled = false; }
+  function shakePin() {
+    const inp = document.getElementById('managerPin');
+    inp.classList.remove('shake');
+    void inp.offsetWidth;
+    inp.classList.add('shake');
+    setTimeout(() => inp.classList.remove('shake'), 400);
+    inp.value = '';
+    inp.focus();
   }
 </script>
 </body>
