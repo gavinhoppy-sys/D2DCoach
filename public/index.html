@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>D2D Roofing Sales Coach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -25,14 +26,12 @@
       --green:       #10b981;
       --green-glow:  rgba(16,185,129,0.3);
       --red:         #ef4444;
-      --red-glow:    rgba(239,68,68,0.3);
       --amber:       #f59e0b;
     }
 
     body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg); color: var(--text);
       height: 100vh; height: 100dvh;
       display: flex; flex-direction: column; overflow: hidden;
     }
@@ -50,16 +49,14 @@
     .brand-dot {
       width: 8px; height: 8px; border-radius: 50%;
       background: linear-gradient(135deg, var(--purple), #ec4899);
-      box-shadow: 0 0 10px var(--purple-glow);
-      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--purple-glow); flex-shrink: 0;
     }
     .header-title h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
     .header-title p  { font-size: 11px; color: var(--text2); margin-top: 1px; }
     .header-actions  { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
     .icon-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: var(--surface); border: 1px solid var(--border);
       color: var(--text2); width: 32px; height: 32px; border-radius: 8px;
       font-size: 14px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
@@ -68,39 +65,32 @@
     .icon-btn:hover { background: var(--surface2); border-color: var(--border2); color: var(--text); }
 
     .stop-conv-btn {
-      background: rgba(239,68,68,0.12);
-      border: 1px solid rgba(239,68,68,0.25);
-      color: #fca5a5;
+      background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5;
       padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
-      cursor: pointer; display: none; align-items: center; gap: 5px;
-      font-family: inherit;
+      cursor: pointer; display: none; align-items: center; gap: 5px; font-family: inherit;
     }
     .stop-conv-btn.visible { display: flex; }
     .stop-conv-btn:hover { background: rgba(239,68,68,0.2); }
 
-    .hub-link {
-      color: var(--text2); text-decoration: none;
+    .hub-link, .kb-btn {
+      color: var(--text2); text-decoration: none; font-family: inherit;
       font-size: 12px; font-weight: 500;
       padding: 5px 12px; border-radius: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      white-space: nowrap;
+      background: var(--surface); border: 1px solid var(--border);
+      white-space: nowrap; cursor: pointer;
       transition: all 0.15s;
     }
-    .hub-link:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+    .hub-link:hover, .kb-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
 
     .end-btn {
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
-      color: #f87171;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171;
       padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
-      cursor: pointer; white-space: nowrap; font-family: inherit;
-      transition: all 0.15s;
+      cursor: pointer; white-space: nowrap; font-family: inherit; transition: all 0.15s;
     }
     .end-btn:hover:not(:disabled) { background: rgba(239,68,68,0.2); }
     .end-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* ── Chat area ── */
+    /* ── Chat ── */
     .chat-area {
       flex: 1; overflow-y: auto;
       padding: 20px 16px; display: flex; flex-direction: column; gap: 12px;
@@ -109,36 +99,28 @@
     .chat-area::-webkit-scrollbar { width: 4px; }
     .chat-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
-    /* Welcome */
     .welcome {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: var(--surface); border: 1px solid var(--border);
       border-radius: 16px; padding: 20px;
       text-align: center; color: var(--text2); font-size: 14px; line-height: 1.6;
     }
-    .welcome strong {
-      display: block; font-size: 17px; color: var(--text);
-      font-weight: 700; margin-bottom: 8px; letter-spacing: -0.3px;
-    }
+    .welcome strong { display: block; font-size: 17px; color: var(--text); font-weight: 700; margin-bottom: 8px; letter-spacing: -0.3px; }
     .welcome .key { color: var(--purple); font-weight: 600; }
 
     /* Rep bubbles */
     .rep-label { align-self: flex-end; font-size: 11px; color: var(--text3); padding-right: 4px; }
     .rep-wrap  { align-self: flex-end; max-width: 76%; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
     .rep-bubble {
-      background: linear-gradient(135deg, var(--purple2), var(--purple));
-      color: white;
+      background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white;
       padding: 10px 15px; border-radius: 16px 16px 4px 16px;
       font-size: 14px; line-height: 1.5; word-wrap: break-word;
       box-shadow: 0 4px 20px rgba(139,92,246,0.25);
     }
     .rep-metrics { font-size: 11px; color: var(--text3); padding-right: 4px; }
 
-    /* Live preview */
     .live-preview {
       align-self: flex-end; max-width: 76%;
-      background: rgba(139,92,246,0.08);
-      border: 1px dashed rgba(139,92,246,0.35);
+      background: rgba(139,92,246,0.08); border: 1px dashed rgba(139,92,246,0.35);
       color: var(--text2); padding: 10px 15px;
       border-radius: 16px 16px 4px 16px;
       font-size: 14px; font-style: italic; word-wrap: break-word; min-width: 48px;
@@ -148,72 +130,39 @@
     .hw-group { display: flex; flex-direction: column; gap: 8px; }
     .hw-bubble {
       align-self: flex-start; max-width: 76%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
       padding: 10px 15px; border-radius: 16px 16px 16px 4px;
-      font-size: 14px; line-height: 1.5;
-      word-wrap: break-word;
-      backdrop-filter: blur(10px);
+      font-size: 14px; line-height: 1.5; word-wrap: break-word; backdrop-filter: blur(10px);
     }
     .coach-note {
-      background: rgba(245,158,11,0.08);
-      border: 1px solid rgba(245,158,11,0.2);
-      border-left: 3px solid var(--amber);
-      border-radius: 4px 12px 12px 4px;
-      padding: 10px 14px;
-      font-size: 13px; color: #fcd34d; line-height: 1.55; word-wrap: break-word;
+      background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+      border-left: 3px solid var(--amber); border-radius: 4px 12px 12px 4px;
+      padding: 10px 14px; font-size: 13px; color: #fcd34d; line-height: 1.55; word-wrap: break-word;
     }
     .coach-tag {
-      display: inline-block;
-      background: rgba(245,158,11,0.2); color: var(--amber);
+      display: inline-block; background: rgba(245,158,11,0.2); color: var(--amber);
       font-size: 10px; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.8px; padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;
     }
 
     /* Scorecard */
-    .scorecard {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 16px; padding: 20px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    }
-    .scorecard h2 {
-      font-size: 14px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1px; color: var(--text2); margin-bottom: 16px; text-align: center;
-    }
+    .scorecard { background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; padding: 20px; }
+    .scorecard h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 16px; text-align: center; }
     .score-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
-    .score-badge {
-      background: var(--surface2); border: 1px solid var(--border2);
-      color: var(--purple); font-size: 12px; font-weight: 700;
-      padding: 4px 10px; border-radius: 8px; white-space: nowrap; flex-shrink: 0;
-    }
+    .score-badge { background: var(--surface2); border: 1px solid var(--border2); color: var(--purple); font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
     .score-body .score-cat  { font-weight: 600; font-size: 13px; color: var(--text); }
     .score-body .score-text { font-size: 12px; color: var(--text2); margin-top: 2px; line-height: 1.4; }
-    .overall-row {
-      margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center; gap: 14px;
-    }
+    .overall-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 14px; }
     .overall-label { font-weight: 600; font-size: 14px; color: var(--text2); }
-    .overall-badge {
-      background: linear-gradient(135deg, var(--purple2), var(--purple));
-      color: white; font-size: 20px; font-weight: 800;
-      padding: 6px 20px; border-radius: 12px;
-      box-shadow: 0 4px 16px var(--purple-glow);
-    }
+    .overall-badge { background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; font-size: 20px; font-weight: 800; padding: 6px 20px; border-radius: 12px; box-shadow: 0 4px 16px var(--purple-glow); }
     .scorecard-raw { font-size: 13px; color: var(--text2); line-height: 1.6; white-space: pre-wrap; }
 
     /* Coach summary */
     .coach-summary {
       background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(139,92,246,0.08));
-      border: 1px solid rgba(139,92,246,0.3);
-      border-radius: 16px; padding: 20px;
-      box-shadow: 0 8px 32px rgba(139,92,246,0.1);
+      border: 1px solid rgba(139,92,246,0.3); border-radius: 16px; padding: 20px;
     }
-    .coach-summary h3 {
-      font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
-      color: var(--purple); margin-bottom: 14px; font-weight: 600;
-    }
+    .coach-summary h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--purple); margin-bottom: 14px; font-weight: 600; }
     .cs-score { font-size: 52px; font-weight: 900; text-align: center; margin-bottom: 4px; letter-spacing: -2px; }
     .cs-score.red    { color: #ef4444; text-shadow: 0 0 20px rgba(239,68,68,0.4); }
     .cs-score.orange { color: #fb923c; text-shadow: 0 0 20px rgba(251,146,60,0.4); }
@@ -222,78 +171,44 @@
     .cs-label { text-align: center; font-size: 11px; color: var(--text3); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.8px; }
     .cs-summary { font-size: 13px; line-height: 1.65; color: var(--text2); margin-bottom: 16px; }
     .cs-row { display: flex; gap: 10px; }
-    .cs-box {
-      flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px;
-    }
+    .cs-box { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
     .cs-box-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); margin-bottom: 6px; }
     .cs-box-text  { font-size: 12px; line-height: 1.45; color: var(--text2); }
 
     /* Typing */
-    .typing {
-      display: flex; gap: 5px; align-items: center;
-      padding: 12px 16px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px 16px 16px 4px; align-self: flex-start;
-    }
+    .typing { display: flex; gap: 5px; align-items: center; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px 16px 16px 4px; align-self: flex-start; }
     .dot { width: 7px; height: 7px; background: var(--text3); border-radius: 50%; animation: bounce 1.2s infinite; }
     .dot:nth-child(2) { animation-delay: 0.2s; }
     .dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+    .error-msg { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 10px 14px; color: #fca5a5; font-size: 13px; }
 
-    .error-msg {
-      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
-      border-radius: 10px; padding: 10px 14px;
-      color: #fca5a5; font-size: 13px;
-    }
-
-    /* ── Conversation bar ── */
+    /* ── Conv bar ── */
     .conv-bar {
-      background: rgba(22,22,22,0.95);
-      backdrop-filter: blur(20px);
+      background: rgba(22,22,22,0.95); backdrop-filter: blur(20px);
       border-top: 1px solid var(--border);
-      padding: 16px 20px;
-      padding-bottom: max(16px, env(safe-area-inset-bottom));
-      flex-shrink: 0;
-      display: flex; flex-direction: column; gap: 12px;
+      padding: 16px 20px; padding-bottom: max(16px, env(safe-area-inset-bottom));
+      flex-shrink: 0; display: flex; flex-direction: column; gap: 12px;
     }
-
-    /* Status */
-    .status-bar {
-      display: flex; align-items: center; justify-content: center;
-      gap: 8px; min-height: 20px;
-      font-size: 13px; font-weight: 500; color: var(--text3);
-    }
+    .status-bar { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 20px; font-size: 13px; font-weight: 500; color: var(--text3); }
     .status-bar.listening  { color: var(--red); }
     .status-bar.speaking   { color: var(--green); }
     .status-bar.processing { color: var(--purple); }
 
-    /* Main button */
     .conv-main-btn {
       width: 100%; padding: 14px; border-radius: 12px; border: none;
       font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
       transition: all 0.15s; letter-spacing: -0.2px;
     }
     .conv-main-btn:active { transform: scale(0.98); }
-    .conv-main-btn.idle {
-      background: linear-gradient(135deg, var(--purple2), var(--purple));
-      color: white;
-      box-shadow: 0 4px 20px var(--purple-glow);
-    }
+    .conv-main-btn.idle       { background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; box-shadow: 0 4px 20px var(--purple-glow); }
     .conv-main-btn.idle:hover { box-shadow: 0 6px 28px rgba(139,92,246,0.5); }
-    .conv-main-btn.send-now {
-      background: rgba(239,68,68,0.1); color: var(--red);
-      border: 1px solid rgba(239,68,68,0.25);
-    }
+    .conv-main-btn.send-now   { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
     .conv-main-btn.send-now:hover { background: rgba(239,68,68,0.18); }
-    .conv-main-btn.interrupt {
-      background: rgba(16,185,129,0.1); color: var(--green);
-      border: 1px solid rgba(16,185,129,0.25);
-    }
+    .conv-main-btn.interrupt  { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
     .conv-main-btn.interrupt:hover { background: rgba(16,185,129,0.18); }
-    .conv-main-btn:disabled { background: var(--surface); color: var(--text3); cursor: not-allowed; transform: none; box-shadow: none; border: 1px solid var(--border); }
+    .conv-main-btn:disabled   { background: var(--surface); color: var(--text3); cursor: not-allowed; transform: none; box-shadow: none; border: 1px solid var(--border); }
 
-    /* Wave bars */
     .wave-bars { display: flex; align-items: center; gap: 3px; height: 16px; }
     .wave-bar  { width: 2.5px; border-radius: 2px; animation: wavebar 0.9s ease-in-out infinite; }
     .wave-bar:nth-child(1) { animation-delay: 0.0s;  height: 6px; }
@@ -305,89 +220,88 @@
     .wave-bar.red   { background: var(--red); }
     .wave-bar.green { background: var(--green); }
 
-    /* Spinner */
-    .spinner {
-      width: 16px; height: 16px; border-radius: 50%;
-      border: 2px solid rgba(139,92,246,0.2); border-top-color: var(--purple);
-      animation: spin 0.7s linear infinite; flex-shrink: 0;
-    }
+    .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(139,92,246,0.2); border-top-color: var(--purple); animation: spin 0.7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Text fallback */
     .text-fallback { display: none; gap: 8px; align-items: flex-end; }
-    .text-fallback textarea {
-      flex: 1; background: var(--surface); border: 1px solid var(--border);
-      color: var(--text); border-radius: 10px;
-      padding: 10px 14px; font-size: 14px; line-height: 1.4;
-      resize: none; outline: none; font-family: inherit;
-    }
+    .text-fallback textarea { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px 14px; font-size: 14px; line-height: 1.4; resize: none; outline: none; font-family: inherit; }
     .text-fallback textarea:focus { border-color: var(--purple); }
     .text-fallback textarea::placeholder { color: var(--text3); }
-    .send-text-btn {
-      background: var(--purple); color: white; border: none;
-      padding: 10px 18px; border-radius: 10px; font-size: 14px;
-      font-weight: 600; cursor: pointer; font-family: inherit;
-    }
+    .send-text-btn { background: var(--purple); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
 
-    /* New session */
     .new-session-area { text-align: center; padding: 6px 0 2px; }
-    .new-btn {
-      background: none; border: 1px solid var(--border2); color: var(--text2);
-      padding: 8px 22px; border-radius: 10px; font-size: 13px; font-weight: 600;
-      cursor: pointer; font-family: inherit;
-      transition: all 0.15s;
-    }
+    .new-btn { background: none; border: 1px solid var(--border2); color: var(--text2); padding: 8px 22px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
     .new-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--purple); }
 
     /* ── Name modal ── */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 100; padding: 20px;
-    }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
     .modal-overlay.hidden { display: none; }
-    .modal-box {
-      background: #1e1e1e;
-      border: 1px solid var(--border2);
-      border-radius: 20px; padding: 36px 32px;
-      max-width: 380px; width: 100%;
-      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
-      text-align: center;
-    }
-    .modal-icon {
-      width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 20px;
-      background: linear-gradient(135deg, var(--purple2), var(--purple));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-      box-shadow: 0 8px 24px var(--purple-glow);
-    }
+    .modal-box { background: #1e1e1e; border: 1px solid var(--border2); border-radius: 20px; padding: 36px 32px; max-width: 380px; width: 100%; box-shadow: 0 32px 80px rgba(0,0,0,0.6); text-align: center; }
+    .modal-icon { width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 20px; background: linear-gradient(135deg, var(--purple2), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 8px 24px var(--purple-glow); }
     .modal-box h2 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; letter-spacing: -0.4px; }
     .modal-box p  { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
-    .modal-input {
-      width: 100%; background: var(--surface); border: 1px solid var(--border2);
-      color: var(--text); border-radius: 10px;
-      padding: 12px 16px; font-size: 15px; outline: none; font-family: inherit;
-      margin-bottom: 12px;
-    }
+    .modal-input { width: 100%; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 12px 16px; font-size: 15px; outline: none; font-family: inherit; margin-bottom: 12px; }
     .modal-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
     .modal-input::placeholder { color: var(--text3); }
-    .modal-submit {
-      width: 100%;
-      background: linear-gradient(135deg, var(--purple2), var(--purple));
-      color: white; border: none;
-      padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 700;
-      cursor: pointer; font-family: inherit;
-      box-shadow: 0 4px 16px var(--purple-glow);
-      transition: box-shadow 0.15s;
-    }
+    .modal-submit { width: 100%; background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 16px var(--purple-glow); }
     .modal-submit:hover { box-shadow: 0 6px 24px rgba(139,92,246,0.5); }
+
+    /* ── Knowledge modal ── */
+    .k-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .k-overlay.hidden { display: none; }
+    .k-modal { background: #1e1e1e; border: 1px solid var(--border2); border-radius: 20px; padding: 28px; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,0.6); }
+    .k-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .k-header h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+    .k-header p  { font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.5; }
+    .k-close { background: var(--surface); border: 1px solid var(--border); color: var(--text2); width: 30px; height: 30px; border-radius: 8px; font-size: 14px; cursor: pointer; flex-shrink: 0; }
+    .k-close:hover { background: var(--surface2); color: var(--text); }
+
+    .k-tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 18px; }
+    .k-tab { flex: 1; padding: 8px; border-radius: 7px; border: none; background: none; color: var(--text2); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .k-tab.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+
+    .k-panel { display: none; }
+    .k-panel.active { display: block; }
+
+    /* Upload tab */
+    .k-drop-zone {
+      border: 2px dashed var(--border2); border-radius: 12px; padding: 32px 20px;
+      text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 12px;
+    }
+    .k-drop-zone:hover, .k-drop-zone.drag-over { border-color: var(--purple); background: rgba(139,92,246,0.05); }
+    .k-drop-icon { font-size: 32px; margin-bottom: 10px; }
+    .k-drop-text { font-size: 14px; color: var(--text2); }
+    .k-drop-sub  { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+    /* Paste tab */
+    .k-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .k-input { width: 100%; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 11px 14px; font-size: 14px; outline: none; font-family: inherit; margin-bottom: 12px; }
+    .k-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
+    .k-input::placeholder { color: var(--text3); }
+    .k-textarea { width: 100%; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 11px 14px; font-size: 13px; line-height: 1.55; outline: none; font-family: inherit; resize: vertical; min-height: 120px; margin-bottom: 12px; }
+    .k-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
+    .k-textarea::placeholder { color: var(--text3); }
+    .k-add-btn { width: 100%; background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px var(--purple-glow); }
+    .k-add-btn:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
+    .k-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Files list */
+    .k-divider { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); font-weight: 600; margin: 20px 0 12px; }
+    .k-file-list { display: flex; flex-direction: column; gap: 8px; }
+    .k-file-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start; }
+    .k-file-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .k-file-info { flex: 1; min-width: 0; }
+    .k-file-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .k-file-preview { font-size: 11px; color: var(--text3); margin-top: 3px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .k-file-del { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; flex-shrink: 0; padding: 0 2px; line-height: 1; }
+    .k-file-del:hover { color: var(--red); }
+    .k-empty { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
+    .k-loading { text-align: center; padding: 16px; color: var(--text3); font-size: 13px; }
   </style>
 </head>
 <body>
 
-<!-- Rep name modal -->
+<!-- Name modal -->
 <div class="modal-overlay" id="nameModal">
   <div class="modal-box">
     <div class="modal-icon">🎯</div>
@@ -396,6 +310,51 @@
     <input class="modal-input" id="nameInput" type="text" placeholder="Your first name" maxlength="40"
       onkeydown="if(event.key==='Enter') submitName()">
     <button class="modal-submit" onclick="submitName()">Start Training</button>
+  </div>
+</div>
+
+<!-- Knowledge base modal -->
+<div class="k-overlay hidden" id="kbModal">
+  <div class="k-modal">
+    <div class="k-header">
+      <div>
+        <h2>Knowledge Base</h2>
+        <p>Upload scripts and training docs — the coach will reference them during sessions.</p>
+      </div>
+      <button class="k-close" onclick="closeKB()">✕</button>
+    </div>
+
+    <div class="k-tabs">
+      <button class="k-tab active" id="tabUpload" onclick="switchTab('upload')">📁 Upload File</button>
+      <button class="k-tab" id="tabPaste"  onclick="switchTab('paste')">✏️ Paste Text</button>
+    </div>
+
+    <!-- Upload panel -->
+    <div class="k-panel active" id="panelUpload">
+      <div class="k-drop-zone" id="dropZone"
+        onclick="document.getElementById('fileInput').click()"
+        ondragover="event.preventDefault(); this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleDrop(event)">
+        <div class="k-drop-icon">📄</div>
+        <div class="k-drop-text">Drop a .txt or .md file here</div>
+        <div class="k-drop-sub">or click to browse</div>
+      </div>
+      <input type="file" id="fileInput" accept=".txt,.md,.csv" style="display:none" onchange="handleFileSelect(event)">
+    </div>
+
+    <!-- Paste panel -->
+    <div class="k-panel" id="panelPaste">
+      <div class="k-label">Document name</div>
+      <input class="k-input" id="pasteFilename" type="text" placeholder="e.g. Cold Door Script, Objection Guide…" maxlength="80">
+      <div class="k-label">Content</div>
+      <textarea class="k-textarea" id="pasteContent" placeholder="Paste your sales script, training notes, or any reference material…"></textarea>
+      <button class="k-add-btn" id="pasteAddBtn" onclick="savePasted()">Add Document</button>
+    </div>
+
+    <!-- Files list -->
+    <div class="k-divider">Saved Documents</div>
+    <div class="k-file-list" id="kbFileList"><div class="k-loading">Loading…</div></div>
   </div>
 </div>
 
@@ -409,6 +368,7 @@
   </div>
   <div class="header-actions">
     <a href="/hub.html" class="hub-link">📋 Hub</a>
+    <button class="kb-btn" onclick="openKB()">📚 Scripts</button>
     <button class="icon-btn" id="voiceBtn" onclick="toggleTTS()" title="Mute homeowner voice">🔊</button>
     <button class="stop-conv-btn" id="stopConvBtn" onclick="stopConversation()">■ Stop</button>
     <button class="end-btn" id="endBtn" onclick="endSession()">End Session</button>
@@ -418,15 +378,14 @@
 <div class="chat-area" id="chatArea">
   <div class="welcome">
     <strong>Ready to practice?</strong>
-    Tap <span class="key">Start Conversation</span> — the mic opens, you pitch the homeowner, and Claude responds in real time. Your pace, energy, and delivery are graded after every turn.
+    Tap <span class="key">Start Conversation</span> — the mic opens, pitch the homeowner, and Claude responds in real time.
+    Your pace, energy, and delivery are graded after every turn.
   </div>
 </div>
 
 <div class="conv-bar">
   <div class="status-bar" id="statusBar"></div>
-  <button class="conv-main-btn idle" id="mainBtn" onclick="handleMainBtn()">
-    ▶ Start Conversation
-  </button>
+  <button class="conv-main-btn idle" id="mainBtn" onclick="handleMainBtn()">▶ Start Conversation</button>
   <div class="text-fallback" id="textFallback">
     <textarea id="msgInput" placeholder="Type your pitch…" rows="2"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendTextMessage();}"></textarea>
@@ -448,14 +407,13 @@
   }
 
   // ── State ─────────────────────────────────────────────────
-  let convState  = 'idle';
-  let ttsEnabled = true;
+  let convState        = 'idle';
+  let ttsEnabled       = true;
   let sessionStartTime = null;
   let repMessageCount  = 0;
   let sendDebounce     = null;
   let currentTranscript = '';
 
-  // Audio analysis
   let audioCtx = null, analyser = null, micStream = null, analysisInterval = null;
   let energySamples = [], freqSamples = [], recordStart = 0;
 
@@ -501,12 +459,16 @@
       }
       currentTranscript = (final + interim).trim();
       updateLivePreview(currentTranscript);
-      if (e.results[e.results.length - 1].isFinal) {
-        const wordCount = final.trim().split(/\s+/).filter(Boolean).length;
-        if (wordCount >= 2) {
-          clearTimeout(sendDebounce);
-          sendDebounce = setTimeout(() => { if (convState === 'listening') triggerAutoSend(); }, 4000);
-        }
+
+      // ── Silence-based auto-send ──
+      // Reset the timer on ANY speech activity (interim or final).
+      // Only fires after 5 seconds of true silence — won't cut you off mid-sentence.
+      const wordCount = currentTranscript.trim().split(/\s+/).filter(Boolean).length;
+      if (wordCount >= 3) {
+        clearTimeout(sendDebounce);
+        sendDebounce = setTimeout(() => {
+          if (convState === 'listening') triggerAutoSend();
+        }, 5000);
       }
     };
 
@@ -548,10 +510,8 @@
       micStream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false,
       });
-    } catch (_) {
-      alert('Microphone access denied.');
-      setConvState('idle'); return;
-    }
+    } catch (_) { alert('Microphone access denied.'); setConvState('idle'); return; }
+
     audioCtx = new AudioContext(); analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048;
     audioCtx.createMediaStreamSource(micStream).connect(analyser);
     energySamples = []; freqSamples = []; recordStart = Date.now(); currentTranscript = '';
@@ -624,10 +584,10 @@
     }
     const fillers = (transcript.match(/\b(um+|uh+|like|you know|basically|literally|right\?|so+)\b/gi) || []).length;
     const parts = [];
-    if (wpm > 0)     parts.push(`${wpm} WPM`);
-    if (energy)      parts.push(energy);
-    if (pitch)       parts.push(pitch);
-    if (fillers > 0) parts.push(`${fillers} filler word${fillers !== 1 ? 's' : ''}`);
+    if (wpm > 0)      parts.push(`${wpm} WPM`);
+    if (energy)       parts.push(energy);
+    if (pitch)        parts.push(pitch);
+    if (fillers > 0)  parts.push(`${fillers} filler word${fillers !== 1 ? 's' : ''}`);
     if (duration > 0) parts.push(`${Math.round(duration)}s`);
     return parts.join(' · ');
   }
@@ -636,9 +596,7 @@
   function speakHomeowner(rawText) {
     const coachIdx = rawText.indexOf('COACH:');
     const text = (coachIdx !== -1 ? rawText.slice(0, coachIdx) : rawText).trim();
-    const resume = () => {
-      if (convState === 'speaking') { setTimeout(() => { setConvState('listening'); openMic(); }, 500); }
-    };
+    const resume = () => { if (convState === 'speaking') setTimeout(() => { setConvState('listening'); openMic(); }, 500); };
     if (!text || !ttsEnabled || !window.speechSynthesis) { resume(); return; }
     speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
@@ -671,7 +629,7 @@
     const btn      = document.getElementById('mainBtn');
     const stopBtn  = document.getElementById('stopConvBtn');
     const endBtn   = document.getElementById('endBtn');
-    const waveBars = (color) => `<div class="wave-bars">${Array(5).fill(`<div class="wave-bar ${color}"></div>`).join('')}</div>`;
+    const waveBars = (c) => `<div class="wave-bars">${Array(5).fill(`<div class="wave-bar ${c}"></div>`).join('')}</div>`;
     const inConv = state !== 'idle' && state !== 'ended';
     stopBtn.classList.toggle('visible', inConv);
     endBtn.disabled = state === 'processing';
@@ -752,18 +710,9 @@
     chat.appendChild(group); scrollBottom();
   }
 
-  function showTyping() {
-    const chat = document.getElementById('chatArea');
-    const el = document.createElement('div'); el.className = 'typing'; el.id = 'typing';
-    el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
-    chat.appendChild(el); scrollBottom();
-  }
+  function showTyping() { const chat = document.getElementById('chatArea'); const el = document.createElement('div'); el.className = 'typing'; el.id = 'typing'; el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>'; chat.appendChild(el); scrollBottom(); }
   function removeTyping() { const el = document.getElementById('typing'); if (el) el.remove(); }
-  function showError(msg) {
-    const chat = document.getElementById('chatArea');
-    const el = document.createElement('div'); el.className = 'error-msg'; el.textContent = '⚠ ' + msg;
-    chat.appendChild(el); scrollBottom();
-  }
+  function showError(msg) { const chat = document.getElementById('chatArea'); const el = document.createElement('div'); el.className = 'error-msg'; el.textContent = '⚠ ' + msg; chat.appendChild(el); scrollBottom(); }
 
   // ── End session ───────────────────────────────────────────
   async function endSession() {
@@ -808,15 +757,13 @@
         html += `<div class="overall-row"><span class="overall-label">Overall Score</span><span class="overall-badge">${score}/10</span></div>
                  <div style="text-align:center;font-size:12px;color:var(--text2);margin-top:8px;">${esc(feedback)}</div>`;
       } else {
-        html += `<div class="score-row"><span class="score-badge">${score}/10</span>
-          <div class="score-body"><div class="score-cat">${esc(cat)}</div><div class="score-text">${esc(feedback)}</div></div></div>`;
+        html += `<div class="score-row"><span class="score-badge">${score}/10</span><div class="score-body"><div class="score-cat">${esc(cat)}</div><div class="score-text">${esc(feedback)}</div></div></div>`;
       }
     }
     if (!hit) html += `<div class="scorecard-raw">${esc(text)}</div>`;
     card.innerHTML = html; chat.appendChild(card); scrollBottom();
   }
 
-  // ── Coach summary card ────────────────────────────────────
   function appendCoachSummary(analysis) {
     const chat = document.getElementById('chatArea');
     const color = scoreColor(analysis.overall);
@@ -833,14 +780,8 @@
     chat.appendChild(card); scrollBottom();
   }
 
-  function scoreColor(n) {
-    if (n >= 85) return 'gold';
-    if (n >= 70) return 'green';
-    if (n >= 50) return 'orange';
-    return 'red';
-  }
+  function scoreColor(n) { return n >= 85 ? 'gold' : n >= 70 ? 'green' : n >= 50 ? 'orange' : 'red'; }
 
-  // ── Coach TTS feedback ────────────────────────────────────
   function speakCoachFeedback(analysis) {
     if (!window.speechSynthesis) return;
     speechSynthesis.cancel();
@@ -860,7 +801,6 @@
     speechSynthesis.speak(utt);
   }
 
-  // ── Save session to DB ────────────────────────────────────
   async function saveSession(analysis, duration) {
     try {
       await fetch('/save-session', {
@@ -870,7 +810,6 @@
     } catch (err) { console.error('Failed to save session:', err); }
   }
 
-  // ── New session ───────────────────────────────────────────
   async function newSession() {
     try { await fetch('/reset', { method: 'POST' }); } catch (_) {}
     if (window.speechSynthesis) speechSynthesis.cancel();
@@ -881,6 +820,105 @@
       </div>`;
     document.getElementById('endBtn').disabled = false;
     setConvState('idle');
+  }
+
+  // ── Knowledge base modal ──────────────────────────────────
+  function openKB() {
+    document.getElementById('kbModal').classList.remove('hidden');
+    loadKBFiles();
+  }
+  function closeKB() { document.getElementById('kbModal').classList.add('hidden'); }
+
+  function switchTab(tab) {
+    document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
+    document.getElementById('tabPaste').classList.toggle('active',  tab === 'paste');
+    document.getElementById('panelUpload').classList.toggle('active', tab === 'upload');
+    document.getElementById('panelPaste').classList.toggle('active',  tab === 'paste');
+  }
+
+  async function loadKBFiles() {
+    const list = document.getElementById('kbFileList');
+    list.innerHTML = '<div class="k-loading">Loading…</div>';
+    try {
+      const res  = await fetch('/knowledge-files');
+      const data = await res.json();
+      if (!data.files || data.files.length === 0) {
+        list.innerHTML = '<div class="k-empty">No documents yet. Upload one above.</div>';
+        return;
+      }
+      list.innerHTML = data.files.map(f => `
+        <div class="k-file-item" id="kf-${f.id}">
+          <div class="k-file-icon">📄</div>
+          <div class="k-file-info">
+            <div class="k-file-name">${esc(f.filename)}</div>
+            <div class="k-file-preview">${esc(f.preview)}…</div>
+          </div>
+          <button class="k-file-del" onclick="deleteKBFile(${f.id})" title="Delete">✕</button>
+        </div>`).join('');
+    } catch (_) {
+      list.innerHTML = '<div class="k-empty">Could not load files.</div>';
+    }
+  }
+
+  async function deleteKBFile(id) {
+    if (!confirm('Delete this document?')) return;
+    try {
+      await fetch('/knowledge-file/' + id, { method: 'DELETE' });
+      const el = document.getElementById('kf-' + id);
+      if (el) el.remove();
+      const list = document.getElementById('kbFileList');
+      if (!list.querySelector('.k-file-item')) list.innerHTML = '<div class="k-empty">No documents yet.</div>';
+    } catch (_) { alert('Failed to delete.'); }
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  }
+
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) processFile(file);
+    e.target.value = '';
+  }
+
+  function processFile(file) {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const content = e.target.result;
+      await uploadKBFile(file.name, content);
+    };
+    reader.readAsText(file);
+  }
+
+  async function savePasted() {
+    const filename = document.getElementById('pasteFilename').value.trim();
+    const content  = document.getElementById('pasteContent').value.trim();
+    if (!filename || !content) { alert('Please fill in both the name and content.'); return; }
+    await uploadKBFile(filename, content);
+    document.getElementById('pasteFilename').value = '';
+    document.getElementById('pasteContent').value  = '';
+  }
+
+  async function uploadKBFile(filename, content) {
+    const btn = document.getElementById('pasteAddBtn');
+    if (btn) btn.disabled = true;
+    try {
+      const res  = await fetch('/knowledge-file', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename, content }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadKBFiles();
+        switchTab('upload');
+      } else {
+        alert('Failed to save: ' + (data.error || 'Unknown error'));
+      }
+    } catch (_) { alert('Failed to upload file.'); }
+    finally { if (btn) btn.disabled = false; }
   }
 </script>
 </body>
