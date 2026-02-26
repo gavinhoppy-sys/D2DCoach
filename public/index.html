@@ -21,26 +21,39 @@
     .header {
       background: #1a1a2e;
       color: white;
-      padding: 12px 16px;
+      padding: 10px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-shrink: 0;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      gap: 10px;
     }
-    .header-title h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.2px; }
-    .header-title p  { font-size: 12px; opacity: 0.6; margin-top: 2px; }
+    .header-title h1 { font-size: 16px; font-weight: 700; }
+    .header-title p  { font-size: 11px; opacity: 0.55; margin-top: 2px; }
+    .header-actions  { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .voice-btn {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: none;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .voice-btn:hover { background: rgba(255,255,255,0.25); }
 
     .end-btn {
       background: #e74c3c;
       color: white;
       border: none;
-      padding: 8px 18px;
-      border-radius: 20px;
+      padding: 7px 15px;
+      border-radius: 18px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s;
       white-space: nowrap;
     }
     .end-btn:hover:not(:disabled) { background: #c0392b; }
@@ -50,13 +63,12 @@
     .chat-area {
       flex: 1;
       overflow-y: auto;
-      padding: 16px 12px;
+      padding: 14px 12px;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    /* ── Welcome card ── */
     .welcome {
       background: #e8eaf6;
       border-radius: 12px;
@@ -68,10 +80,15 @@
     }
     .welcome strong { display: block; font-size: 16px; margin-bottom: 6px; }
 
-    /* ── Rep bubble (right) ── */
-    .rep-bubble {
+    /* Rep messages */
+    .rep-label {
       align-self: flex-end;
-      max-width: 78%;
+      font-size: 11px;
+      color: #888;
+      padding-right: 4px;
+    }
+    .rep-wrap { align-self: flex-end; max-width: 78%; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .rep-bubble {
       background: #0084ff;
       color: white;
       padding: 10px 14px;
@@ -80,17 +97,14 @@
       line-height: 1.45;
       word-wrap: break-word;
     }
-    .rep-label {
-      align-self: flex-end;
+    .rep-metrics {
       font-size: 11px;
       color: #888;
-      margin-bottom: 2px;
       padding-right: 4px;
     }
 
-    /* ── Homeowner bubble (left) ── */
+    /* Homeowner messages */
     .hw-group { display: flex; flex-direction: column; gap: 6px; }
-
     .hw-bubble {
       align-self: flex-start;
       max-width: 78%;
@@ -104,7 +118,7 @@
       word-wrap: break-word;
     }
 
-    /* ── Coach note ── */
+    /* Coach note */
     .coach-note {
       background: #fffbeb;
       border-left: 3px solid #f59e0b;
@@ -115,7 +129,7 @@
       line-height: 1.5;
       word-wrap: break-word;
     }
-    .coach-note .coach-tag {
+    .coach-tag {
       display: inline-block;
       background: #f59e0b;
       color: white;
@@ -128,7 +142,7 @@
       margin-bottom: 5px;
     }
 
-    /* ── Scorecard ── */
+    /* Scorecard */
     .scorecard {
       background: white;
       border-radius: 14px;
@@ -136,97 +150,71 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.12);
       border: 2px solid #6366f1;
     }
-    .scorecard h2 {
-      font-size: 17px;
-      color: #4338ca;
-      margin-bottom: 16px;
-      text-align: center;
-      letter-spacing: 0.3px;
-    }
-    .score-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 11px;
-    }
-    .score-badge {
-      background: #6366f1;
-      color: white;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 12px;
-      white-space: nowrap;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
+    .scorecard h2 { font-size: 17px; color: #4338ca; margin-bottom: 16px; text-align: center; }
+    .score-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 11px; }
+    .score-badge { background: #6366f1; color: white; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 12px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
     .score-body .score-cat  { font-weight: 600; font-size: 14px; color: #111; }
     .score-body .score-text { font-size: 13px; color: #555; margin-top: 2px; line-height: 1.4; }
-    .overall-row {
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-    }
-    .overall-label { font-weight: 700; font-size: 15px; color: #111; }
-    .overall-badge {
-      background: #059669;
-      color: white;
-      font-size: 22px;
-      font-weight: 800;
-      padding: 6px 20px;
-      border-radius: 20px;
-    }
+    .overall-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; gap: 14px; }
+    .overall-label { font-weight: 700; font-size: 15px; }
+    .overall-badge { background: #059669; color: white; font-size: 22px; font-weight: 800; padding: 6px 20px; border-radius: 20px; }
     .scorecard-raw { font-size: 14px; color: #444; line-height: 1.6; white-space: pre-wrap; }
 
-    /* ── Typing indicator ── */
-    .typing {
-      display: flex;
-      gap: 5px;
-      align-items: center;
-      padding: 10px 14px;
-      background: white;
-      border-radius: 18px 18px 18px 4px;
-      align-self: flex-start;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      width: fit-content;
-    }
-    .dot {
-      width: 8px; height: 8px;
-      background: #aaa;
-      border-radius: 50%;
-      animation: bounce 1.2s infinite;
-    }
+    /* Typing indicator */
+    .typing { display: flex; gap: 5px; align-items: center; padding: 10px 14px; background: white; border-radius: 18px 18px 18px 4px; align-self: flex-start; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .dot { width: 8px; height: 8px; background: #aaa; border-radius: 50%; animation: bounce 1.2s infinite; }
     .dot:nth-child(2) { animation-delay: 0.2s; }
     .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30%            { transform: translateY(-6px); }
-    }
+    @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
 
-    /* ── Error chip ── */
-    .error-msg {
-      background: #fee2e2;
-      border-radius: 8px;
-      padding: 10px 14px;
-      color: #991b1b;
-      font-size: 13px;
-    }
+    .error-msg { background: #fee2e2; border-radius: 8px; padding: 10px 14px; color: #991b1b; font-size: 13px; }
 
     /* ── Input area ── */
     .input-area {
       background: white;
-      padding: 10px 12px;
       border-top: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+
+    /* Metrics badge */
+    .metrics-badge {
+      display: none;
+      background: #f0fdf4;
+      border-top: 1px solid #bbf7d0;
+      padding: 6px 14px;
+      font-size: 12px;
+      color: #166534;
+      font-weight: 500;
+    }
+
+    /* Recording indicator strip */
+    .recording-strip {
+      display: none;
+      background: #fef2f2;
+      border-top: 1px solid #fecaca;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: #dc2626;
+      font-weight: 600;
+      align-items: center;
+      gap: 6px;
+    }
+    .recording-strip.active { display: flex; }
+    .rec-dot {
+      width: 8px; height: 8px;
+      background: #dc2626;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .input-row {
       display: flex;
       gap: 8px;
       align-items: flex-end;
-      flex-shrink: 0;
+      padding: 10px 12px;
     }
-    .input-area textarea {
+    .input-row textarea {
       flex: 1;
       border: 1.5px solid #d1d5db;
       border-radius: 22px;
@@ -240,42 +228,52 @@
       transition: border-color 0.15s;
       overflow-y: auto;
     }
-    .input-area textarea:focus { border-color: #0084ff; }
-    .input-area textarea:disabled { background: #f3f4f6; }
+    .input-row textarea:focus { border-color: #0084ff; }
+    .input-row textarea:disabled { background: #f9fafb; color: #555; }
 
-    .send-btn {
-      background: #0084ff;
-      color: white;
-      border: none;
+    /* Mic button */
+    .mic-btn {
       width: 44px; height: 44px;
       border-radius: 50%;
+      border: none;
+      background: #f3f4f6;
+      color: #374151;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mic-btn:hover:not(:disabled) { background: #e5e7eb; }
+    .mic-btn.recording {
+      background: #dc2626;
+      color: white;
+      animation: mic-pulse 1.5s infinite;
+    }
+    @keyframes mic-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.4)} 50%{box-shadow:0 0 0 8px rgba(220,38,38,0)} }
+    .mic-btn:disabled { opacity: 0.4; cursor: not-allowed; animation: none; }
+    .mic-btn.hidden { display: none; }
+
+    /* Send button */
+    .send-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: #0084ff;
+      color: white;
       font-size: 18px;
       cursor: pointer;
       flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       transition: background 0.15s;
     }
     .send-btn:hover:not(:disabled) { background: #006edb; }
     .send-btn:disabled { background: #b0c8e8; cursor: not-allowed; }
 
-    /* ── New session button ── */
-    .new-session-area {
-      text-align: center;
-      padding: 6px 0 2px;
-    }
-    .new-btn {
-      background: none;
-      border: 1.5px solid #6366f1;
-      color: #6366f1;
-      padding: 7px 20px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
+    .new-session-area { text-align: center; padding: 6px 0 2px; }
+    .new-btn { background: none; border: 1.5px solid #6366f1; color: #6366f1; padding: 7px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
     .new-btn:hover { background: #ede9fe; }
+
+    .no-voice-note { font-size: 11px; color: #9ca3af; text-align: center; padding: 4px 0 6px; }
   </style>
 </head>
 <body>
@@ -283,78 +281,340 @@
 <div class="header">
   <div class="header-title">
     <h1>D2D Roofing Sales Coach</h1>
-    <p>Practice your pitch with AI</p>
+    <p>Voice-powered sales practice</p>
   </div>
-  <button class="end-btn" id="endBtn" onclick="endSession()">End Session</button>
+  <div class="header-actions">
+    <button class="voice-btn" id="voiceBtn" onclick="toggleTTS()" title="Mute homeowner voice">🔊</button>
+    <button class="end-btn" id="endBtn" onclick="endSession()">End Session</button>
+  </div>
 </div>
 
 <div class="chat-area" id="chatArea">
   <div class="welcome">
     <strong>Welcome, Sales Rep!</strong>
-    You've just knocked on a homeowner's door. Type your opening line below and hit Send.
-    Claude will respond as the homeowner and give you real-time coaching feedback.
+    You've just knocked on a homeowner's door.<br>
+    Tap 🎤 to speak your pitch — Claude will analyze your pace, energy, and delivery in real time.
   </div>
 </div>
 
 <div class="input-area">
-  <textarea
-    id="msgInput"
-    placeholder="What do you say to the homeowner..."
-    rows="1"
-    onkeydown="handleKey(event)"
-    oninput="autoResize(this)"
-  ></textarea>
-  <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">&#9658;</button>
+  <div class="recording-strip" id="recordingStrip">
+    <div class="rec-dot"></div>
+    Recording… tap the mic again or press Enter to send
+  </div>
+  <div class="metrics-badge" id="metricsBadge"></div>
+  <div class="input-row">
+    <textarea
+      id="msgInput"
+      placeholder="Speak or type your pitch…"
+      rows="1"
+      onkeydown="handleKey(event)"
+      oninput="autoResize(this)"
+    ></textarea>
+    <button class="mic-btn hidden" id="micBtn" onclick="toggleRecording()" title="Start recording">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v6a2 2 0 1 0 4 0V5a2 2 0 0 0-2-2zM5 11a7 7 0 0 0 14 0h2a9 9 0 0 1-8 8.94V22h-2v-2.06A9 9 0 0 1 3 11h2z"/>
+      </svg>
+    </button>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">&#9658;</button>
+  </div>
+  <div class="no-voice-note" id="noVoiceNote" style="display:none;">
+    Voice input requires Chrome or Edge
+  </div>
 </div>
 
 <script>
-  let busy = false;
-  let ended = false;
+  // ── State ──────────────────────────────────────────────────────────
+  let busy       = false;
+  let ended      = false;
+  let ttsEnabled = true;
 
-  /* ── Helpers ── */
+  // Voice / recording
+  const hasSpeech = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  let recognition      = null;
+  let isRecording      = false;
+  let micStream        = null;
+  let audioCtx         = null;
+  let analyser         = null;
+  let analysisInterval = null;
+  let energySamples    = [];
+  let freqSamples      = [];
+  let recordStart      = 0;
+  let pendingMetrics   = '';
+
+  // TTS voices
+  let voices = [];
+  if (window.speechSynthesis) {
+    speechSynthesis.onvoiceschanged = () => { voices = speechSynthesis.getVoices(); };
+    setTimeout(() => { voices = speechSynthesis.getVoices(); }, 300);
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────
+  (function init() {
+    if (hasSpeech) {
+      document.getElementById('micBtn').classList.remove('hidden');
+      setupRecognition();
+    } else {
+      document.getElementById('noVoiceNote').style.display = 'block';
+    }
+  })();
+
+  function setupRecognition() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.continuous      = true;
+    recognition.interimResults  = true;
+    recognition.lang            = 'en-US';
+
+    recognition.onresult = (e) => {
+      let final = '', interim = '';
+      for (let i = 0; i < e.results.length; i++) {
+        (e.results[i].isFinal ? (final += e.results[i][0].transcript + ' ')
+                              : (interim += e.results[i][0].transcript));
+      }
+      const input = document.getElementById('msgInput');
+      input.value = (final + interim).trim();
+      autoResize(input);
+    };
+
+    recognition.onerror = (e) => {
+      if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        console.error('Speech error:', e.error);
+        stopRecording();
+      }
+    };
+
+    // Chrome stops recognition after ~60s of silence — restart if still recording
+    recognition.onend = () => {
+      if (isRecording) { try { recognition.start(); } catch(_) {} }
+    };
+  }
+
+  // ── Recording ──────────────────────────────────────────────────────
+  async function toggleRecording() {
+    if (busy || ended) return;
+    isRecording ? stopRecording() : await startRecording();
+  }
+
+  async function startRecording() {
+    // Stop any TTS
+    if (window.speechSynthesis) speechSynthesis.cancel();
+
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    } catch (_) {
+      alert('Microphone access denied. Please allow it in your browser settings.');
+      return;
+    }
+
+    // Web Audio setup
+    audioCtx  = new AudioContext();
+    analyser  = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    audioCtx.createMediaStreamSource(micStream).connect(analyser);
+
+    // Reset metric accumulators
+    energySamples = [];
+    freqSamples   = [];
+    recordStart   = Date.now();
+    pendingMetrics = '';
+
+    // Clear input and badge
+    const input = document.getElementById('msgInput');
+    input.value = '';
+    input.style.height = 'auto';
+    hideMetrics();
+
+    try { recognition.start(); } catch(_) {}
+    analysisInterval = setInterval(sampleAudio, 150);
+
+    isRecording = true;
+    setMicUI(true);
+  }
+
+  function stopRecording() {
+    if (!isRecording) return;
+    isRecording = false;
+
+    clearInterval(analysisInterval);
+    try { recognition.stop(); } catch(_) {}
+    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    if (audioCtx)  { audioCtx.close().catch(()=>{}); audioCtx = null; }
+
+    const transcript = document.getElementById('msgInput').value.trim();
+    const duration   = (Date.now() - recordStart) / 1000;
+    pendingMetrics   = buildMetrics(transcript, duration);
+
+    setMicUI(false);
+    if (pendingMetrics) showMetrics(pendingMetrics);
+  }
+
+  // ── Audio sampling ─────────────────────────────────────────────────
+  function sampleAudio() {
+    if (!analyser) return;
+
+    // RMS energy
+    const td = new Float32Array(analyser.fftSize);
+    analyser.getFloatTimeDomainData(td);
+    let rms = Math.sqrt(td.reduce((s, v) => s + v * v, 0) / td.length);
+    if (rms > 0.003) energySamples.push(rms);
+
+    // Dominant frequency in vocal range (80–1000 Hz)
+    const fd      = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(fd);
+    const binHz   = (audioCtx ? audioCtx.sampleRate : 44100) / analyser.fftSize;
+    const minBin  = Math.floor(80   / binHz);
+    const maxBin  = Math.min(Math.floor(1000 / binHz), fd.length - 1);
+    let maxVal = 0, maxIdx = 0;
+    for (let i = minBin; i <= maxBin; i++) {
+      if (fd[i] > maxVal) { maxVal = fd[i]; maxIdx = i; }
+    }
+    if (maxVal > 20) freqSamples.push(maxIdx * binHz);
+  }
+
+  // ── Metrics calculation ────────────────────────────────────────────
+  function buildMetrics(transcript, duration) {
+    const words = transcript.split(/\s+/).filter(w => w.length > 0);
+    const wpm   = duration > 1 ? Math.round((words.length / duration) * 60) : 0;
+
+    // Energy
+    let energy = '';
+    if (energySamples.length > 0) {
+      const avg = energySamples.reduce((a, b) => a + b, 0) / energySamples.length;
+      energy = avg < 0.025 ? 'Soft energy' : avg < 0.06 ? 'Moderate energy' : 'Strong energy';
+    }
+
+    // Pitch variation
+    let pitch = '';
+    if (freqSamples.length > 5) {
+      const mean   = freqSamples.reduce((a, b) => a + b, 0) / freqSamples.length;
+      const stdDev = Math.sqrt(freqSamples.reduce((s, v) => s + (v - mean) ** 2, 0) / freqSamples.length);
+      pitch = stdDev < 35 ? 'Monotone' : stdDev < 85 ? 'Natural variation' : 'Dynamic pitch';
+    }
+
+    // Filler words
+    const fillers = (transcript.match(/\b(um+|uh+|like|you know|basically|literally|right\?|so+)\b/gi) || []).length;
+
+    const parts = [];
+    if (wpm > 0)     parts.push(`${wpm} WPM`);
+    if (energy)      parts.push(energy);
+    if (pitch)       parts.push(pitch);
+    if (fillers > 0) parts.push(`${fillers} filler word${fillers !== 1 ? 's' : ''}`);
+    if (duration > 0) parts.push(`${Math.round(duration)}s`);
+
+    return parts.join(' · ');
+  }
+
+  // ── Mic UI ─────────────────────────────────────────────────────────
+  function setMicUI(recording) {
+    const btn   = document.getElementById('micBtn');
+    const strip = document.getElementById('recordingStrip');
+    if (recording) {
+      btn.classList.add('recording');
+      btn.title = 'Stop recording';
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>`;
+      strip.classList.add('active');
+    } else {
+      btn.classList.remove('recording');
+      btn.title = 'Start recording';
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v6a2 2 0 1 0 4 0V5a2 2 0 0 0-2-2zM5 11a7 7 0 0 0 14 0h2a9 9 0 0 1-8 8.94V22h-2v-2.06A9 9 0 0 1 3 11h2z"/></svg>`;
+      strip.classList.remove('active');
+    }
+  }
+
+  function showMetrics(text) {
+    const el = document.getElementById('metricsBadge');
+    el.textContent = '🎤 ' + text;
+    el.style.display = 'block';
+  }
+  function hideMetrics() {
+    const el = document.getElementById('metricsBadge');
+    el.style.display = 'none';
+    pendingMetrics = '';
+  }
+
+  // ── TTS ────────────────────────────────────────────────────────────
+  function toggleTTS() {
+    ttsEnabled = !ttsEnabled;
+    const btn = document.getElementById('voiceBtn');
+    btn.textContent = ttsEnabled ? '🔊' : '🔇';
+    btn.title = ttsEnabled ? 'Mute homeowner voice' : 'Unmute homeowner voice';
+    if (!ttsEnabled && window.speechSynthesis) speechSynthesis.cancel();
+  }
+
+  function speakHomeowner(rawText) {
+    if (!ttsEnabled || !window.speechSynthesis) return;
+    const coachIdx = rawText.indexOf('COACH:');
+    const text = (coachIdx !== -1 ? rawText.slice(0, coachIdx) : rawText).trim();
+    if (!text) return;
+
+    speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate  = 1.0;
+    utt.pitch = 1.0;
+
+    // Pick a natural English voice
+    const preferred = voices.find(v =>
+      v.lang.startsWith('en') && /natural|neural|samantha|karen|victoria|moira|fiona/i.test(v.name)
+    ) || voices.find(v => v.lang.startsWith('en-US'))
+      || voices.find(v => v.lang.startsWith('en'));
+    if (preferred) utt.voice = preferred;
+
+    speechSynthesis.speak(utt);
+  }
+
+  // ── Utility ────────────────────────────────────────────────────────
   function esc(t) {
     return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
-
   function scrollBottom() {
     const c = document.getElementById('chatArea');
     c.scrollTop = c.scrollHeight;
   }
-
   function autoResize(el) {
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }
-
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
-
   function setControls(disabled) {
     document.getElementById('sendBtn').disabled = disabled;
     document.getElementById('endBtn').disabled  = disabled;
-    document.getElementById('msgInput').disabled = disabled;
+    if (!isRecording) {
+      document.getElementById('msgInput').disabled = disabled;
+      if (hasSpeech) document.getElementById('micBtn').disabled = disabled;
+    }
   }
 
-  /* ── DOM builders ── */
-  function appendRepMsg(text) {
+  // ── DOM builders ───────────────────────────────────────────────────
+  function appendRepMsg(text, metrics) {
     const chat = document.getElementById('chatArea');
-    const lbl = document.createElement('div');
+    const lbl  = document.createElement('div');
     lbl.className = 'rep-label';
     lbl.textContent = 'You';
+    const wrap = document.createElement('div');
+    wrap.className = 'rep-wrap';
     const bub = document.createElement('div');
     bub.className = 'rep-bubble';
     bub.textContent = text;
+    wrap.appendChild(bub);
+    if (metrics) {
+      const m = document.createElement('div');
+      m.className = 'rep-metrics';
+      m.textContent = '🎤 ' + metrics;
+      wrap.appendChild(m);
+    }
     chat.appendChild(lbl);
-    chat.appendChild(bub);
+    chat.appendChild(wrap);
     scrollBottom();
   }
 
   function appendHomeownerResponse(raw) {
-    const chat = document.getElementById('chatArea');
+    const chat     = document.getElementById('chatArea');
     const coachIdx = raw.indexOf('COACH:');
-    const hwText   = coachIdx === -1 ? raw.trim() : raw.slice(0, coachIdx).trim();
-    const coachTxt = coachIdx === -1 ? null : raw.slice(coachIdx + 6).trim();
+    const hwText   = coachIdx !== -1 ? raw.slice(0, coachIdx).trim() : raw.trim();
+    const coachTxt = coachIdx !== -1 ? raw.slice(coachIdx + 6).trim() : null;
 
     const group = document.createElement('div');
     group.className = 'hw-group';
@@ -377,54 +637,68 @@
 
   function showTyping() {
     const chat = document.getElementById('chatArea');
-    const el = document.createElement('div');
+    const el   = document.createElement('div');
     el.className = 'typing';
     el.id = 'typing';
     el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
     chat.appendChild(el);
     scrollBottom();
-    return el;
   }
   function removeTyping() {
     const el = document.getElementById('typing');
     if (el) el.remove();
   }
-
   function showError(msg) {
     const chat = document.getElementById('chatArea');
-    const el = document.createElement('div');
+    const el   = document.createElement('div');
     el.className = 'error-msg';
     el.textContent = 'Error: ' + msg;
     chat.appendChild(el);
     scrollBottom();
   }
 
-  /* ── Send message ── */
+  // ── Send message ───────────────────────────────────────────────────
   async function sendMessage() {
     if (busy || ended) return;
+
+    // Stop recording first if active
+    if (isRecording) stopRecording();
+
     const input = document.getElementById('msgInput');
     const text  = input.value.trim();
     if (!text) return;
 
+    // Build message sent to Claude (includes voice metrics if present)
+    const fullMsg = pendingMetrics
+      ? `${text}\n\n[Voice: ${pendingMetrics}]`
+      : text;
+
+    const savedMetrics = pendingMetrics;
     input.value = '';
     input.style.height = 'auto';
+    hideMetrics();
+
     busy = true;
     setControls(true);
 
-    appendRepMsg(text);
+    appendRepMsg(text, savedMetrics);
     showTyping();
 
     try {
       const res  = await fetch('/chat', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text }),
+        body:    JSON.stringify({ message: fullMsg }),
       });
       const data = await res.json();
       removeTyping();
-      if (data.error) { showError(data.error); }
-      else            { appendHomeownerResponse(data.response); }
-    } catch (err) {
+      if (data.error) {
+        showError(data.error);
+      } else {
+        appendHomeownerResponse(data.response);
+        speakHomeowner(data.response);
+      }
+    } catch (_) {
       removeTyping();
       showError('Could not reach the server. Is it running?');
     }
@@ -434,31 +708,31 @@
     if (!ended) document.getElementById('msgInput').focus();
   }
 
-  /* ── End session / scorecard ── */
+  // ── End session / scorecard ────────────────────────────────────────
   async function endSession() {
     if (busy || ended) return;
-    busy   = true;
-    ended  = true;
+    if (isRecording) stopRecording();
+    if (window.speechSynthesis) speechSynthesis.cancel();
+
+    busy  = true;
+    ended = true;
     setControls(true);
     document.getElementById('msgInput').disabled = true;
+    if (hasSpeech) document.getElementById('micBtn').disabled = true;
 
     showTyping();
 
     try {
-      const res  = await fetch('/scorecard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const res  = await fetch('/scorecard', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
       const data = await res.json();
       removeTyping();
-      if (data.scorecard) { appendScorecard(data.scorecard); }
-      else                { showError(data.error || 'Failed to generate scorecard.'); }
-    } catch (err) {
+      if (data.scorecard) appendScorecard(data.scorecard);
+      else showError(data.error || 'Failed to generate scorecard.');
+    } catch (_) {
       removeTyping();
       showError('Could not reach the server.');
     }
 
-    // Show "Start New Session" button
     const chat = document.getElementById('chatArea');
     const area = document.createElement('div');
     area.className = 'new-session-area';
@@ -469,64 +743,52 @@
     busy = false;
   }
 
-  /* ── Scorecard renderer ── */
+  // ── Scorecard ──────────────────────────────────────────────────────
   function appendScorecard(text) {
     const chat = document.getElementById('chatArea');
     const card = document.createElement('div');
     card.className = 'scorecard';
 
-    const rows = text.split('\n').filter(l => l.trim());
-    let bodyHtml = '<h2>Session Scorecard</h2>';
-    let parsedAny = false;
+    let html = '<h2>Session Scorecard</h2>';
+    let hit  = false;
 
-    for (const line of rows) {
-      // Match: "Category: 7/10 — feedback"
+    for (const line of text.split('\n').filter(l => l.trim())) {
       const m = line.match(/^(Opening|Objection Handling|Rapport|Closing Attempt|Overall)[:\s]+(\d+)\/10\s*[—–-]+\s*(.+)$/i);
       if (!m) continue;
       const [, cat, score, feedback] = m;
-      parsedAny = true;
-
+      hit = true;
       if (cat.toLowerCase() === 'overall') {
-        bodyHtml += `
-          <div class="overall-row">
-            <span class="overall-label">Overall Score</span>
-            <span class="overall-badge">${score}/10</span>
-          </div>
-          <div style="text-align:center;font-size:13px;color:#555;margin-top:8px;">${esc(feedback)}</div>`;
+        html += `<div class="overall-row"><span class="overall-label">Overall Score</span><span class="overall-badge">${score}/10</span></div>
+                 <div style="text-align:center;font-size:13px;color:#555;margin-top:8px;">${esc(feedback)}</div>`;
       } else {
-        bodyHtml += `
-          <div class="score-row">
-            <span class="score-badge">${score}/10</span>
-            <div class="score-body">
-              <div class="score-cat">${esc(cat)}</div>
-              <div class="score-text">${esc(feedback)}</div>
-            </div>
-          </div>`;
+        html += `<div class="score-row">
+          <span class="score-badge">${score}/10</span>
+          <div class="score-body"><div class="score-cat">${esc(cat)}</div><div class="score-text">${esc(feedback)}</div></div>
+        </div>`;
       }
     }
 
-    if (!parsedAny) {
-      // Fallback: display raw text
-      bodyHtml += `<div class="scorecard-raw">${esc(text)}</div>`;
-    }
+    if (!hit) html += `<div class="scorecard-raw">${esc(text)}</div>`;
 
-    card.innerHTML = bodyHtml;
+    card.innerHTML = html;
     chat.appendChild(card);
     scrollBottom();
   }
 
-  /* ── New session ── */
+  // ── New session ────────────────────────────────────────────────────
   async function newSession() {
-    try { await fetch('/reset', { method: 'POST' }); } catch (_) {}
+    try { await fetch('/reset', { method: 'POST' }); } catch(_) {}
     ended = false;
     busy  = false;
+    if (window.speechSynthesis) speechSynthesis.cancel();
     document.getElementById('chatArea').innerHTML = `
       <div class="welcome">
         <strong>New Session Started!</strong>
-        You've knocked on a new door. Type your opening line below.
+        A fresh door is waiting. Tap 🎤 and start your pitch.
       </div>`;
     setControls(false);
     document.getElementById('msgInput').disabled = false;
+    if (hasSpeech) document.getElementById('micBtn').disabled = false;
     document.getElementById('msgInput').focus();
   }
 </script>
