@@ -216,6 +216,58 @@
       animation: spin 0.8s linear infinite; margin: 0 auto 16px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── KB button ── */
+    .kb-btn {
+      color: var(--text2); font-family: inherit;
+      font-size: 12px; font-weight: 500;
+      padding: 5px 12px; border-radius: 8px;
+      background: var(--surface); border: 1px solid var(--border);
+      white-space: nowrap; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .kb-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+    /* ── Knowledge modal ── */
+    .k-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .k-overlay.hidden { display: none; }
+    .k-modal { background: #1e1e1e; border: 1px solid var(--border2); border-radius: 20px; padding: 28px; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,0.6); }
+    .k-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .k-header h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+    .k-header p  { font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.5; }
+    .k-close { background: var(--surface); border: 1px solid var(--border); color: var(--text2); width: 30px; height: 30px; border-radius: 8px; font-size: 14px; cursor: pointer; flex-shrink: 0; }
+    .k-close:hover { background: var(--surface2); color: var(--text); }
+    .k-tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 18px; }
+    .k-tab { flex: 1; padding: 8px; border-radius: 7px; border: none; background: none; color: var(--text2); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .k-tab.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+    .k-panel { display: none; }
+    .k-panel.active { display: block; }
+    .k-drop-zone { border: 2px dashed var(--border2); border-radius: 12px; padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 12px; }
+    .k-drop-zone:hover, .k-drop-zone.drag-over { border-color: var(--purple); background: rgba(139,92,246,0.05); }
+    .k-drop-icon { font-size: 32px; margin-bottom: 10px; }
+    .k-drop-text { font-size: 14px; color: var(--text2); }
+    .k-drop-sub  { font-size: 12px; color: var(--text3); margin-top: 4px; }
+    .k-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .k-input { width: 100%; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 11px 14px; font-size: 14px; outline: none; font-family: inherit; margin-bottom: 12px; }
+    .k-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
+    .k-input::placeholder { color: var(--text3); }
+    .k-textarea { width: 100%; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 11px 14px; font-size: 13px; line-height: 1.55; outline: none; font-family: inherit; resize: vertical; min-height: 120px; margin-bottom: 12px; }
+    .k-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
+    .k-textarea::placeholder { color: var(--text3); }
+    .k-add-btn { width: 100%; background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px var(--purple-glow); }
+    .k-add-btn:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
+    .k-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .k-divider { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); font-weight: 600; margin: 20px 0 12px; }
+    .k-file-list { display: flex; flex-direction: column; gap: 8px; }
+    .k-file-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start; }
+    .k-file-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .k-file-info { flex: 1; min-width: 0; }
+    .k-file-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .k-file-preview { font-size: 11px; color: var(--text3); margin-top: 3px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .k-file-del { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; flex-shrink: 0; padding: 0 2px; line-height: 1; }
+    .k-file-del:hover { color: var(--red); }
+    .k-empty { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
+    .k-loading { text-align: center; padding: 16px; color: var(--text3); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -230,6 +282,7 @@
   </div>
   <div class="header-right">
     <span class="rep-badge" id="repBadge"></span>
+    <button class="kb-btn" onclick="openKB()">📚 Scripts</button>
     <a href="/" class="practice-btn">▶ Practice</a>
   </div>
 </div>
@@ -263,6 +316,48 @@
   <div id="sessionsHeader" style="display:none;" class="section-title">Past Sessions</div>
   <div class="sessions-section" id="sessionsList"></div>
 
+</div>
+
+<!-- Knowledge base modal -->
+<div class="k-overlay hidden" id="kbModal">
+  <div class="k-modal">
+    <div class="k-header">
+      <div>
+        <h2>Knowledge Base</h2>
+        <p>Upload scripts and training docs — the coach will reference them during sessions.</p>
+      </div>
+      <button class="k-close" onclick="closeKB()">✕</button>
+    </div>
+
+    <div class="k-tabs">
+      <button class="k-tab active" id="tabUpload" onclick="switchTab('upload')">📁 Upload File</button>
+      <button class="k-tab" id="tabPaste"  onclick="switchTab('paste')">✏️ Paste Text</button>
+    </div>
+
+    <div class="k-panel active" id="panelUpload">
+      <div class="k-drop-zone" id="dropZone"
+        onclick="document.getElementById('fileInput').click()"
+        ondragover="event.preventDefault(); this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleDrop(event)">
+        <div class="k-drop-icon">📄</div>
+        <div class="k-drop-text">Drop a .txt or .md file here</div>
+        <div class="k-drop-sub">or click to browse</div>
+      </div>
+      <input type="file" id="fileInput" accept=".txt,.md,.csv" style="display:none" onchange="handleFileSelect(event)">
+    </div>
+
+    <div class="k-panel" id="panelPaste">
+      <div class="k-label">Document name</div>
+      <input class="k-input" id="pasteFilename" type="text" placeholder="e.g. Cold Door Script, Objection Guide…" maxlength="80">
+      <div class="k-label">Content</div>
+      <textarea class="k-textarea" id="pasteContent" placeholder="Paste your sales script, training notes, or any reference material…"></textarea>
+      <button class="k-add-btn" id="pasteAddBtn" onclick="savePasted()">Add Document</button>
+    </div>
+
+    <div class="k-divider">Saved Documents</div>
+    <div class="k-file-list" id="kbFileList"><div class="k-loading">Loading…</div></div>
+  </div>
 </div>
 
 <script>
@@ -444,6 +539,98 @@
 
   function toggleCard(i) {
     document.getElementById(`card-${i}`).classList.toggle('open');
+  }
+
+  // ── Knowledge base ─────────────────────────────────────────
+  function openKB() {
+    document.getElementById('kbModal').classList.remove('hidden');
+    loadKBFiles();
+  }
+  function closeKB() { document.getElementById('kbModal').classList.add('hidden'); }
+
+  function switchTab(tab) {
+    document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
+    document.getElementById('tabPaste').classList.toggle('active',  tab === 'paste');
+    document.getElementById('panelUpload').classList.toggle('active', tab === 'upload');
+    document.getElementById('panelPaste').classList.toggle('active',  tab === 'paste');
+  }
+
+  async function loadKBFiles() {
+    const list = document.getElementById('kbFileList');
+    list.innerHTML = '<div class="k-loading">Loading…</div>';
+    try {
+      const res  = await fetch('/knowledge-files');
+      const data = await res.json();
+      if (!data.files || data.files.length === 0) {
+        list.innerHTML = '<div class="k-empty">No documents yet. Upload one above.</div>';
+        return;
+      }
+      list.innerHTML = data.files.map(f => `
+        <div class="k-file-item" id="kf-${f.id}">
+          <div class="k-file-icon">📄</div>
+          <div class="k-file-info">
+            <div class="k-file-name">${esc(f.filename)}</div>
+            <div class="k-file-preview">${esc(f.preview)}…</div>
+          </div>
+          <button class="k-file-del" onclick="deleteKBFile(${f.id})" title="Delete">✕</button>
+        </div>`).join('');
+    } catch (_) {
+      list.innerHTML = '<div class="k-empty">Could not load files.</div>';
+    }
+  }
+
+  async function deleteKBFile(id) {
+    if (!confirm('Delete this document?')) return;
+    try {
+      await fetch('/knowledge-file/' + id, { method: 'DELETE' });
+      const el = document.getElementById('kf-' + id);
+      if (el) el.remove();
+      const list = document.getElementById('kbFileList');
+      if (!list.querySelector('.k-file-item')) list.innerHTML = '<div class="k-empty">No documents yet.</div>';
+    } catch (_) { alert('Failed to delete.'); }
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  }
+
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) processFile(file);
+    e.target.value = '';
+  }
+
+  function processFile(file) {
+    const reader = new FileReader();
+    reader.onload = async (e) => { await uploadKBFile(file.name, e.target.result); };
+    reader.readAsText(file);
+  }
+
+  async function savePasted() {
+    const filename = document.getElementById('pasteFilename').value.trim();
+    const content  = document.getElementById('pasteContent').value.trim();
+    if (!filename || !content) { alert('Please fill in both the name and content.'); return; }
+    await uploadKBFile(filename, content);
+    document.getElementById('pasteFilename').value = '';
+    document.getElementById('pasteContent').value  = '';
+  }
+
+  async function uploadKBFile(filename, content) {
+    const btn = document.getElementById('pasteAddBtn');
+    if (btn) btn.disabled = true;
+    try {
+      const res  = await fetch('/knowledge-file', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename, content }),
+      });
+      const data = await res.json();
+      if (data.success) { await loadKBFiles(); switchTab('upload'); }
+      else alert('Failed to save: ' + (data.error || 'Unknown error'));
+    } catch (_) { alert('Failed to upload file.'); }
+    finally { if (btn) btn.disabled = false; }
   }
 </script>
 </body>
