@@ -51,49 +51,107 @@ async function getKnowledgeBase() {
   return knowledgeCache;
 }
 
-// ── Build system prompt with knowledge base ───────────────
-const BASE_SYSTEM_PROMPT = `You are roleplaying as a skeptical homeowner. A door-to-door roofing sales rep has just knocked on your door. You are mildly annoyed but willing to listen. After each rep message, respond in character as the homeowner, then on a new line add: COACH: [1-2 sentences of direct, specific feedback on the rep's technique and vocal delivery. If the message includes voice metrics (WPM, energy, pitch, filler words), address them explicitly — ideal sales pace is 130-150 WPM, energy should be warm and confident, filler words undermine credibility, monotone delivery kills rapport. Always say what to do differently. If training materials are provided below, reference them specifically when relevant.]`;
+// ── Per-session state ─────────────────────────────────────
+const activeSessions = new Map(); // sessionId → { history, persona, scenario, weakAreas, lastActivity }
 
-async function buildSystemPrompt() {
-  const files = await getKnowledgeBase();
-  if (files.length === 0) return BASE_SYSTEM_PROMPT;
-  const kb = files
-    .map(f => `--- ${f.filename} ---\n${f.content.slice(0, 3000)}`)
-    .join('\n\n');
-  return `${BASE_SYSTEM_PROMPT}\n\n[TRAINING MATERIALS — reference these when coaching]\n${kb}`;
+function getSession(id) {
+  if (!activeSessions.has(id)) {
+    activeSessions.set(id, {
+      history: [],
+      persona: 'standard',
+      scenario: 'cold-knock',
+      weakAreas: [],
+      lastActivity: Date.now(),
+    });
+  }
+  const s = activeSessions.get(id);
+  s.lastActivity = Date.now();
+  return s;
 }
 
-const SCORECARD_PROMPT = `You are an expert sales coach. Review this door-to-door roofing sales practice conversation and rate the rep 1-10 on each category with one sentence of feedback. Use exactly this format:
+// Prune sessions idle for more than 2 hours
+setInterval(() => {
+  const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+  for (const [id, s] of activeSessions) {
+    if (s.lastActivity < cutoff) activeSessions.delete(id);
+  }
+}, 30 * 60 * 1000);
 
-Opening: [score]/10 — [one sentence of feedback]
-Objection Handling: [score]/10 — [one sentence of feedback]
-Rapport: [score]/10 — [one sentence of feedback]
-Closing Attempt: [score]/10 — [one sentence of feedback]
-Overall: [score]/10 — [one sentence summarizing performance]`;
+// ── Homeowner personas ────────────────────────────────────
+const PERSONAS = {
+  standard:       'You are mildly annoyed at the interruption but willing to hear a short pitch.',
+  budget:         'Money is very tight right now. You keep steering back to cost and whether insurance will cover it. Push back hard on price.',
+  bad_contractor: 'A contractor scammed you two years ago — took a large deposit and left the job unfinished. You are deeply suspicious of any home-services salesperson.',
+  has_contractor: 'Your brother-in-law does roofing and you always use family for home projects. You deflect to this whenever possible.',
+  spouse_away:    'You cannot make any financial decisions without your spouse, who is at work. You are somewhat interested but keep deferring.',
+  skeptical:      'You are very busy and skeptical of door-to-door salespeople. You are about to close the door and the rep has very little time to earn your attention.',
+};
 
-// ── In-memory conversation history ────────────────────────
-let conversationHistory = [];
+// ── Scenarios ─────────────────────────────────────────────
+const SCENARIOS = {
+  'cold-knock': 'A door-to-door roofing sales rep has just knocked on your door unexpectedly.',
+  'post-storm': 'There was a significant hailstorm in your neighborhood two days ago. A roofing rep came by. You noticed granules in your gutters but have not had a professional look yet.',
+  'referral':   'Your next-door neighbor mentioned a roofing company might stop by. You vaguely remember them saying that, so you are slightly more open than usual but still cautious.',
+  'insurance':  'Your insurance adjuster recently confirmed you have a legitimate storm damage claim, but you have not started the repair process yet.',
+};
+
+// ── Build system prompt ───────────────────────────────────
+async function buildSystemPrompt(persona = 'standard', scenario = 'cold-knock', weakAreas = []) {
+  const personaTxt  = PERSONAS[persona]   || PERSONAS.standard;
+  const scenarioTxt = SCENARIOS[scenario] || SCENARIOS['cold-knock'];
+
+  const weakAreaNote = weakAreas.length > 0
+    ? `\n\n[COACHING FOCUS: This rep historically struggles with ${weakAreas.join(' and ')}. Watch closely for these patterns and call them out immediately when they appear.]`
+    : '';
+
+  const base = `You are roleplaying as a homeowner. ${scenarioTxt} ${personaTxt}
+
+After each rep message, respond in character as the homeowner, then on a new line add:
+COACH: [2-3 sentences of direct, specific feedback. Quote the exact words or phrases the rep just used. Always end your feedback with a suggested alternative — format it as: Try instead: "[exact phrase to use]". If voice metrics are present (WPM, energy, filler words), address them explicitly — ideal pace: 130-150 WPM, filler words kill credibility, monotone delivery loses attention. Reference training materials when relevant.]
+
+Adjust your skepticism dynamically: if the rep builds genuine rapport and handles your concerns well, warm up gradually. If they fumble objections, sound scripted, or ignore your concerns, increase your resistance.${weakAreaNote}`;
+
+  const files = await getKnowledgeBase();
+  if (files.length === 0) return base;
+
+  const totalBudget = 15000;
+  const perFile = Math.min(6000, Math.floor(totalBudget / Math.max(files.length, 1)));
+  const kb = files.map(f => {
+    let content = f.content;
+    if (content.length > perFile) {
+      const cut = content.lastIndexOf('\n', perFile);
+      content = content.slice(0, cut > 0 ? cut : perFile) + '\n[…truncated]';
+    }
+    return `--- ${f.filename} ---\n${content}`;
+  }).join('\n\n');
+
+  return `${base}\n\n[TRAINING MATERIALS — reference these when coaching]\n${kb}`;
+}
 
 // ── Chat ──────────────────────────────────────────────────
 app.post('/chat', async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, sessionId, persona, scenario, weakAreas } = req.body;
     if (!message || !message.trim()) {
       return res.status(400).json({ error: 'Message is required.' });
     }
+    const session = getSession(sessionId || 'default');
+    if (persona)              session.persona   = persona;
+    if (scenario)             session.scenario  = scenario;
+    if (Array.isArray(weakAreas)) session.weakAreas = weakAreas;
 
-    conversationHistory.push({ role: 'user', content: message });
+    session.history.push({ role: 'user', content: message });
 
-    const systemPrompt = await buildSystemPrompt();
+    const systemPrompt = await buildSystemPrompt(session.persona, session.scenario, session.weakAreas);
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: systemPrompt,
-      messages: conversationHistory,
+      messages: session.history,
     });
 
     const assistantMessage = response.content[0].text;
-    conversationHistory.push({ role: 'assistant', content: assistantMessage });
+    session.history.push({ role: 'assistant', content: assistantMessage });
 
     res.json({ response: assistantMessage });
   } catch (err) {
@@ -102,39 +160,21 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-// ── Scorecard ─────────────────────────────────────────────
-app.post('/scorecard', async (req, res) => {
+// ── End session (scorecard + analysis + save in one call) ─
+app.post('/end-session', async (req, res) => {
   try {
-    if (conversationHistory.length === 0) {
-      return res.status(400).json({ error: 'No conversation to score yet.' });
-    }
-    const conversationText = conversationHistory
-      .map(m => `${m.role === 'user' ? 'SALES REP' : 'HOMEOWNER/COACH'}: ${m.content}`)
-      .join('\n\n');
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: `Here is the full practice sales conversation:\n\n${conversationText}\n\n${SCORECARD_PROMPT}` }],
-    });
-    res.json({ scorecard: response.content[0].text });
-  } catch (err) {
-    console.error('Scorecard error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ── Analyze ───────────────────────────────────────────────
-app.post('/analyze', async (req, res) => {
-  try {
-    if (conversationHistory.length === 0) {
+    const { sessionId, repName, duration, repMessages } = req.body;
+    const session = getSession(sessionId || 'default');
+    if (session.history.length === 0) {
       return res.status(400).json({ error: 'No conversation to analyze.' });
     }
-    const conversationText = conversationHistory
+    const conversationText = session.history
       .map(m => `${m.role === 'user' ? 'SALES REP' : 'HOMEOWNER/COACH'}: ${m.content}`)
       .join('\n\n');
+
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [{
         role: 'user',
         content: `You are an expert door-to-door sales coach. Analyze this roofing sales practice session and return ONLY a valid JSON object — no markdown, no extra text.
@@ -144,6 +184,7 @@ ${conversationText}
 
 Return exactly this structure:
 {
+  "scorecard": "Opening: [score]/10 — [one sentence feedback]\\nObjection Handling: [score]/10 — [one sentence feedback]\\nRapport: [score]/10 — [one sentence feedback]\\nClosing Attempt: [score]/10 — [one sentence feedback]\\nOverall: [score]/10 — [summary sentence]",
   "overall": <integer 0-100>,
   "breakdown": {
     "opening":           { "score": <0-100>, "feedback": "<one sentence>" },
@@ -161,10 +202,71 @@ Return exactly this structure:
 Use any [Voice: ...] metrics in the rep's messages to inform tonality and timing scores. Ideal pace is 130-150 WPM.`,
       }],
     });
+
+    const raw = response.content[0].text.trim();
+    const objMatch = raw.match(/\{[\s\S]*\}/);
+    const result = JSON.parse(objMatch ? objMatch[0] : raw);
+    const { scorecard, ...analysis } = result;
+
+    if (repName && analysis.overall != null) {
+      await pool.query(
+        'INSERT INTO sessions (rep_name, duration, rep_messages, analysis) VALUES ($1, $2, $3, $4)',
+        [repName.trim(), duration || 0, repMessages || 0, JSON.stringify(analysis)]
+      );
+    }
+
+    res.json({ scorecard, analysis });
+  } catch (err) {
+    console.error('End session error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Scorecard (legacy) ────────────────────────────────────
+app.post('/scorecard', async (req, res) => {
+  try {
+    const { sessionId } = req.body || {};
+    const session = getSession(sessionId || 'default');
+    if (session.history.length === 0) {
+      return res.status(400).json({ error: 'No conversation to score yet.' });
+    }
+    const conversationText = session.history
+      .map(m => `${m.role === 'user' ? 'SALES REP' : 'HOMEOWNER/COACH'}: ${m.content}`)
+      .join('\n\n');
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: `Here is the full practice sales conversation:\n\n${conversationText}\n\nYou are an expert sales coach. Rate the rep 1-10 on each category with one sentence of feedback:\n\nOpening: [score]/10 — [feedback]\nObjection Handling: [score]/10 — [feedback]\nRapport: [score]/10 — [feedback]\nClosing Attempt: [score]/10 — [feedback]\nOverall: [score]/10 — [summary]` }],
+    });
+    res.json({ scorecard: response.content[0].text });
+  } catch (err) {
+    console.error('Scorecard error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Analyze (legacy) ──────────────────────────────────────
+app.post('/analyze', async (req, res) => {
+  try {
+    const { sessionId } = req.body || {};
+    const session = getSession(sessionId || 'default');
+    if (session.history.length === 0) {
+      return res.status(400).json({ error: 'No conversation to analyze.' });
+    }
+    const conversationText = session.history
+      .map(m => `${m.role === 'user' ? 'SALES REP' : 'HOMEOWNER/COACH'}: ${m.content}`)
+      .join('\n\n');
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: `You are an expert door-to-door sales coach. Analyze this roofing sales practice session and return ONLY a valid JSON object — no markdown, no extra text.\n\nConversation:\n${conversationText}\n\nReturn exactly this structure:\n{\n  "overall": <integer 0-100>,\n  "breakdown": {\n    "opening":           { "score": <0-100>, "feedback": "<one sentence>" },\n    "objectionHandling": { "score": <0-100>, "feedback": "<one sentence>" },\n    "rapport":           { "score": <0-100>, "feedback": "<one sentence>" },\n    "tonality":          { "score": <0-100>, "feedback": "<one sentence>" },\n    "timing":            { "score": <0-100>, "feedback": "<one sentence>" },\n    "closing":           { "score": <0-100>, "feedback": "<one sentence>" }\n  },\n  "summary": "<2-3 sentences>",\n  "keyStrength": "<one specific thing they did well>",\n  "keyImprovement": "<one specific thing to work on>"\n}\n\nUse any [Voice: ...] metrics to inform tonality and timing scores. Ideal pace is 130-150 WPM.`,
+      }],
+    });
     const raw = response.content[0].text.trim();
     const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
     const jsonStr = jsonMatch ? jsonMatch[1] : raw;
-    // Strip any leading/trailing non-JSON text by finding the outermost { }
     const objMatch = jsonStr.match(/\{[\s\S]*\}/);
     const analysis = JSON.parse(objMatch ? objMatch[0] : jsonStr);
     res.json({ analysis });
@@ -174,7 +276,7 @@ Use any [Voice: ...] metrics in the rep's messages to inform tonality and timing
   }
 });
 
-// ── Save session ──────────────────────────────────────────
+// ── Save session (legacy) ─────────────────────────────────
 app.post('/save-session', async (req, res) => {
   try {
     const { repName, duration, repMessages, analysis } = req.body;
@@ -219,7 +321,7 @@ app.post('/knowledge-file', async (req, res) => {
       'INSERT INTO knowledge_files (filename, content) VALUES ($1, $2) RETURNING id',
       [filename.trim(), content.trim()]
     );
-    knowledgeCache = null; // invalidate cache
+    knowledgeCache = null;
     res.json({ success: true, id: result.rows[0].id });
   } catch (err) {
     console.error('Knowledge file error:', err.message);
@@ -282,7 +384,6 @@ app.get('/manager/reps', async (req, res) => {
       const analyses = row.all_analyses || [];
       const scores = analyses.map(a => a.overall || 0);
       const latestScore = scores[0] || 0;
-      // Trend: avg of newer half vs older half
       let improvement = null;
       if (scores.length >= 4) {
         const half = Math.floor(scores.length / 2);
@@ -290,14 +391,12 @@ app.get('/manager/reps', async (req, res) => {
         const older = scores.slice(-half).reduce((a, b) => a + b, 0) / half;
         improvement = Math.round(newer - older);
       }
-      // Aggregate category averages
       const catKeys = ['opening', 'objectionHandling', 'rapport', 'tonality', 'timing', 'closing'];
       const catAvgs = {};
       catKeys.forEach(k => {
         const vals = analyses.map(a => a.breakdown?.[k]?.score).filter(v => v != null);
         catAvgs[k] = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
       });
-      // Top improvement areas
       const issues = analyses.map(a => a.keyImprovement).filter(Boolean);
       return {
         name: row.rep_name,
@@ -344,7 +443,8 @@ app.get('/manager/sessions', async (req, res) => {
 
 // ── Reset ─────────────────────────────────────────────────
 app.post('/reset', (req, res) => {
-  conversationHistory = [];
+  const { sessionId } = req.body || {};
+  if (sessionId) activeSessions.delete(sessionId);
   res.json({ success: true });
 });
 

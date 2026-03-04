@@ -297,6 +297,28 @@
     .k-file-del:hover { color: var(--red); }
     .k-empty { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
     .k-loading { text-align: center; padding: 16px; color: var(--text3); font-size: 13px; }
+
+    /* ── Session setup panel ── */
+    .setup-panel { padding: 20px 4px 4px; }
+    .setup-header { margin-bottom: 18px; }
+    .setup-header strong { display: block; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .setup-header span { font-size: 13px; color: var(--text2); }
+    .setup-section { margin-bottom: 16px; }
+    .setup-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); margin-bottom: 10px; }
+    .persona-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    @media (max-width: 480px) { .persona-grid { grid-template-columns: repeat(2, 1fr); } }
+    .persona-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 8px; cursor: pointer; transition: all 0.15s; text-align: center; }
+    .persona-card:hover { background: var(--surface2); border-color: var(--border2); }
+    .persona-card.active { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.45); }
+    .pc-icon { font-size: 22px; margin-bottom: 5px; }
+    .pc-name { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .pc-desc { font-size: 10px; color: var(--text3); line-height: 1.3; }
+    .scenario-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .scenario-card { flex: 1; min-width: 90px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 8px; cursor: pointer; transition: all 0.15s; font-size: 12px; font-weight: 500; color: var(--text2); text-align: center; white-space: nowrap; }
+    .scenario-card:hover { background: var(--surface2); border-color: var(--border2); color: var(--text); }
+    .scenario-card.active { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.45); color: var(--text); }
+    .sc-icon { margin-right: 3px; }
+    .weak-areas-note { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #fcd34d; line-height: 1.5; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -375,13 +397,7 @@
   </div>
 </div>
 
-<div class="chat-area" id="chatArea">
-  <div class="welcome">
-    <strong>Ready to practice?</strong>
-    Tap <span class="key">Start Conversation</span> — the mic opens, pitch the homeowner, and Claude responds in real time.
-    Your pace, energy, and delivery are graded after every turn.
-  </div>
-</div>
+<div class="chat-area" id="chatArea"></div>
 
 <div class="conv-bar">
   <div class="status-bar" id="statusBar"></div>
@@ -397,6 +413,13 @@
   // ── Rep name ──────────────────────────────────────────────
   let repName = localStorage.getItem('d2d_rep_name') || '';
 
+  // ── Session setup ─────────────────────────────────────────
+  let sessionId = crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
+  let selectedPersona    = 'standard';
+  let selectedScenario   = 'cold-knock';
+  let repWeakAreas       = [];
+  let sessionContextSent = false;
+
   function submitName() {
     const val = document.getElementById('nameInput').value.trim();
     if (!val) return;
@@ -404,6 +427,8 @@
     localStorage.setItem('d2d_rep_name', repName);
     document.getElementById('nameModal').classList.add('hidden');
     document.getElementById('repNameDisplay').textContent = 'Hey, ' + repName;
+    showSetupPanel();
+    loadRepWeakAreas();
   }
 
   // ── State ─────────────────────────────────────────────────
@@ -444,6 +469,8 @@
       document.getElementById('statusBar').style.display = 'none';
       document.getElementById('voiceBtn').style.display = 'none';
     }
+    showSetupPanel();
+    loadRepWeakAreas();
   })();
 
   // ── Speech recognition ────────────────────────────────────
@@ -488,7 +515,9 @@
   // ── Lifecycle ─────────────────────────────────────────────
   async function startConversation() {
     if (convState !== 'idle') return;
+    sessionContextSent = false;
     sessionStartTime = Date.now(); repMessageCount = 0;
+    document.getElementById('chatArea').innerHTML = '';
     setConvState('listening'); await openMic();
   }
 
@@ -558,8 +587,15 @@
     const fullMsg = metrics ? `${text}\n\n[Voice: ${metrics}]` : text;
     repMessageCount++;
     appendRepMsg(text, metrics); showTyping();
+    const body = { message: fullMsg, sessionId };
+    if (!sessionContextSent) {
+      body.persona   = selectedPersona;
+      body.scenario  = selectedScenario;
+      body.weakAreas = repWeakAreas;
+      sessionContextSent = true;
+    }
     try {
-      const res  = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: fullMsg }) });
+      const res  = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await res.json();
       removeTyping();
       if (data.error) { showError(data.error); setConvState('idle'); }
@@ -670,9 +706,21 @@
     const input = document.getElementById('msgInput');
     const text  = (input.value || '').trim();
     if (!text) return;
-    input.value = ''; appendRepMsg(text, ''); showTyping();
+    input.value = '';
+    if (document.getElementById('chatArea').querySelector('.setup-panel')) {
+      document.getElementById('chatArea').innerHTML = '';
+    }
+    repMessageCount++;
+    appendRepMsg(text, ''); showTyping();
+    const body = { message: text, sessionId };
+    if (!sessionContextSent) {
+      body.persona   = selectedPersona;
+      body.scenario  = selectedScenario;
+      body.weakAreas = repWeakAreas;
+      sessionContextSent = true;
+    }
     try {
-      const res  = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
+      const res  = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await res.json();
       removeTyping();
       if (data.error) showError(data.error);
@@ -725,20 +773,19 @@
     showTyping();
     try {
       const sessionDuration = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : 0;
-      const [scorecardRes, analyzeRes] = await Promise.all([
-        fetch('/scorecard', { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
-        fetch('/analyze',   { method: 'POST', headers: { 'Content-Type': 'application/json' } }),
-      ]);
-      const [scorecardData, analyzeData] = await Promise.all([scorecardRes.json(), analyzeRes.json()]);
+      const res  = await fetch('/end-session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, repName: repName || 'Unknown', duration: sessionDuration, repMessages: repMessageCount }),
+      });
+      const data = await res.json();
       removeTyping();
-      if (scorecardData.scorecard) appendScorecard(scorecardData.scorecard);
-      else showError(scorecardData.error || 'Failed to generate scorecard.');
-      if (analyzeData.analysis) {
-        appendCoachSummary(analyzeData.analysis);
-        speakCoachFeedback(analyzeData.analysis);
-        await saveSession(analyzeData.analysis, sessionDuration);
-      } else {
-        showError('Could not generate analysis — session not saved. (' + (analyzeData.error || 'unknown error') + ')');
+      if (data.scorecard) appendScorecard(data.scorecard);
+      else showError(data.error || 'Failed to generate scorecard.');
+      if (data.analysis) {
+        appendCoachSummary(data.analysis);
+        speakCoachFeedback(data.analysis);
+      } else if (!data.scorecard) {
+        showError('Could not generate analysis — session not saved. (' + (data.error || 'unknown error') + ')');
       }
     } catch (_) { removeTyping(); showError('Could not reach the server.'); }
     const chat = document.getElementById('chatArea');
@@ -803,29 +850,105 @@
     speechSynthesis.speak(utt);
   }
 
-  async function saveSession(analysis, duration) {
-    try {
-      const res = await fetch('/save-session', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repName: repName || 'Unknown', duration: duration || 0, repMessages: repMessageCount, analysis }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        showError('Session could not be saved: ' + (err.error || res.status));
-      }
-    } catch (err) { showError('Session could not be saved: ' + err.message); }
-  }
-
   async function newSession() {
-    try { await fetch('/reset', { method: 'POST' }); } catch (_) {}
+    try { await fetch('/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) }); } catch (_) {}
+    sessionId = crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
+    sessionContextSent = false;
     if (window.speechSynthesis) speechSynthesis.cancel();
-    document.getElementById('chatArea').innerHTML = `
-      <div class="welcome">
-        <strong>New session started</strong>
-        A fresh door is waiting. Tap <span class="key">Start Conversation</span> and begin your pitch.
-      </div>`;
     document.getElementById('endBtn').disabled = false;
     setConvState('idle');
+    showSetupPanel();
+  }
+
+  // ── Session setup panel ───────────────────────────────────
+  function showSetupPanel() {
+    const PERSONAS = [
+      ['standard',       '😐', 'Standard',      'Mildly annoyed, willing to listen'],
+      ['budget',         '💸', 'Budget Tight',   'Cost-focused, insurance questions'],
+      ['bad_contractor', '😠', 'Burned Before',  'Bad contractor experience'],
+      ['has_contractor', '👨‍👩‍👧', 'Has a Guy',      'Brother-in-law does roofing'],
+      ['spouse_away',    '🤷', 'Needs Spouse',   "Can't decide without partner"],
+      ['skeptical',      '🚪', 'About to Close', 'Very busy, door closing fast'],
+    ];
+    const SCENARIOS = [
+      ['cold-knock', '🚶', 'Cold Knock'],
+      ['post-storm', '⛈️', 'After Storm'],
+      ['referral',   '🤝', 'Referral'],
+      ['insurance',  '📋', 'Insurance Claim'],
+    ];
+    document.getElementById('chatArea').innerHTML = `
+      <div class="setup-panel">
+        <div class="setup-header">
+          <strong>Configure your session</strong>
+          <span>Pick a homeowner type and scenario, then start.</span>
+        </div>
+        <div class="setup-section">
+          <div class="setup-section-label">Homeowner Type</div>
+          <div class="persona-grid">
+            ${PERSONAS.map(([id, icon, name, desc]) => `
+              <div class="persona-card${selectedPersona === id ? ' active' : ''}" id="p-${id}" onclick="selectPersona('${id}')">
+                <div class="pc-icon">${icon}</div>
+                <div class="pc-name">${name}</div>
+                <div class="pc-desc">${desc}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div class="setup-section">
+          <div class="setup-section-label">Scenario</div>
+          <div class="scenario-row">
+            ${SCENARIOS.map(([id, icon, label]) => `
+              <div class="scenario-card${selectedScenario === id ? ' active' : ''}" id="s-${id}" onclick="selectScenario('${id}')">
+                <span class="sc-icon">${icon}</span>${label}
+              </div>`).join('')}
+          </div>
+        </div>
+        <div id="weakAreasNote" style="display:none;" class="weak-areas-note"></div>
+      </div>`;
+    showWeakAreasNote();
+  }
+
+  function selectPersona(id) {
+    selectedPersona = id;
+    document.querySelectorAll('.persona-card').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById('p-' + id);
+    if (el) el.classList.add('active');
+  }
+
+  function selectScenario(id) {
+    selectedScenario = id;
+    document.querySelectorAll('.scenario-card').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById('s-' + id);
+    if (el) el.classList.add('active');
+  }
+
+  function showWeakAreasNote() {
+    const el = document.getElementById('weakAreasNote');
+    if (!el || repWeakAreas.length === 0) { if (el) el.style.display = 'none'; return; }
+    const labels = { opening: 'Opening', objectionHandling: 'Objection Handling', rapport: 'Rapport', tonality: 'Tonality', timing: 'Timing', closing: 'Closing' };
+    const names = repWeakAreas.map(k => labels[k] || k).join(' & ');
+    el.style.display = 'block';
+    el.innerHTML = `🎯 <strong>Coach focus this session:</strong> Your recent sessions show room for improvement in <strong>${names}</strong>. The coach will watch these closely.`;
+  }
+
+  async function loadRepWeakAreas() {
+    if (!repName) return;
+    try {
+      const res  = await fetch('/sessions?name=' + encodeURIComponent(repName));
+      const data = await res.json();
+      const recent = (data.sessions || []).slice(0, 10);
+      if (recent.length < 3) return;
+      const catKeys = ['opening', 'objectionHandling', 'rapport', 'tonality', 'timing', 'closing'];
+      const avgs = {};
+      catKeys.forEach(k => {
+        const vals = recent.map(s => s.analysis?.breakdown?.[k]?.score).filter(v => v != null);
+        avgs[k] = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      });
+      repWeakAreas = catKeys
+        .filter(k => avgs[k] !== null && avgs[k] < 60)
+        .sort((a, b) => avgs[a] - avgs[b])
+        .slice(0, 2);
+      showWeakAreasNote();
+    } catch (_) {}
   }
 
   // ── Knowledge base modal ──────────────────────────────────
