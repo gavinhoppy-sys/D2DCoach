@@ -8,227 +8,166 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:        #161616;
-      --bg2:       #1e1e1e;
-      --surface:   rgba(255,255,255,0.04);
-      --surface2:  rgba(255,255,255,0.07);
-      --border:    rgba(255,255,255,0.08);
-      --border2:   rgba(255,255,255,0.14);
-      --text:      #f0f0f0;
-      --text2:     rgba(255,255,255,0.55);
-      --text3:     rgba(255,255,255,0.3);
-      --purple:    #8b5cf6;
-      --purple2:   #7c3aed;
-      --purple-glow: rgba(139,92,246,0.3);
-      --green:     #10b981;
-      --red:       #ef4444;
-      --amber:     #f59e0b;
+      --bg: #161616; --bg2: #1e1e1e;
+      --surface: rgba(255,255,255,0.04); --surface2: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+      --text: #f0f0f0; --text2: rgba(255,255,255,0.55); --text3: rgba(255,255,255,0.3);
+      --purple: #8b5cf6; --purple2: #7c3aed; --purple-glow: rgba(139,92,246,0.3);
+      --green: #10b981; --red: #ef4444; --amber: #f59e0b;
     }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg); color: var(--text); min-height: 100vh;
-    }
-
-    /* ── Header ── */
-    .header {
-      background: rgba(22,22,22,0.95);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
-      display: flex; justify-content: space-between; align-items: center;
-      position: sticky; top: 0; z-index: 10;
-    }
+    /* Header */
+    .header { background: rgba(22,22,22,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
     .header-brand { display: flex; align-items: center; gap: 10px; }
-    .brand-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--purple), #ec4899);
-      box-shadow: 0 0 10px var(--purple-glow);
-    }
+    .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), #ec4899); box-shadow: 0 0 10px var(--purple-glow); }
     .header-title h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
-    .header-title p  { font-size: 11px; color: var(--text2); margin-top: 1px; }
+    .header-title p { font-size: 11px; color: var(--text2); margin-top: 1px; }
     .header-right { display: flex; align-items: center; gap: 10px; }
-    .rep-badge {
-      font-size: 12px; color: var(--text2);
-      background: var(--surface); border: 1px solid var(--border);
-      padding: 4px 12px; border-radius: 8px;
-    }
-    .practice-btn {
-      background: linear-gradient(135deg, var(--purple2), var(--purple));
-      color: white; text-decoration: none;
-      padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
-      box-shadow: 0 4px 14px var(--purple-glow);
-      transition: box-shadow 0.15s;
-    }
+    .rep-badge { font-size: 12px; color: var(--text2); background: var(--surface); border: 1px solid var(--border); padding: 4px 12px; border-radius: 8px; }
+    .practice-btn { background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; text-decoration: none; padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 14px var(--purple-glow); transition: box-shadow 0.15s; }
     .practice-btn:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
+    .kb-btn { color: var(--text2); font-family: inherit; font-size: 12px; font-weight: 500; padding: 5px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); white-space: nowrap; cursor: pointer; transition: all 0.15s; }
+    .kb-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
 
-    /* ── Main ── */
+    /* Feedback banner */
+    .feedback-banner { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; cursor: pointer; transition: background 0.15s; }
+    .feedback-banner:hover { background: rgba(139,92,246,0.15); }
+    .feedback-banner-header { display: flex; align-items: center; gap: 10px; }
+    .feedback-banner-title { font-size: 13px; font-weight: 600; color: var(--purple); flex: 1; }
+    .feedback-badge { background: var(--purple); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+    .feedback-items { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .feedback-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .feedback-item-date { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+    /* Main */
     .main { max-width: 720px; margin: 0 auto; padding: 28px 20px 60px; }
+    .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 14px; }
 
-    /* ── Name prompt ── */
-    .name-prompt {
-      background: var(--bg2); border: 1px solid var(--border2);
-      border-radius: 20px; padding: 40px 32px; text-align: center;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
-    }
-    .name-prompt-icon {
-      width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 20px;
-      background: linear-gradient(135deg, var(--purple2), var(--purple));
-      display: flex; align-items: center; justify-content: center; font-size: 24px;
-      box-shadow: 0 8px 24px var(--purple-glow);
-    }
+    /* Name prompt */
+    .name-prompt { background: var(--bg2); border: 1px solid var(--border2); border-radius: 20px; padding: 40px 32px; text-align: center; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+    .name-prompt-icon { width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 20px; background: linear-gradient(135deg, var(--purple2), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 8px 24px var(--purple-glow); }
     .name-prompt h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.4px; }
-    .name-prompt p  { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
+    .name-prompt p { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
     .name-row { display: flex; gap: 10px; max-width: 340px; margin: 0 auto; }
-    .name-input {
-      flex: 1; background: var(--surface); border: 1px solid var(--border2);
-      color: var(--text); border-radius: 10px;
-      padding: 11px 14px; font-size: 15px; outline: none; font-family: inherit;
-    }
+    .name-input { flex: 1; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 11px 14px; font-size: 15px; outline: none; font-family: inherit; }
     .name-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
     .name-input::placeholder { color: var(--text3); }
-    .name-submit {
-      background: linear-gradient(135deg, var(--purple2), var(--purple));
-      color: white; border: none;
-      padding: 11px 20px; border-radius: 10px; font-size: 14px;
-      font-weight: 600; cursor: pointer; font-family: inherit;
-      box-shadow: 0 4px 14px var(--purple-glow);
-    }
-    .name-submit:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
+    .name-submit { background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; border: none; padding: 11px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px var(--purple-glow); }
 
-    /* ── Section title ── */
-    .section-title {
-      font-size: 11px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 1px; color: var(--text3); margin-bottom: 14px;
-    }
+    /* Today's Focus */
+    .focus-card { background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(139,92,246,0.05)); border: 1px solid rgba(139,92,246,0.25); border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; }
+    .focus-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .focus-icon { font-size: 18px; }
+    .focus-headline { font-size: 13px; font-weight: 700; color: var(--purple); }
+    .focus-tip { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .focus-start-btn { margin-top: 12px; display: inline-block; background: var(--purple); color: white; text-decoration: none; padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; }
 
-    /* ── Stats row ── */
+    /* Stats */
     .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    .stat-box {
-      flex: 1; min-width: 90px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 16px 14px; text-align: center;
-      transition: border-color 0.15s, background 0.15s;
-    }
+    .stat-box { flex: 1; min-width: 90px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 14px; text-align: center; transition: border-color 0.15s, background 0.15s; }
     .stat-box:hover { background: var(--surface2); border-color: var(--border2); }
     .stat-num { font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -1px; }
-    .stat-num.green  { color: var(--green); }
-    .stat-num.orange { color: #fb923c; }
-    .stat-num.red    { color: var(--red); }
-    .stat-num.gold   { color: #fbbf24; }
+    .stat-num.green { color: var(--green); } .stat-num.orange { color: #fb923c; } .stat-num.red { color: var(--red); } .stat-num.gold { color: #fbbf24; }
     .stat-label { font-size: 10px; color: var(--text3); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* ── Progress card ── */
-    .progress-section {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 20px; margin-bottom: 20px;
-    }
+    /* Streak + Badges */
+    .streak-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .streak-box { display: flex; align-items: center; gap: 8px; background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-radius: 12px; padding: 10px 16px; }
+    .streak-flame { font-size: 20px; }
+    .streak-count { font-size: 18px; font-weight: 800; color: #fbbf24; letter-spacing: -0.5px; }
+    .streak-label { font-size: 11px; color: var(--text3); margin-top: 1px; }
+    .badges-wrap { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+    .badge { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 7px 11px; font-size: 11px; color: var(--text2); white-space: nowrap; }
+    .badge.earned { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25); color: #6ee7b7; }
+    .badge-icon { font-size: 14px; }
 
-    /* Trend chart */
+    /* Progress section */
+    .progress-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
     svg.trend { width: 100%; height: 80px; overflow: visible; }
-    .chart-label {
-      display: flex; justify-content: space-between;
-      font-size: 10px; color: var(--text3); margin-top: 6px;
-      text-transform: uppercase; letter-spacing: 0.4px;
-    }
-
+    .chart-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--text3); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
     .no-data { text-align: center; padding: 32px 20px; color: var(--text3); font-size: 14px; }
     .no-data strong { display: block; font-size: 17px; color: var(--text2); margin-bottom: 8px; font-weight: 600; }
 
-    /* ── Session cards ── */
+    /* Curriculum */
+    .curriculum-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; }
+    .lesson-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .lesson-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--surface2); border: 1px solid var(--border); }
+    .lesson-row.completed { background: rgba(16,185,129,0.07); border-color: rgba(16,185,129,0.2); }
+    .lesson-row.current { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.25); }
+    .lesson-num { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: var(--surface); flex-shrink: 0; }
+    .lesson-row.completed .lesson-num { background: rgba(16,185,129,0.2); color: #34d399; }
+    .lesson-row.current .lesson-num { background: rgba(139,92,246,0.2); color: var(--purple); }
+    .lesson-info { flex: 1; }
+    .lesson-title { font-size: 13px; font-weight: 600; }
+    .lesson-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .lesson-btn { background: var(--purple); color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none; white-space: nowrap; }
+    .lesson-btn.done { background: none; border: 1px solid rgba(16,185,129,0.3); color: #34d399; cursor: default; font-size: 12px; padding: 5px 12px; }
+
+    /* Leaderboard */
+    .lb-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; }
+    .lb-row { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 10px; }
+    .lb-row.me { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25); }
+    .lb-row:hover:not(.me) { background: var(--surface2); }
+    .lb-rank { width: 24px; text-align: center; font-size: 12px; font-weight: 700; color: var(--text3); flex-shrink: 0; }
+    .lb-rank.top { color: #fbbf24; }
+    .lb-name { flex: 1; font-size: 13px; font-weight: 500; }
+    .lb-sessions { font-size: 11px; color: var(--text3); }
+    .lb-score { font-size: 14px; font-weight: 700; }
+
+    /* Session cards */
     .sessions-section { display: flex; flex-direction: column; gap: 10px; }
-
-    .session-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; overflow: hidden; cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-    }
+    .session-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
     .session-card:hover { background: var(--surface2); border-color: var(--border2); }
-
     .card-header { display: flex; align-items: center; gap: 14px; padding: 16px; }
-
-    .score-circle {
-      width: 52px; height: 52px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 800; flex-shrink: 0; color: white;
-      letter-spacing: -0.5px;
-    }
+    .score-circle { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; letter-spacing: -0.5px; }
     .score-circle.red    { background: rgba(239,68,68,0.2);   border: 1px solid rgba(239,68,68,0.4);   color: #f87171; }
     .score-circle.orange { background: rgba(251,146,60,0.2);  border: 1px solid rgba(251,146,60,0.4);  color: #fb923c; }
     .score-circle.green  { background: rgba(16,185,129,0.2);  border: 1px solid rgba(16,185,129,0.4);  color: #34d399; }
     .score-circle.gold   { background: rgba(251,191,36,0.2);  border: 1px solid rgba(251,191,36,0.4);  color: #fbbf24; }
-
     .card-meta { flex: 1; min-width: 0; }
-    .card-date  { font-size: 12px; color: var(--text3); }
+    .card-date { font-size: 12px; color: var(--text3); }
     .card-turns { font-size: 11px; color: var(--text3); margin-top: 2px; }
-    .card-summary {
-      font-size: 13px; color: var(--text2); margin-top: 5px;
-      line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
+    .card-summary { font-size: 13px; color: var(--text2); margin-top: 5px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .expand-icon { font-size: 16px; color: var(--text3); flex-shrink: 0; transition: transform 0.2s; }
     .session-card.open .expand-icon { transform: rotate(180deg); }
-
     .card-body { display: none; padding: 0 16px 16px; border-top: 1px solid var(--border); }
     .session-card.open .card-body { display: block; }
-
     .key-points { display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
-    .key-point {
-      flex: 1; min-width: 140px; border-radius: 10px; padding: 10px 12px;
-      font-size: 12px; line-height: 1.5;
-    }
-    .key-point.strength {
-      background: rgba(16,185,129,0.08); color: #6ee7b7;
-      border: 1px solid rgba(16,185,129,0.2);
-    }
-    .key-point.improve  {
-      background: rgba(245,158,11,0.08); color: #fcd34d;
-      border: 1px solid rgba(245,158,11,0.2);
-    }
-    .key-point strong {
-      display: block; font-size: 10px; text-transform: uppercase;
-      letter-spacing: 0.6px; margin-bottom: 4px; opacity: 0.6;
-    }
-
+    .key-point { flex: 1; min-width: 140px; border-radius: 10px; padding: 10px 12px; font-size: 12px; line-height: 1.5; }
+    .key-point.strength { background: rgba(16,185,129,0.08); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.2); }
+    .key-point.improve  { background: rgba(245,158,11,0.08); color: #fcd34d; border: 1px solid rgba(245,158,11,0.2); }
+    .key-point strong { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; opacity: 0.6; }
     .breakdown-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
     .breakdown-row { display: flex; align-items: center; gap: 10px; }
     .breakdown-label { font-size: 11px; font-weight: 600; color: var(--text2); width: 120px; flex-shrink: 0; }
     .bar-track { flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 6px; overflow: hidden; }
-    .bar-fill  { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-    .bar-fill.red    { background: rgba(239,68,68,0.7); }
-    .bar-fill.orange { background: rgba(251,146,60,0.7); }
-    .bar-fill.green  { background: rgba(16,185,129,0.7); }
-    .bar-fill.gold   { background: rgba(251,191,36,0.7); }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .bar-fill.red { background: rgba(239,68,68,0.7); } .bar-fill.orange { background: rgba(251,146,60,0.7); }
+    .bar-fill.green { background: rgba(16,185,129,0.7); } .bar-fill.gold { background: rgba(251,191,36,0.7); }
     .breakdown-pct { font-size: 11px; font-weight: 700; width: 34px; text-align: right; color: var(--text2); }
     .breakdown-feedback { font-size: 11px; color: var(--text3); margin-top: 3px; margin-left: 130px; line-height: 1.4; }
+    /* Transcript */
+    .transcript-toggle { margin-top: 12px; font-size: 11px; color: var(--purple); cursor: pointer; font-weight: 600; }
+    .transcript-toggle:hover { text-decoration: underline; }
+    .transcript-block { display: none; margin-top: 10px; background: rgba(0,0,0,0.25); border-radius: 10px; padding: 12px 14px; max-height: 280px; overflow-y: auto; font-size: 12px; line-height: 1.7; color: var(--text2); white-space: pre-wrap; }
+    .transcript-block.open { display: block; }
+    .t-rep { color: var(--text); font-weight: 600; }
+    .t-hw  { color: #93c5fd; }
+    .t-coach { color: #86efac; font-style: italic; }
+    /* Goal result in card */
+    .goal-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; border-radius: 7px; padding: 3px 9px; margin-top: 8px; }
+    .goal-tag.achieved { background: rgba(16,185,129,0.1); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+    .goal-tag.missed   { background: rgba(245,158,11,0.1);  color: #fcd34d;  border: 1px solid rgba(245,158,11,0.2); }
 
     /* Loading */
-    .loading {
-      text-align: center; padding: 60px 20px; color: var(--text3); font-size: 14px;
-    }
-    .loading-spinner {
-      width: 28px; height: 28px; border-radius: 50%;
-      border: 2px solid rgba(139,92,246,0.2); border-top-color: var(--purple);
-      animation: spin 0.8s linear infinite; margin: 0 auto 16px;
-    }
+    .loading { text-align: center; padding: 60px 20px; color: var(--text3); font-size: 14px; }
+    .loading-spinner { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(139,92,246,0.2); border-top-color: var(--purple); animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── KB button ── */
-    .kb-btn {
-      color: var(--text2); font-family: inherit;
-      font-size: 12px; font-weight: 500;
-      padding: 5px 12px; border-radius: 8px;
-      background: var(--surface); border: 1px solid var(--border);
-      white-space: nowrap; cursor: pointer;
-      transition: all 0.15s;
-    }
-    .kb-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
-
-    /* ── Knowledge modal ── */
+    /* KB modal */
     .k-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
     .k-overlay.hidden { display: none; }
     .k-modal { background: #1e1e1e; border: 1px solid var(--border2); border-radius: 20px; padding: 28px; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,0.6); }
@@ -240,13 +179,10 @@
     .k-tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 18px; }
     .k-tab { flex: 1; padding: 8px; border-radius: 7px; border: none; background: none; color: var(--text2); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
     .k-tab.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
-    .k-panel { display: none; }
-    .k-panel.active { display: block; }
+    .k-panel { display: none; } .k-panel.active { display: block; }
     .k-drop-zone { border: 2px dashed var(--border2); border-radius: 12px; padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 12px; }
     .k-drop-zone:hover, .k-drop-zone.drag-over { border-color: var(--purple); background: rgba(139,92,246,0.05); }
-    .k-drop-icon { font-size: 32px; margin-bottom: 10px; }
-    .k-drop-text { font-size: 14px; color: var(--text2); }
-    .k-drop-sub  { font-size: 12px; color: var(--text3); margin-top: 4px; }
+    .k-drop-icon { font-size: 32px; margin-bottom: 10px; } .k-drop-text { font-size: 14px; color: var(--text2); } .k-drop-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
     .k-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
     .k-input { width: 100%; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 11px 14px; font-size: 14px; outline: none; font-family: inherit; margin-bottom: 12px; }
     .k-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
@@ -255,8 +191,7 @@
     .k-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
     .k-textarea::placeholder { color: var(--text3); }
     .k-add-btn { width: 100%; background: linear-gradient(135deg, var(--purple2), var(--purple)); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px var(--purple-glow); }
-    .k-add-btn:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
-    .k-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .k-add-btn:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); } .k-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .k-divider { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); font-weight: 600; margin: 20px 0 12px; }
     .k-file-list { display: flex; flex-direction: column; gap: 8px; }
     .k-file-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start; }
@@ -275,16 +210,44 @@
 <div class="header">
   <div class="header-brand">
     <div class="brand-dot"></div>
-    <div class="header-title">
-      <h1>D2D Coach</h1>
-      <p>Session Hub</p>
-    </div>
+    <div class="header-title"><h1>D2D Coach</h1><p>Session Hub</p></div>
   </div>
   <div class="header-right">
     <span class="rep-badge" id="repBadge"></span>
     <button class="kb-btn" onclick="openKB()">📚 Scripts</button>
     <a href="/" class="kb-btn" style="text-decoration:none;">← Home</a>
     <a href="/practice.html" class="practice-btn">▶ Practice</a>
+  </div>
+</div>
+
+<!-- KB modal -->
+<div class="k-overlay hidden" id="kbModal">
+  <div class="k-modal">
+    <div class="k-header">
+      <div><h2>Knowledge Base</h2><p>Upload scripts and training docs — the coach will reference them during sessions.</p></div>
+      <button class="k-close" onclick="closeKB()">✕</button>
+    </div>
+    <div class="k-tabs">
+      <button class="k-tab active" id="tabUpload" onclick="switchTab('upload')">📁 Upload File</button>
+      <button class="k-tab" id="tabPaste" onclick="switchTab('paste')">✏️ Paste Text</button>
+    </div>
+    <div class="k-panel active" id="panelUpload">
+      <div class="k-drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
+        <div class="k-drop-icon">📄</div>
+        <div class="k-drop-text">Drop a .txt or .md file here</div>
+        <div class="k-drop-sub">or click to browse</div>
+      </div>
+      <input type="file" id="fileInput" accept=".txt,.md,.csv" style="display:none" onchange="handleFileSelect(event)">
+    </div>
+    <div class="k-panel" id="panelPaste">
+      <div class="k-label">Document name</div>
+      <input class="k-input" id="pasteFilename" type="text" placeholder="e.g. Cold Door Script, Objection Guide…" maxlength="80">
+      <div class="k-label">Content</div>
+      <textarea class="k-textarea" id="pasteContent" placeholder="Paste your sales script, training notes, or any reference material…"></textarea>
+      <button class="k-add-btn" id="pasteAddBtn" onclick="savePasted()">Add Document</button>
+    </div>
+    <div class="k-divider">Saved Documents</div>
+    <div class="k-file-list" id="kbFileList"><div class="k-loading">Loading…</div></div>
   </div>
 </div>
 
@@ -297,12 +260,25 @@
       <h2>Load your sessions</h2>
       <p>Enter the name you used during practice to view your history and progress.</p>
       <div class="name-row">
-        <input class="name-input" id="hubNameInput" type="text" placeholder="Your first name" maxlength="40"
-          onkeydown="if(event.key==='Enter') hubSubmitName()">
+        <input class="name-input" id="hubNameInput" type="text" placeholder="Your first name" maxlength="40" onkeydown="if(event.key==='Enter') hubSubmitName()">
         <button class="name-submit" onclick="hubSubmitName()">Load</button>
       </div>
     </div>
   </div>
+
+  <!-- Feedback banner -->
+  <div id="feedbackBanner" style="display:none;" class="feedback-banner" onclick="toggleFeedback()">
+    <div class="feedback-banner-header">
+      <span>💬</span>
+      <span class="feedback-banner-title">Manager Feedback</span>
+      <span class="feedback-badge" id="feedbackCount"></span>
+      <span id="feedbackChevron" style="color:var(--text3);font-size:14px;">⌄</span>
+    </div>
+    <div id="feedbackItems" class="feedback-items" style="display:none;"></div>
+  </div>
+
+  <!-- Today's Focus -->
+  <div id="focusCard" style="display:none;"></div>
 
   <!-- Progress -->
   <div id="progressSection" style="display:none; margin-bottom: 20px;">
@@ -311,68 +287,43 @@
       <div class="stats-row" id="statsRow"></div>
       <div id="chartWrap"></div>
     </div>
+    <div class="streak-row" id="streakRow"></div>
+  </div>
+
+  <!-- Curriculum -->
+  <div id="curriculumSection" style="display:none; margin-bottom: 20px;">
+    <div class="section-title">Training Curriculum</div>
+    <div class="curriculum-section" id="curriculumContent"></div>
   </div>
 
   <!-- Sessions -->
   <div id="sessionsHeader" style="display:none;" class="section-title">Past Sessions</div>
   <div class="sessions-section" id="sessionsList"></div>
 
-</div>
-
-<!-- Knowledge base modal -->
-<div class="k-overlay hidden" id="kbModal">
-  <div class="k-modal">
-    <div class="k-header">
-      <div>
-        <h2>Knowledge Base</h2>
-        <p>Upload scripts and training docs — the coach will reference them during sessions.</p>
-      </div>
-      <button class="k-close" onclick="closeKB()">✕</button>
-    </div>
-
-    <div class="k-tabs">
-      <button class="k-tab active" id="tabUpload" onclick="switchTab('upload')">📁 Upload File</button>
-      <button class="k-tab" id="tabPaste"  onclick="switchTab('paste')">✏️ Paste Text</button>
-    </div>
-
-    <div class="k-panel active" id="panelUpload">
-      <div class="k-drop-zone" id="dropZone"
-        onclick="document.getElementById('fileInput').click()"
-        ondragover="event.preventDefault(); this.classList.add('drag-over')"
-        ondragleave="this.classList.remove('drag-over')"
-        ondrop="handleDrop(event)">
-        <div class="k-drop-icon">📄</div>
-        <div class="k-drop-text">Drop a .txt or .md file here</div>
-        <div class="k-drop-sub">or click to browse</div>
-      </div>
-      <input type="file" id="fileInput" accept=".txt,.md,.csv" style="display:none" onchange="handleFileSelect(event)">
-    </div>
-
-    <div class="k-panel" id="panelPaste">
-      <div class="k-label">Document name</div>
-      <input class="k-input" id="pasteFilename" type="text" placeholder="e.g. Cold Door Script, Objection Guide…" maxlength="80">
-      <div class="k-label">Content</div>
-      <textarea class="k-textarea" id="pasteContent" placeholder="Paste your sales script, training notes, or any reference material…"></textarea>
-      <button class="k-add-btn" id="pasteAddBtn" onclick="savePasted()">Add Document</button>
-    </div>
-
-    <div class="k-divider">Saved Documents</div>
-    <div class="k-file-list" id="kbFileList"><div class="k-loading">Loading…</div></div>
+  <!-- Leaderboard -->
+  <div id="lbSection" style="display:none; margin-top: 28px;">
+    <div class="section-title">Team Leaderboard</div>
+    <div class="lb-section" id="lbContent"></div>
   </div>
+
 </div>
 
 <script>
   let sessions = [];
   let repName  = localStorage.getItem('d2d_rep_name') || '';
+  let feedbackOpen = false;
 
   (function init() {
     if (repName) {
       document.getElementById('repBadge').textContent = repName;
       loadSessions(repName);
+      loadFeedback(repName);
     } else {
       document.getElementById('namePrompt').style.display = 'block';
       setTimeout(() => document.getElementById('hubNameInput').focus(), 100);
     }
+    loadLeaderboard();
+    renderCurriculum();
   })();
 
   function hubSubmitName() {
@@ -380,25 +331,21 @@
     if (!val) return;
     repName = val;
     localStorage.setItem('d2d_rep_name', repName);
-    document.getElementById('namePrompt').style.display  = 'none';
-    document.getElementById('repBadge').textContent      = repName;
+    document.getElementById('namePrompt').style.display = 'none';
+    document.getElementById('repBadge').textContent = repName;
     loadSessions(repName);
+    loadFeedback(repName);
   }
 
   async function loadSessions(name) {
-    document.getElementById('sessionsList').innerHTML = `
-      <div class="loading">
-        <div class="loading-spinner"></div>
-        Loading sessions…
-      </div>`;
+    document.getElementById('sessionsList').innerHTML = `<div class="loading"><div class="loading-spinner"></div>Loading sessions…</div>`;
     try {
       const res  = await fetch('/sessions?name=' + encodeURIComponent(name));
       const data = await res.json();
       sessions = data.sessions || [];
       render();
     } catch (_) {
-      document.getElementById('sessionsList').innerHTML =
-        '<div class="no-data"><strong>Could not load sessions</strong>Check your connection and refresh.</div>';
+      document.getElementById('sessionsList').innerHTML = '<div class="no-data"><strong>Could not load sessions</strong>Check your connection and refresh.</div>';
     }
   }
 
@@ -407,37 +354,26 @@
       document.getElementById('progressSection').style.display = 'block';
       document.getElementById('sessionsHeader').style.display  = 'block';
     }
-    renderStats(); renderChart(); renderSessions();
+    renderStats();
+    renderChart();
+    renderStreakBadges();
+    renderTodaysFocus();
+    renderSessions();
   }
 
-  // ── Helpers ────────────────────────────────────────────────
-  function scoreColor(n) {
-    if (n >= 85) return 'gold';
-    if (n >= 70) return 'green';
-    if (n >= 50) return 'orange';
-    return 'red';
-  }
-  function fmt(isoDate) {
-    return new Date(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
-  function fmtDuration(secs) {
-    if (!secs) return '';
-    const m = Math.floor(secs / 60), s = secs % 60;
-    return m > 0 ? `${m}m ${s}s` : `${s}s`;
-  }
-  function esc(t) {
-    return (t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+  // ── Helpers ──────────────────────────────────────────────
+  function scoreColor(n) { return n >= 85 ? 'gold' : n >= 70 ? 'green' : n >= 50 ? 'orange' : 'red'; }
+  function fmt(d) { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+  function fmtDuration(s) { if (!s) return ''; const m = Math.floor(s/60), sec = s%60; return m > 0 ? `${m}m ${sec}s` : `${sec}s`; }
+  function esc(t) { return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function dotColor(s) { return s >= 85 ? '#fbbf24' : s >= 70 ? '#10b981' : s >= 50 ? '#fb923c' : '#ef4444'; }
 
-  // ── Stats ──────────────────────────────────────────────────
+  // ── Stats ────────────────────────────────────────────────
   function renderStats() {
     const el = document.getElementById('statsRow');
-    if (sessions.length === 0) {
-      el.innerHTML = '<p style="width:100%;text-align:center;color:var(--text3);padding:10px 0;font-size:13px;">No sessions yet — start practicing!</p>';
-      return;
-    }
+    if (sessions.length === 0) { el.innerHTML = '<p style="width:100%;text-align:center;color:var(--text3);padding:10px 0;font-size:13px;">No sessions yet — start practicing!</p>'; return; }
     const scores = sessions.map(s => s.analysis.overall);
-    const avg    = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
+    const avg    = Math.round(scores.reduce((a,b) => a+b,0) / scores.length);
     const best   = Math.max(...scores);
     const latest = scores[0];
     const trend  = scores.length >= 2 ? latest - scores[1] : null;
@@ -445,49 +381,134 @@
       <div class="stat-box"><div class="stat-num ${scoreColor(latest)}">${latest}%</div><div class="stat-label">Latest</div></div>
       <div class="stat-box"><div class="stat-num ${scoreColor(avg)}">${avg}%</div><div class="stat-label">Average</div></div>
       <div class="stat-box"><div class="stat-num ${scoreColor(best)}">${best}%</div><div class="stat-label">Best</div></div>
-      <div class="stat-box">
-        <div class="stat-num ${trend === null ? '' : trend >= 0 ? 'green' : 'red'}">
-          ${trend === null ? '—' : (trend >= 0 ? '+' : '') + trend + '%'}
-        </div>
-        <div class="stat-label">vs Last</div>
-      </div>
+      <div class="stat-box"><div class="stat-num ${trend===null?'':trend>=0?'green':'red'}">${trend===null?'—':(trend>=0?'+':'')+trend+'%'}</div><div class="stat-label">vs Last</div></div>
       <div class="stat-box"><div class="stat-num">${sessions.length}</div><div class="stat-label">Sessions</div></div>`;
   }
 
-  // ── Trend chart ────────────────────────────────────────────
+  // ── Trend chart ──────────────────────────────────────────
   function renderChart() {
     const wrap = document.getElementById('chartWrap');
-    const pts  = sessions.slice(0, 20).reverse().map(s => s.analysis.overall);
+    const pts  = sessions.slice(0,20).reverse().map(s => s.analysis.overall);
     if (pts.length < 2) { wrap.innerHTML = ''; return; }
     const W = 600, H = 70, PAD = 6;
-    const xStep = (W - PAD * 2) / (pts.length - 1);
-    const coords = pts.map((v, i) => ({ x: PAD + i * xStep, y: PAD + (1 - v / 100) * (H - PAD * 2) }));
+    const xStep = (W - PAD*2) / (pts.length - 1);
+    const coords = pts.map((v,i) => ({ x: PAD+i*xStep, y: PAD+(1-v/100)*(H-PAD*2) }));
     const polyline = coords.map(c => `${c.x},${c.y}`).join(' ');
-    const area = [...coords.map(c => `${c.x},${c.y}`), `${coords[coords.length-1].x},${H}`, `${coords[0].x},${H}`].join(' ');
-    const dots = coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3.5" fill="${dotColor(pts[coords.indexOf(c)])}" stroke="#161616" stroke-width="2"/>`).join('');
-    wrap.innerHTML = `
-      <svg class="trend" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3"/>
-            <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
-          </linearGradient>
-        </defs>
-        <polygon points="${area}" fill="url(#grad)"/>
-        <polyline fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="round" points="${polyline}"/>
-        ${dots}
-      </svg>
+    const area = [...coords.map(c=>`${c.x},${c.y}`), `${coords[coords.length-1].x},${H}`, `${coords[0].x},${H}`].join(' ');
+    const dots = coords.map((c,i) => `<circle cx="${c.x}" cy="${c.y}" r="3.5" fill="${dotColor(pts[i])}" stroke="#161616" stroke-width="2"/>`).join('');
+    wrap.innerHTML = `<svg class="trend" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3"/><stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/></linearGradient></defs>
+      <polygon points="${area}" fill="url(#grad)"/>
+      <polyline fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="round" points="${polyline}"/>
+      ${dots}</svg>
       <div class="chart-label"><span>Oldest</span><span>Most Recent</span></div>`;
   }
 
-  function dotColor(score) {
-    if (score >= 85) return '#fbbf24';
-    if (score >= 70) return '#10b981';
-    if (score >= 50) return '#fb923c';
-    return '#ef4444';
+  // ── Streak & Badges ──────────────────────────────────────
+  function computeStreak() {
+    if (sessions.length === 0) return 0;
+    const dates = [...new Set(sessions.map(s => new Date(s.date).toDateString()))];
+    let streak = 0;
+    const today = new Date(); today.setHours(0,0,0,0);
+    let check = new Date(today);
+    for (let i = 0; i < 365; i++) {
+      if (dates.includes(check.toDateString())) { streak++; check.setDate(check.getDate()-1); }
+      else if (i === 0) { check.setDate(check.getDate()-1); } // allow yesterday to still count
+      else break;
+    }
+    return streak;
   }
 
-  // ── Sessions list ──────────────────────────────────────────
+  function renderStreakBadges() {
+    const streak = computeStreak();
+    const BADGES = [
+      { icon: '🌱', name: 'First Step',  earned: sessions.length >= 1 },
+      { icon: '🔥', name: 'Grinder',     earned: sessions.length >= 10 },
+      { icon: '⚡', name: 'Machine',     earned: sessions.length >= 25 },
+      { icon: '🏆', name: 'Elite',       earned: sessions.some(s => s.analysis.overall >= 85) },
+      { icon: '🎯', name: 'Consistent',  earned: sessions.length >= 5 && sessions.slice(0,5).every(s => s.analysis.overall >= 70) },
+      { icon: '📈', name: 'Level Up',    earned: sessions.length >= 4 && (sessions[0].analysis.overall - sessions[sessions.length-1].analysis.overall >= 10) },
+      { icon: '🔆', name: 'On a Roll',   earned: streak >= 3 },
+    ];
+    const earnedBadges = BADGES.filter(b => b.earned);
+    const el = document.getElementById('streakRow');
+    el.innerHTML = `
+      <div class="streak-box">
+        <div class="streak-flame">🔥</div>
+        <div>
+          <div class="streak-count">${streak}</div>
+          <div class="streak-label">${streak === 1 ? 'day streak' : 'day streak'}</div>
+        </div>
+      </div>
+      <div class="badges-wrap">
+        ${earnedBadges.map(b => `<div class="badge earned"><span class="badge-icon">${b.icon}</span>${b.name}</div>`).join('')}
+        ${earnedBadges.length === 0 ? '<div class="badge" style="color:var(--text3);font-size:11px;">Complete sessions to earn badges</div>' : ''}
+      </div>`;
+  }
+
+  // ── Today's Focus ────────────────────────────────────────
+  const FOCUS_TIPS = {
+    opening:           { icon: '🚪', headline: 'Sharpen your opener', tip: 'State your name, company, and a specific reason you\'re there within your first two sentences. Don\'t ask "how are you" — it signals you\'re selling.' },
+    objectionHandling: { icon: '🛡️', headline: 'Handle objections better', tip: 'When they push back, lead with "That makes sense — a lot of homeowners feel that way" before you pivot. Never argue. Validate first, then redirect.' },
+    rapport:           { icon: '🤝', headline: 'Build more rapport', tip: 'Ask one personal question before any pitch. A simple observation about their home or yard works. People buy from people they like.' },
+    tonality:          { icon: '🎙️', headline: 'Fix your tonality', tip: 'Slow down 10%, raise your energy 20%. Record yourself on your phone and listen back — it\'s uncomfortable but transformative.' },
+    timing:            { icon: '⏱️', headline: 'Control your pace', tip: 'You\'re outside the 130-150 WPM sweet spot. Speaking slower than feels natural reads as confidence, not hesitation.' },
+    closing:           { icon: '🎯', headline: 'Ask for the close', tip: 'End every turn by asking a yes/no question that moves forward: "Can I take a quick look at the roof while I\'m here?" Never leave without asking.' },
+  };
+
+  function renderTodaysFocus() {
+    if (sessions.length < 2) return;
+    const catKeys = ['opening','objectionHandling','rapport','tonality','timing','closing'];
+    const avgs = {};
+    catKeys.forEach(k => {
+      const vals = sessions.slice(0,10).map(s => s.analysis?.breakdown?.[k]?.score).filter(v => v != null);
+      avgs[k] = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 100;
+    });
+    const worst = catKeys.sort((a,b) => avgs[a]-avgs[b])[0];
+    const tip = FOCUS_TIPS[worst];
+    if (!tip) return;
+    const el = document.getElementById('focusCard');
+    el.style.display = 'block';
+    el.innerHTML = `<div class="focus-card">
+      <div class="focus-header"><span class="focus-icon">${tip.icon}</span><span class="focus-headline">Today's Focus: ${tip.headline}</span></div>
+      <div class="focus-tip">${tip.tip}</div>
+      <a class="focus-start-btn" href="/practice.html">▶ Start Session</a>
+    </div>`;
+  }
+
+  // ── Curriculum ───────────────────────────────────────────
+  const LESSONS = [
+    { n: 1, title: 'Opener Only',          desc: 'Nail your name, company, and reason for being there.' },
+    { n: 2, title: 'Opener + Rapport',     desc: 'Build a human connection before pitching.' },
+    { n: 3, title: 'Objection Handling',   desc: 'Handle 2-3 tough objections smoothly.' },
+    { n: 4, title: 'Full Pitch',           desc: 'Complete conversation from opener to close attempt.' },
+    { n: 5, title: 'Elite Challenge',      desc: 'Skeptical homeowner, cold knock. Score 70+ to pass.' },
+  ];
+
+  function renderCurriculum() {
+    document.getElementById('curriculumSection').style.display = 'block';
+    const curr = JSON.parse(localStorage.getItem('d2d_curriculum') || '{"completed":[]}');
+    const nextLesson = LESSONS.find(l => !curr.completed.includes(l.n)) || LESSONS[LESSONS.length-1];
+    const el = document.getElementById('curriculumContent');
+    el.innerHTML = `<div class="lesson-list">` + LESSONS.map(l => {
+      const done    = curr.completed.includes(l.n);
+      const current = l.n === nextLesson.n && !done;
+      const cls     = done ? 'completed' : current ? 'current' : '';
+      const btn     = done
+        ? `<span class="lesson-btn done">✓ Done</span>`
+        : `<a class="lesson-btn" href="/practice.html?lesson=${l.n}">Start</a>`;
+      return `<div class="lesson-row ${cls}">
+        <div class="lesson-num">${done ? '✓' : l.n}</div>
+        <div class="lesson-info">
+          <div class="lesson-title">${l.title}</div>
+          <div class="lesson-desc">${l.desc}</div>
+        </div>
+        ${btn}
+      </div>`;
+    }).join('') + `</div>`;
+  }
+
+  // ── Sessions list ─────────────────────────────────────────
   function renderSessions() {
     const list = document.getElementById('sessionsList');
     if (sessions.length === 0) {
@@ -498,15 +519,8 @@
       const a  = s.analysis;
       const cl = scoreColor(a.overall);
       const bd = a.breakdown || {};
-      const cats = [
-        ['Opening',            bd.opening],
-        ['Objection Handling', bd.objectionHandling],
-        ['Rapport',            bd.rapport],
-        ['Tonality',           bd.tonality],
-        ['Timing',             bd.timing],
-        ['Closing',            bd.closing],
-      ];
-      const barsHtml = cats.filter(([,v]) => v).map(([label, v]) => `
+      const cats = [['Opening',bd.opening],['Objection Handling',bd.objectionHandling],['Rapport',bd.rapport],['Tonality',bd.tonality],['Timing',bd.timing],['Closing',bd.closing]];
+      const barsHtml = cats.filter(([,v])=>v).map(([label,v])=>`
         <div>
           <div class="breakdown-row">
             <div class="breakdown-label">${label}</div>
@@ -515,7 +529,11 @@
           </div>
           ${v.feedback ? `<div class="breakdown-feedback">${esc(v.feedback)}</div>` : ''}
         </div>`).join('');
-      const meta = [fmt(s.date), s.repMessages ? `${s.repMessages} turn${s.repMessages !== 1 ? 's' : ''}` : '', fmtDuration(s.duration)].filter(Boolean).join(' · ');
+      const meta = [fmt(s.date), s.repMessages ? `${s.repMessages} turn${s.repMessages!==1?'s':''}` : '', fmtDuration(s.duration)].filter(Boolean).join(' · ');
+      const goalTag = a.goalAchieved !== undefined ? `<div class="goal-tag ${a.goalAchieved?'achieved':'missed'}">${a.goalAchieved?'✅':'❌'} ${esc(a.sessionGoal||'')}</div>` : '';
+      const transcriptHtml = a.transcript ? `
+        <div class="transcript-toggle" onclick="toggleTranscript(${i}, event)">📄 View transcript</div>
+        <div class="transcript-block" id="tr-${i}">${formatTranscript(a.transcript)}</div>` : '';
       return `
         <div class="session-card" id="card-${i}" onclick="toggleCard(${i})">
           <div class="card-header">
@@ -523,115 +541,143 @@
             <div class="card-meta">
               <div class="card-date">${fmt(s.date)}</div>
               <div class="card-turns">${meta}</div>
-              <div class="card-summary">${esc(a.summary || '')}</div>
+              <div class="card-summary">${esc(a.summary||'')}</div>
             </div>
             <div class="expand-icon">⌄</div>
           </div>
           <div class="card-body">
+            ${goalTag}
             <div class="key-points">
               ${a.keyStrength    ? `<div class="key-point strength"><strong>💪 Strength</strong>${esc(a.keyStrength)}</div>` : ''}
               ${a.keyImprovement ? `<div class="key-point improve"><strong>🎯 Work On</strong>${esc(a.keyImprovement)}</div>` : ''}
             </div>
             <div class="breakdown-grid">${barsHtml}</div>
+            ${transcriptHtml}
           </div>
         </div>`;
     }).join('');
   }
 
-  function toggleCard(i) {
-    document.getElementById(`card-${i}`).classList.toggle('open');
+  function toggleCard(i) { document.getElementById(`card-${i}`).classList.toggle('open'); }
+
+  function toggleTranscript(i, e) {
+    e.stopPropagation();
+    document.getElementById(`tr-${i}`).classList.toggle('open');
   }
 
-  // ── Knowledge base ─────────────────────────────────────────
-  function openKB() {
-    document.getElementById('kbModal').classList.remove('hidden');
-    loadKBFiles();
+  function formatTranscript(raw) {
+    return raw.split('\n').map(line => {
+      if (line.startsWith('REP:'))      return `<span class="t-rep">${esc(line)}</span>`;
+      if (line.startsWith('HOMEOWNER:')) return `<span class="t-hw">${esc(line)}</span>`;
+      if (line.startsWith('COACH:'))    return `<span class="t-coach">${esc(line)}</span>`;
+      return esc(line);
+    }).join('\n');
   }
+
+  // ── Feedback ─────────────────────────────────────────────
+  let allFeedback = [];
+  async function loadFeedback(name) {
+    try {
+      const res  = await fetch('/feedback?name=' + encodeURIComponent(name));
+      const data = await res.json();
+      allFeedback = data.feedback || [];
+      if (allFeedback.length === 0) return;
+      const unread = allFeedback.filter(f => !f.read_at);
+      const banner = document.getElementById('feedbackBanner');
+      banner.style.display = 'block';
+      document.getElementById('feedbackCount').textContent = unread.length > 0 ? unread.length + ' new' : allFeedback.length + ' msg' + (allFeedback.length !== 1 ? 's' : '');
+      document.getElementById('feedbackItems').innerHTML = allFeedback.map(f => `
+        <div class="feedback-item">
+          ${esc(f.message)}
+          <div class="feedback-item-date">${fmt(f.created_at)}</div>
+        </div>`).join('');
+    } catch (_) {}
+  }
+
+  function toggleFeedback() {
+    feedbackOpen = !feedbackOpen;
+    document.getElementById('feedbackItems').style.display = feedbackOpen ? 'flex' : 'none';
+    document.getElementById('feedbackChevron').textContent = feedbackOpen ? '⌃' : '⌄';
+    if (feedbackOpen) {
+      const unreadIds = allFeedback.filter(f => !f.read_at).map(f => f.id);
+      if (unreadIds.length > 0) {
+        fetch('/feedback/read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: unreadIds }) }).catch(() => {});
+        document.getElementById('feedbackCount').textContent = allFeedback.length + ' msg' + (allFeedback.length !== 1 ? 's' : '');
+      }
+    }
+  }
+
+  // ── Leaderboard ───────────────────────────────────────────
+  async function loadLeaderboard() {
+    try {
+      const res  = await fetch('/leaderboard');
+      const data = await res.json();
+      const lb   = data.leaderboard || [];
+      if (lb.length === 0) return;
+      document.getElementById('lbSection').style.display = 'block';
+      document.getElementById('lbContent').innerHTML = lb.map((r, i) => {
+        const isMe = repName && r.rep_name.toLowerCase() === repName.toLowerCase();
+        const cl = scoreColor(r.avg_score);
+        return `<div class="lb-row${isMe?' me':''}">
+          <div class="lb-rank${i<3?' top':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+          <div class="lb-name">${esc(r.rep_name)}${isMe?' <span style="color:var(--purple);font-size:10px;">(you)</span>':''}</div>
+          <div class="lb-sessions" style="margin-right:12px;">${r.session_count} sess.</div>
+          <div class="lb-score" style="color:var(--${cl==='gold'?'amber':cl==='green'?'green':cl==='orange'?'amber':'red'})">${r.avg_score}%</div>
+        </div>`;
+      }).join('');
+    } catch (_) {}
+  }
+
+  // ── KB modal ─────────────────────────────────────────────
+  function openKB() { document.getElementById('kbModal').classList.remove('hidden'); loadKBFiles(); }
   function closeKB() { document.getElementById('kbModal').classList.add('hidden'); }
-
-  function switchTab(tab) {
-    document.getElementById('tabUpload').classList.toggle('active', tab === 'upload');
-    document.getElementById('tabPaste').classList.toggle('active',  tab === 'paste');
-    document.getElementById('panelUpload').classList.toggle('active', tab === 'upload');
-    document.getElementById('panelPaste').classList.toggle('active',  tab === 'paste');
+  function switchTab(t) {
+    document.getElementById('tabUpload').classList.toggle('active', t==='upload');
+    document.getElementById('tabPaste').classList.toggle('active', t==='paste');
+    document.getElementById('panelUpload').classList.toggle('active', t==='upload');
+    document.getElementById('panelPaste').classList.toggle('active', t==='paste');
   }
-
   async function loadKBFiles() {
     const list = document.getElementById('kbFileList');
     list.innerHTML = '<div class="k-loading">Loading…</div>';
     try {
       const res  = await fetch('/knowledge-files');
       const data = await res.json();
-      if (!data.files || data.files.length === 0) {
-        list.innerHTML = '<div class="k-empty">No documents yet. Upload one above.</div>';
-        return;
-      }
+      if (!data.files || data.files.length === 0) { list.innerHTML = '<div class="k-empty">No documents yet. Upload one above.</div>'; return; }
       list.innerHTML = data.files.map(f => `
         <div class="k-file-item" id="kf-${f.id}">
           <div class="k-file-icon">📄</div>
-          <div class="k-file-info">
-            <div class="k-file-name">${esc(f.filename)}</div>
-            <div class="k-file-preview">${esc(f.preview)}…</div>
-          </div>
+          <div class="k-file-info"><div class="k-file-name">${esc(f.filename)}</div><div class="k-file-preview">${esc(f.preview)}…</div></div>
           <button class="k-file-del" onclick="deleteKBFile(${f.id})" title="Delete">✕</button>
         </div>`).join('');
-    } catch (_) {
-      list.innerHTML = '<div class="k-empty">Could not load files.</div>';
-    }
+    } catch (_) { list.innerHTML = '<div class="k-empty">Could not load files.</div>'; }
   }
-
   async function deleteKBFile(id) {
     if (!confirm('Delete this document?')) return;
     try {
       await fetch('/knowledge-file/' + id, { method: 'DELETE' });
-      const el = document.getElementById('kf-' + id);
-      if (el) el.remove();
+      const el = document.getElementById('kf-'+id); if (el) el.remove();
       const list = document.getElementById('kbFileList');
       if (!list.querySelector('.k-file-item')) list.innerHTML = '<div class="k-empty">No documents yet.</div>';
     } catch (_) { alert('Failed to delete.'); }
   }
-
-  function handleDrop(e) {
-    e.preventDefault();
-    document.getElementById('dropZone').classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file);
-  }
-
-  function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (file) processFile(file);
-    e.target.value = '';
-  }
-
-  function processFile(file) {
-    const reader = new FileReader();
-    reader.onload = async (e) => { await uploadKBFile(file.name, e.target.result); };
-    reader.readAsText(file);
-  }
-
+  function handleDrop(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f) processFile(f); }
+  function handleFileSelect(e) { const f=e.target.files[0]; if(f) processFile(f); e.target.value=''; }
+  function processFile(file) { const r=new FileReader(); r.onload=async(e)=>{await uploadKBFile(file.name,e.target.result);}; r.readAsText(file); }
   async function savePasted() {
-    const filename = document.getElementById('pasteFilename').value.trim();
-    const content  = document.getElementById('pasteContent').value.trim();
-    if (!filename || !content) { alert('Please fill in both the name and content.'); return; }
-    await uploadKBFile(filename, content);
-    document.getElementById('pasteFilename').value = '';
-    document.getElementById('pasteContent').value  = '';
+    const filename=document.getElementById('pasteFilename').value.trim(), content=document.getElementById('pasteContent').value.trim();
+    if(!filename||!content){alert('Please fill in both fields.');return;}
+    await uploadKBFile(filename,content);
+    document.getElementById('pasteFilename').value=''; document.getElementById('pasteContent').value='';
   }
-
-  async function uploadKBFile(filename, content) {
-    const btn = document.getElementById('pasteAddBtn');
-    if (btn) btn.disabled = true;
+  async function uploadKBFile(filename,content) {
+    const btn=document.getElementById('pasteAddBtn'); if(btn) btn.disabled=true;
     try {
-      const res  = await fetch('/knowledge-file', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename, content }),
-      });
-      const data = await res.json();
-      if (data.success) { await loadKBFiles(); switchTab('upload'); }
-      else alert('Failed to save: ' + (data.error || 'Unknown error'));
-    } catch (_) { alert('Failed to upload file.'); }
-    finally { if (btn) btn.disabled = false; }
+      const res=await fetch('/knowledge-file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename,content})});
+      const data=await res.json();
+      if(data.success){await loadKBFiles();switchTab('upload');}else alert('Failed: '+(data.error||'Unknown'));
+    } catch(_){alert('Failed to upload.');}
+    finally{if(btn)btn.disabled=false;}
   }
 </script>
 </body>

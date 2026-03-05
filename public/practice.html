@@ -319,6 +319,16 @@
     .scenario-card.active { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.45); color: var(--text); }
     .sc-icon { margin-right: 3px; }
     .weak-areas-note { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #fcd34d; line-height: 1.5; margin-top: 4px; }
+    .setup-select { width: 100%; background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 10px; padding: 10px 14px; font-size: 13px; font-family: inherit; outline: none; cursor: pointer; appearance: none; }
+    .setup-select:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.12); }
+    .drill-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); cursor: pointer; user-select: none; margin-bottom: 10px; }
+    .drill-toggle input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--purple); cursor: pointer; }
+    .curriculum-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); border-radius: 8px; padding: 6px 12px; font-size: 12px; color: var(--purple); font-weight: 600; margin-top: 4px; }
+    .audio-playback { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 10px 0; }
+    .audio-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+    .audio-playback audio { width: 100%; height: 36px; }
+    .goal-result { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #6ee7b7; line-height: 1.5; margin: 6px 0; }
+    .goal-result.missed { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); color: #fcd34d; }
   </style>
 </head>
 <body>
@@ -419,6 +429,20 @@
   let selectedScenario   = 'cold-knock';
   let repWeakAreas       = [];
   let sessionContextSent = false;
+  let selectedGoal       = '';
+  let drillMode          = false;
+  let selectedObjection  = 'I already have a contractor';
+  let curriculumLesson   = null;
+  let sessionTranscript  = [];
+  let allAudioChunks     = [];
+  let mediaRecorder      = null;
+
+  // Read curriculum lesson from URL param
+  (function readUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const lesson = parseInt(params.get('lesson'));
+    if (lesson >= 1 && lesson <= 5) curriculumLesson = lesson;
+  })();
 
   function submitName() {
     const val = document.getElementById('nameInput').value.trim();
@@ -516,6 +540,8 @@
   async function startConversation() {
     if (convState !== 'idle') return;
     sessionContextSent = false;
+    sessionTranscript  = [];
+    allAudioChunks     = [];
     sessionStartTime = Date.now(); repMessageCount = 0;
     document.getElementById('chatArea').innerHTML = '';
     setConvState('listening'); await openMic();
@@ -546,11 +572,23 @@
     energySamples = []; freqSamples = []; recordStart = Date.now(); currentTranscript = '';
     try { recognition.start(); } catch (_) {}
     analysisInterval = setInterval(sampleAudio, 150);
+    // Start audio recording
+    if (window.MediaRecorder) {
+      try {
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus'
+          : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+        mediaRecorder = new MediaRecorder(micStream, mimeType ? { mimeType } : {});
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) allAudioChunks.push(e.data); };
+        mediaRecorder.start(400);
+      } catch (_) {}
+    }
   }
 
   function closeMic() {
     clearInterval(analysisInterval);
     try { recognition.stop(); } catch (_) {}
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') { try { mediaRecorder.stop(); } catch (_) {} }
+    mediaRecorder = null;
     if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
     if (audioCtx)  { audioCtx.close().catch(() => {}); audioCtx = null; }
     analyser = null;
@@ -587,11 +625,15 @@
     const fullMsg = metrics ? `${text}\n\n[Voice: ${metrics}]` : text;
     repMessageCount++;
     appendRepMsg(text, metrics); showTyping();
+    sessionTranscript.push({ role: 'rep', text });
     const body = { message: fullMsg, sessionId };
     if (!sessionContextSent) {
-      body.persona   = selectedPersona;
-      body.scenario  = selectedScenario;
-      body.weakAreas = repWeakAreas;
+      body.persona          = selectedPersona;
+      body.scenario         = selectedScenario;
+      body.weakAreas        = repWeakAreas;
+      body.sessionGoal      = selectedGoal || null;
+      body.drillObjection   = drillMode ? selectedObjection : null;
+      body.curriculumLesson = curriculumLesson || null;
       sessionContextSent = true;
     }
     try {
@@ -711,12 +753,16 @@
       document.getElementById('chatArea').innerHTML = '';
     }
     repMessageCount++;
+    sessionTranscript.push({ role: 'rep', text });
     appendRepMsg(text, ''); showTyping();
     const body = { message: text, sessionId };
     if (!sessionContextSent) {
-      body.persona   = selectedPersona;
-      body.scenario  = selectedScenario;
-      body.weakAreas = repWeakAreas;
+      body.persona          = selectedPersona;
+      body.scenario         = selectedScenario;
+      body.weakAreas        = repWeakAreas;
+      body.sessionGoal      = selectedGoal || null;
+      body.drillObjection   = drillMode ? selectedObjection : null;
+      body.curriculumLesson = curriculumLesson || null;
       sessionContextSent = true;
     }
     try {
@@ -747,6 +793,7 @@
     const coachIdx = raw.indexOf('COACH:');
     const hwText   = coachIdx !== -1 ? raw.slice(0, coachIdx).trim() : raw.trim();
     const coachTxt = coachIdx !== -1 ? raw.slice(coachIdx + 6).trim() : null;
+    sessionTranscript.push({ role: 'homeowner', text: hwText, coach: coachTxt });
     const group = document.createElement('div'); group.className = 'hw-group';
     const bub   = document.createElement('div'); bub.className = 'hw-bubble'; bub.textContent = hwText;
     group.appendChild(bub);
@@ -773,9 +820,23 @@
     showTyping();
     try {
       const sessionDuration = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : 0;
+      const transcriptText = sessionTranscript.map(t => {
+        const lines = [t.role === 'rep' ? `REP: ${t.text}` : `HOMEOWNER: ${t.text}`];
+        if (t.coach) lines.push(`COACH: ${t.coach}`);
+        return lines.join('\n');
+      }).join('\n\n');
+
       const res  = await fetch('/end-session', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, repName: repName || 'Unknown', duration: sessionDuration, repMessages: repMessageCount }),
+        body: JSON.stringify({
+          sessionId,
+          repName: repName || 'Unknown',
+          duration: sessionDuration,
+          repMessages: repMessageCount,
+          transcript: transcriptText || null,
+          sessionGoal: selectedGoal || null,
+          curriculumLesson: curriculumLesson || null,
+        }),
       });
       const data = await res.json();
       removeTyping();
@@ -783,10 +844,13 @@
       else showError(data.error || 'Failed to generate scorecard.');
       if (data.analysis) {
         appendCoachSummary(data.analysis);
+        if (data.analysis.goalAchieved !== undefined) appendGoalResult(data.analysis);
         speakCoachFeedback(data.analysis);
+        updateCurriculumProgress(data.analysis);
       } else if (!data.scorecard) {
         showError('Could not generate analysis — session not saved. (' + (data.error || 'unknown error') + ')');
       }
+      showAudioPlayback();
     } catch (_) { removeTyping(); showError('Could not reach the server.'); }
     const chat = document.getElementById('chatArea');
     const area = document.createElement('div'); area.className = 'new-session-area';
@@ -860,6 +924,47 @@
     showSetupPanel();
   }
 
+  // ── Audio playback ────────────────────────────────────────
+  function showAudioPlayback() {
+    if (allAudioChunks.length === 0) return;
+    setTimeout(() => {
+      try {
+        const mimeType = allAudioChunks[0]?.type || 'audio/webm';
+        const blob = new Blob(allAudioChunks, { type: mimeType });
+        const url  = URL.createObjectURL(blob);
+        const chat = document.getElementById('chatArea');
+        const div  = document.createElement('div');
+        div.className = 'audio-playback';
+        div.innerHTML = `<div class="audio-label">🎧 Session Recording</div><audio controls src="${url}"></audio>`;
+        const newArea = chat.querySelector('.new-session-area');
+        if (newArea) chat.insertBefore(div, newArea); else chat.appendChild(div);
+        scrollBottom();
+      } catch (_) {}
+    }, 700);
+  }
+
+  // ── Goal result ───────────────────────────────────────────
+  function appendGoalResult(analysis) {
+    const chat = document.getElementById('chatArea');
+    const div  = document.createElement('div');
+    const achieved = analysis.goalAchieved;
+    div.className = `goal-result${achieved ? '' : ' missed'}`;
+    div.innerHTML = `<strong>${achieved ? '✅ Goal achieved' : '❌ Goal not met'}: ${esc(analysis.sessionGoal || selectedGoal)}</strong><br>${esc(analysis.goalFeedback || '')}`;
+    const newArea = chat.querySelector('.new-session-area');
+    if (newArea) chat.insertBefore(div, newArea); else chat.appendChild(div);
+  }
+
+  // ── Curriculum progress ───────────────────────────────────
+  function updateCurriculumProgress(analysis) {
+    if (!curriculumLesson) return;
+    const passed = analysis.overall >= 60;
+    const curr = JSON.parse(localStorage.getItem('d2d_curriculum') || '{"completed":[]}');
+    if (passed && !curr.completed.includes(curriculumLesson)) {
+      curr.completed.push(curriculumLesson);
+      localStorage.setItem('d2d_curriculum', JSON.stringify(curr));
+    }
+  }
+
   // ── Session setup panel ───────────────────────────────────
   function showSetupPanel() {
     const PERSONAS = [
@@ -903,8 +1008,42 @@
           </div>
         </div>
         <div id="weakAreasNote" style="display:none;" class="weak-areas-note"></div>
+        ${curriculumLesson ? `<div class="curriculum-badge">📚 Curriculum — Lesson ${curriculumLesson} active</div>` : ''}
+        <div class="setup-section" style="margin-top:14px;">
+          <div class="setup-section-label">Session Goal</div>
+          <select class="setup-select" id="goalSelect" onchange="selectedGoal = this.value">
+            <option value="">No specific goal</option>
+            <option value="No filler words — eliminate um, uh, like, you know">No filler words</option>
+            <option value="Ask for the appointment in every response">Ask for appointment every turn</option>
+            <option value="Handle the price objection with value, not apology">Handle price without apology</option>
+            <option value="Build genuine rapport before any pitch">Build rapport before pitching</option>
+            <option value="Complete the close within 5 turns">Close within 5 turns</option>
+          </select>
+        </div>
+        <div class="setup-section">
+          <label class="drill-toggle">
+            <input type="checkbox" id="drillCheck" onchange="toggleDrillMode(this.checked)"> Drill Mode — repeat one objection
+          </label>
+          <div id="drillPicker" style="display:none;">
+            <select class="setup-select" id="objectionSelect" onchange="selectedObjection = this.value">
+              <option value="I already have a contractor">I already have a contractor</option>
+              <option value="We just replaced our roof">We just replaced our roof</option>
+              <option value="I need to talk to my spouse first">I need to talk to my spouse first</option>
+              <option value="I don't trust door-to-door salespeople">I don't trust door-to-door salespeople</option>
+              <option value="How much is this going to cost?">Price / cost concern</option>
+              <option value="I need to check with my insurance first">Need to check insurance first</option>
+              <option value="I'm not interested">Not interested / about to close door</option>
+            </select>
+          </div>
+        </div>
       </div>`;
     showWeakAreasNote();
+  }
+
+  function toggleDrillMode(on) {
+    drillMode = on;
+    const picker = document.getElementById('drillPicker');
+    if (picker) picker.style.display = on ? 'block' : 'none';
   }
 
   function selectPersona(id) {

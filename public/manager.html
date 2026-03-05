@@ -320,6 +320,72 @@
     .breakdown-pct { font-size: 11px; font-weight: 700; width: 34px; text-align: right; color: var(--text2); }
     .breakdown-feedback { font-size: 11px; color: var(--text3); margin-top: 3px; margin-left: 130px; line-height: 1.4; }
 
+    /* Feedback button */
+    .feedback-btn {
+      background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3);
+      color: var(--purple); font-size: 11px; font-weight: 600;
+      padding: 5px 10px; border-radius: 7px; cursor: pointer;
+      font-family: inherit; flex-shrink: 0; transition: all 0.15s;
+    }
+    .feedback-btn:hover { background: rgba(139,92,246,0.22); border-color: var(--purple); }
+
+    /* Transcript viewer */
+    .transcript-section { margin-top: 14px; }
+    .transcript-toggle {
+      font-size: 11px; font-weight: 600; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 0.6px;
+      cursor: pointer; background: none; border: none;
+      padding: 0; font-family: inherit; display: flex; align-items: center; gap: 6px;
+    }
+    .transcript-toggle:hover { color: var(--text2); }
+    .transcript-body {
+      display: none; margin-top: 10px;
+      background: rgba(0,0,0,0.3); border-radius: 10px;
+      padding: 12px; max-height: 260px; overflow-y: auto;
+      font-size: 12px; line-height: 1.7; border: 1px solid var(--border);
+    }
+    .t-line { margin-bottom: 5px; }
+    .t-rep   { color: #a78bfa; }
+    .t-owner { color: #f9a8d4; }
+    .t-coach { color: #6ee7b7; font-style: italic; }
+
+    /* Feedback modal */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-box {
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 20px; padding: 32px; max-width: 440px; width: 100%;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+    .modal-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 6px; }
+    .modal-sub   { font-size: 12px; color: var(--text3); margin-bottom: 20px; }
+    .modal-textarea {
+      width: 100%; min-height: 110px; resize: vertical;
+      background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text); border-radius: 10px;
+      padding: 12px; font-size: 13px; font-family: inherit; outline: none; line-height: 1.6;
+    }
+    .modal-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+    .modal-cancel {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text2);
+      padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 500;
+      cursor: pointer; font-family: inherit;
+    }
+    .modal-cancel:hover { background: var(--surface2); color: var(--text); }
+    .modal-send {
+      background: linear-gradient(135deg, var(--purple2), var(--purple));
+      color: white; border: none; padding: 9px 22px; border-radius: 9px;
+      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 12px var(--purple-glow);
+    }
+    .modal-send:hover { box-shadow: 0 6px 18px rgba(139,92,246,0.5); }
+    .modal-send:disabled { opacity: 0.6; cursor: not-allowed; }
+    .modal-success { color: var(--green); font-size: 13px; margin-top: 10px; text-align: center; display: none; }
+
     /* Improvement summary card */
     .improve-section {
       background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.18);
@@ -425,6 +491,20 @@
       <div class="sessions-section" id="detailSessionsList"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal-overlay" id="feedbackModal" style="display:none;" onclick="if(event.target===this)closeFeedbackModal()">
+  <div class="modal-box">
+    <div class="modal-title">Leave Feedback</div>
+    <div class="modal-sub" id="feedbackModalSub"></div>
+    <textarea class="modal-textarea" id="feedbackText" placeholder="Great improvement on your opener today! Focus on slowing down when presenting your credentials…"></textarea>
+    <div class="modal-success" id="feedbackSuccess">✓ Feedback sent!</div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeFeedbackModal()">Cancel</button>
+      <button class="modal-send" id="feedbackSendBtn" onclick="submitFeedback()">Send Feedback</button>
+    </div>
   </div>
 </div>
 
@@ -674,7 +754,7 @@
     }
 
     // Session cards
-    renderDetailSessions(sessions);
+    renderDetailSessions(name, sessions);
   }
 
   function renderDetailChart(sessions) {
@@ -709,7 +789,7 @@
     return '#ef4444';
   }
 
-  function renderDetailSessions(sessions) {
+  function renderDetailSessions(repName, sessions) {
     const list = document.getElementById('detailSessionsList');
     if (sessions.length === 0) {
       list.innerHTML = '<div class="no-data"><strong>No sessions found</strong>This rep has no recorded sessions in the selected time range.</div>';
@@ -737,15 +817,25 @@
           ${v.feedback ? `<div class="breakdown-feedback">${esc(v.feedback)}</div>` : ''}
         </div>`).join('');
       const meta = [fmt(s.date), s.repMessages ? `${s.repMessages} turn${s.repMessages !== 1 ? 's' : ''}` : '', fmtDuration(s.duration)].filter(Boolean).join(' · ');
+      const goalTag = a.sessionGoal
+        ? `<span style="font-size:11px;color:var(--text3);margin-left:6px;">${a.goalAchieved === true ? '✅' : a.goalAchieved === false ? '❌' : '🎯'} ${esc(a.sessionGoal)}</span>`
+        : '';
+      const transcriptHtml = a.transcript
+        ? `<div class="transcript-section">
+             <button class="transcript-toggle" id="transcript-btn-${i}" onclick="event.stopPropagation();toggleTranscript(${i})">▶ Show Transcript</button>
+             <div class="transcript-body" id="transcript-body-${i}">${formatTranscript(a.transcript)}</div>
+           </div>`
+        : '';
       return `
         <div class="session-card" id="dc-${i}" onclick="toggleDetail(${i})">
           <div class="card-header">
             <div class="score-circle ${cl}">${a.overall}%</div>
             <div class="card-meta">
-              <div class="card-date">${fmt(s.date)}</div>
+              <div class="card-date">${fmt(s.date)}${goalTag}</div>
               <div class="card-turns">${meta}</div>
               <div class="card-summary">${esc(a.summary || '')}</div>
             </div>
+            <button class="feedback-btn" onclick="event.stopPropagation();openFeedbackModal('${esc(repName)}',${s.id})">Leave Feedback</button>
             <div class="expand-icon">⌄</div>
           </div>
           <div class="card-body">
@@ -754,6 +844,7 @@
               ${a.keyImprovement ? `<div class="key-point improve"><strong>🎯 Work On</strong>${esc(a.keyImprovement)}</div>` : ''}
             </div>
             <div class="breakdown-grid">${barsHtml}</div>
+            ${transcriptHtml}
           </div>
         </div>`;
     }).join('');
@@ -767,6 +858,68 @@
     document.getElementById('detailView').style.display      = 'none';
     document.getElementById('leaderboardView').style.display = 'block';
     document.getElementById('headerSub').textContent = 'Manager Dashboard';
+  }
+
+  // ── Feedback Modal ─────────────────────────────────────
+  let feedbackTarget = { repName: '', sessionId: null };
+
+  function openFeedbackModal(repName, sessionId) {
+    feedbackTarget = { repName, sessionId };
+    document.getElementById('feedbackModalSub').textContent = `For ${repName} · Session #${sessionId}`;
+    document.getElementById('feedbackText').value = '';
+    document.getElementById('feedbackSuccess').style.display = 'none';
+    const btn = document.getElementById('feedbackSendBtn');
+    btn.disabled = false; btn.textContent = 'Send Feedback';
+    document.getElementById('feedbackModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('feedbackText').focus(), 50);
+  }
+
+  function closeFeedbackModal() {
+    document.getElementById('feedbackModal').style.display = 'none';
+  }
+
+  async function submitFeedback() {
+    const message = document.getElementById('feedbackText').value.trim();
+    if (!message) return;
+    const btn = document.getElementById('feedbackSendBtn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const res = await fetch('/manager/feedback?pin=' + encodeURIComponent(pin), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repName: feedbackTarget.repName, sessionId: feedbackTarget.sessionId, message }),
+      });
+      if (res.ok) {
+        document.getElementById('feedbackSuccess').style.display = 'block';
+        document.getElementById('feedbackText').value = '';
+        setTimeout(closeFeedbackModal, 1600);
+      } else {
+        alert('Failed to send feedback. Please try again.');
+        btn.disabled = false; btn.textContent = 'Send Feedback';
+      }
+    } catch (_) {
+      alert('Network error. Please try again.');
+      btn.disabled = false; btn.textContent = 'Send Feedback';
+    }
+  }
+
+  // ── Transcript ─────────────────────────────────────────
+  function toggleTranscript(idx) {
+    const el  = document.getElementById(`transcript-body-${idx}`);
+    const btn = document.getElementById(`transcript-btn-${idx}`);
+    const visible = el.style.display === 'block';
+    el.style.display = visible ? 'none' : 'block';
+    btn.textContent  = visible ? '▶ Show Transcript' : '▼ Hide Transcript';
+  }
+
+  function formatTranscript(raw) {
+    if (!raw) return '<em style="color:var(--text3)">No transcript recorded.</em>';
+    return raw.split('\n').filter(l => l.trim()).map(line => {
+      if (line.startsWith('REP:'))       return `<div class="t-line t-rep"><strong>REP:</strong>${esc(line.slice(4))}</div>`;
+      if (line.startsWith('HOMEOWNER:')) return `<div class="t-line t-owner"><strong>HOMEOWNER:</strong>${esc(line.slice(10))}</div>`;
+      if (line.startsWith('COACH:'))     return `<div class="t-line t-coach"><strong>COACH:</strong>${esc(line.slice(6))}</div>`;
+      return `<div class="t-line" style="color:var(--text3)">${esc(line)}</div>`;
+    }).join('');
   }
 </script>
 </body>

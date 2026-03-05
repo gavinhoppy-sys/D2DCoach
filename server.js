@@ -4,12 +4,12 @@ const Anthropic = require('@anthropic-ai/sdk');
 const { Pool } = require('pg');
 
 const app = express();
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '4mb' }));
 app.use(express.static('public'));
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// ── PostgreSQL setup ──────────────────────────────────────
+// ── PostgreSQL ────────────────────────────────────────────
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
@@ -34,6 +34,16 @@ async function initDB() {
       uploaded_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS session_feedback (
+      id         SERIAL PRIMARY KEY,
+      rep_name   TEXT NOT NULL,
+      session_id INTEGER,
+      message    TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      read_at    TIMESTAMPTZ
+    )
+  `);
   console.log('Database ready.');
 }
 initDB().catch(err => console.error('DB init error:', err.message));
@@ -52,7 +62,7 @@ async function getKnowledgeBase() {
 }
 
 // ── Per-session state ─────────────────────────────────────
-const activeSessions = new Map(); // sessionId → { history, persona, scenario, weakAreas, lastActivity }
+const activeSessions = new Map();
 
 function getSession(id) {
   if (!activeSessions.has(id)) {
@@ -61,6 +71,9 @@ function getSession(id) {
       persona: 'standard',
       scenario: 'cold-knock',
       weakAreas: [],
+      drillObjection: null,
+      sessionGoal: null,
+      curriculumLesson: null,
       lastActivity: Date.now(),
     });
   }
@@ -69,7 +82,6 @@ function getSession(id) {
   return s;
 }
 
-// Prune sessions idle for more than 2 hours
 setInterval(() => {
   const cutoff = Date.now() - 2 * 60 * 60 * 1000;
   for (const [id, s] of activeSessions) {
@@ -77,7 +89,7 @@ setInterval(() => {
   }
 }, 30 * 60 * 1000);
 
-// ── Homeowner personas ────────────────────────────────────
+// ── Personas ──────────────────────────────────────────────
 const PERSONAS = {
   standard:       'You are mildly annoyed at the interruption but willing to hear a short pitch.',
   budget:         'Money is very tight right now. You keep steering back to cost and whether insurance will cover it. Push back hard on price.',
@@ -95,8 +107,19 @@ const SCENARIOS = {
   'insurance':  'Your insurance adjuster recently confirmed you have a legitimate storm damage claim, but you have not started the repair process yet.',
 };
 
+// ── Curriculum lesson notes ───────────────────────────────
+const CURRICULUM = {
+  1: '\n\nCURRICULUM — LESSON 1 (Opener Only): Keep the conversation brief. Coach exclusively on the rep\'s opening — name, company, specific reason for being there. After 3-4 exchanges wrap up.',
+  2: '\n\nCURRICULUM — LESSON 2 (Opener + Rapport): Let the conversation develop but focus coaching almost entirely on rapport-building. Is the rep connecting as a human or just pitching?',
+  3: '\n\nCURRICULUM — LESSON 3 (Objection Handling): Throw at least 2-3 solid objections. Coach should focus almost entirely on how the rep handles each one.',
+  4: '\n\nCURRICULUM — LESSON 4 (Full Pitch): Full natural conversation from opener to close attempt. Coach on all aspects equally.',
+  5: '\n\nCURRICULUM — LESSON 5 (Elite Challenge): You are maximally skeptical on a cold knock. Push back on everything. The rep must score 70+ to pass this lesson.',
+};
+
 // ── Build system prompt ───────────────────────────────────
-async function buildSystemPrompt(persona = 'standard', scenario = 'cold-knock', weakAreas = []) {
+async function buildSystemPrompt(persona = 'standard', scenario = 'cold-knock', weakAreas = [], opts = {}) {
+  const { drillObjection, sessionGoal, curriculumLesson } = opts;
+
   const personaTxt  = PERSONAS[persona]   || PERSONAS.standard;
   const scenarioTxt = SCENARIOS[scenario] || SCENARIOS['cold-knock'];
 
@@ -104,12 +127,22 @@ async function buildSystemPrompt(persona = 'standard', scenario = 'cold-knock', 
     ? `\n\n[COACHING FOCUS: This rep historically struggles with ${weakAreas.join(' and ')}. Watch closely for these patterns and call them out immediately when they appear.]`
     : '';
 
+  const drillNote = drillObjection
+    ? `\n\nDRILL MODE: Throw the following objection every single turn in different variations: "${drillObjection}". The coach should focus exclusively on how well the rep handles this objection and give very specific corrective guidance each turn.`
+    : '';
+
+  const goalNote = sessionGoal
+    ? `\n\nSESSION GOAL: The rep has set this goal for today: "${sessionGoal}". Note in your COACH feedback each turn whether they are making progress toward it.`
+    : '';
+
+  const currNote = curriculumLesson ? (CURRICULUM[curriculumLesson] || '') : '';
+
   const base = `You are roleplaying as a homeowner. ${scenarioTxt} ${personaTxt}
 
 After each rep message, respond in character as the homeowner, then on a new line add:
 COACH: [2-3 sentences of direct, specific feedback. Quote the exact words or phrases the rep just used. Always end your feedback with a suggested alternative — format it as: Try instead: "[exact phrase to use]". If voice metrics are present (WPM, energy, filler words), address them explicitly — ideal pace: 130-150 WPM, filler words kill credibility, monotone delivery loses attention. Reference training materials when relevant.]
 
-Adjust your skepticism dynamically: if the rep builds genuine rapport and handles your concerns well, warm up gradually. If they fumble objections, sound scripted, or ignore your concerns, increase your resistance.${weakAreaNote}`;
+Adjust your skepticism dynamically: if the rep builds genuine rapport and handles your concerns well, warm up gradually. If they fumble objections, sound scripted, or ignore your concerns, increase your resistance.${weakAreaNote}${drillNote}${goalNote}${currNote}`;
 
   const files = await getKnowledgeBase();
   if (files.length === 0) return base;
@@ -131,18 +164,25 @@ Adjust your skepticism dynamically: if the rep builds genuine rapport and handle
 // ── Chat ──────────────────────────────────────────────────
 app.post('/chat', async (req, res) => {
   try {
-    const { message, sessionId, persona, scenario, weakAreas } = req.body;
-    if (!message || !message.trim()) {
-      return res.status(400).json({ error: 'Message is required.' });
-    }
+    const { message, sessionId, persona, scenario, weakAreas, drillObjection, sessionGoal, curriculumLesson } = req.body;
+    if (!message || !message.trim()) return res.status(400).json({ error: 'Message is required.' });
+
     const session = getSession(sessionId || 'default');
-    if (persona)              session.persona   = persona;
-    if (scenario)             session.scenario  = scenario;
-    if (Array.isArray(weakAreas)) session.weakAreas = weakAreas;
+    if (persona)                  session.persona          = persona;
+    if (scenario)                 session.scenario         = scenario;
+    if (Array.isArray(weakAreas)) session.weakAreas        = weakAreas;
+    if (drillObjection !== undefined) session.drillObjection = drillObjection;
+    if (sessionGoal !== undefined)    session.sessionGoal    = sessionGoal;
+    if (curriculumLesson !== undefined) session.curriculumLesson = curriculumLesson;
 
     session.history.push({ role: 'user', content: message });
 
-    const systemPrompt = await buildSystemPrompt(session.persona, session.scenario, session.weakAreas);
+    const systemPrompt = await buildSystemPrompt(session.persona, session.scenario, session.weakAreas, {
+      drillObjection:  session.drillObjection,
+      sessionGoal:     session.sessionGoal,
+      curriculumLesson: session.curriculumLesson,
+    });
+
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
@@ -160,17 +200,20 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-// ── End session (scorecard + analysis + save in one call) ─
+// ── End session ───────────────────────────────────────────
 app.post('/end-session', async (req, res) => {
   try {
-    const { sessionId, repName, duration, repMessages } = req.body;
+    const { sessionId, repName, duration, repMessages, transcript, sessionGoal, curriculumLesson } = req.body;
     const session = getSession(sessionId || 'default');
-    if (session.history.length === 0) {
-      return res.status(400).json({ error: 'No conversation to analyze.' });
-    }
+    if (session.history.length === 0) return res.status(400).json({ error: 'No conversation to analyze.' });
+
     const conversationText = session.history
       .map(m => `${m.role === 'user' ? 'SALES REP' : 'HOMEOWNER/COACH'}: ${m.content}`)
       .join('\n\n');
+
+    const goalInstruction = sessionGoal
+      ? `\nThe rep set this session goal: "${sessionGoal}". Also include in your JSON: "goalAchieved": <true or false>, "goalFeedback": "<one sentence on whether/how they met it>"`
+      : '';
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
@@ -196,10 +239,10 @@ Return exactly this structure:
   },
   "summary": "<2-3 sentences describing how the session went>",
   "keyStrength": "<one specific thing they did well>",
-  "keyImprovement": "<one specific thing to work on next time>"
+  "keyImprovement": "<one specific thing to work on next time>"${goalInstruction ? ',\n  "goalAchieved": <true/false>,\n  "goalFeedback": "<one sentence>"' : ''}
 }
 
-Use any [Voice: ...] metrics in the rep's messages to inform tonality and timing scores. Ideal pace is 130-150 WPM.`,
+Use any [Voice: ...] metrics in the rep's messages to inform tonality and timing scores. Ideal pace is 130-150 WPM.${goalInstruction}`,
       }],
     });
 
@@ -208,70 +251,140 @@ Use any [Voice: ...] metrics in the rep's messages to inform tonality and timing
     const result = JSON.parse(objMatch ? objMatch[0] : raw);
     const { scorecard, ...analysis } = result;
 
-    if (repName && analysis.overall != null) {
+    // Merge extra context into analysis before saving
+    const fullAnalysis = {
+      ...analysis,
+      ...(transcript     ? { transcript }     : {}),
+      ...(sessionGoal    ? { sessionGoal }     : {}),
+      ...(curriculumLesson ? { curriculumLesson } : {}),
+    };
+
+    if (repName && fullAnalysis.overall != null) {
       await pool.query(
         'INSERT INTO sessions (rep_name, duration, rep_messages, analysis) VALUES ($1, $2, $3, $4)',
-        [repName.trim(), duration || 0, repMessages || 0, JSON.stringify(analysis)]
+        [repName.trim(), duration || 0, repMessages || 0, JSON.stringify(fullAnalysis)]
       );
     }
 
-    res.json({ scorecard, analysis });
+    res.json({ scorecard, analysis: fullAnalysis });
   } catch (err) {
     console.error('End session error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ── Scorecard (legacy) ────────────────────────────────────
-app.post('/scorecard', async (req, res) => {
+// ── Leaderboard (public) ──────────────────────────────────
+app.get('/leaderboard', async (req, res) => {
   try {
-    const { sessionId } = req.body || {};
-    const session = getSession(sessionId || 'default');
-    if (session.history.length === 0) {
-      return res.status(400).json({ error: 'No conversation to score yet.' });
-    }
-    const conversationText = session.history
-      .map(m => `${m.role === 'user' ? 'SALES REP' : 'HOMEOWNER/COACH'}: ${m.content}`)
-      .join('\n\n');
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: `Here is the full practice sales conversation:\n\n${conversationText}\n\nYou are an expert sales coach. Rate the rep 1-10 on each category with one sentence of feedback:\n\nOpening: [score]/10 — [feedback]\nObjection Handling: [score]/10 — [feedback]\nRapport: [score]/10 — [feedback]\nClosing Attempt: [score]/10 — [feedback]\nOverall: [score]/10 — [summary]` }],
-    });
-    res.json({ scorecard: response.content[0].text });
+    const result = await pool.query(
+      `SELECT rep_name,
+         COUNT(*)::int AS session_count,
+         ROUND(AVG((analysis->>'overall')::numeric))::int AS avg_score,
+         MAX((analysis->>'overall')::numeric)::int AS best_score,
+         MAX(created_at) AS last_active
+       FROM sessions
+       GROUP BY rep_name
+       ORDER BY avg_score DESC
+       LIMIT 50`
+    );
+    res.json({ leaderboard: result.rows });
   } catch (err) {
-    console.error('Scorecard error:', err.message);
+    console.error('Leaderboard error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ── Analyze (legacy) ──────────────────────────────────────
-app.post('/analyze', async (req, res) => {
+// ── Manager feedback ──────────────────────────────────────
+app.post('/manager/feedback', async (req, res) => {
+  if (!checkPin(req, res)) return;
+  try {
+    const { repName, sessionId: sid, message } = req.body;
+    if (!repName || !message) return res.status(400).json({ error: 'repName and message required.' });
+    await pool.query(
+      'INSERT INTO session_feedback (rep_name, session_id, message) VALUES ($1, $2, $3)',
+      [repName.trim(), sid || null, message.trim()]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Feedback error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Rep feedback (get) ────────────────────────────────────
+app.get('/feedback', async (req, res) => {
+  try {
+    const { name } = req.query;
+    if (!name) return res.status(400).json({ error: 'name query param required.' });
+    const result = await pool.query(
+      `SELECT id, message, session_id, created_at, read_at
+       FROM session_feedback
+       WHERE LOWER(rep_name) = LOWER($1)
+       ORDER BY created_at DESC LIMIT 20`,
+      [name.trim()]
+    );
+    res.json({ feedback: result.rows });
+  } catch (err) {
+    console.error('Get feedback error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Rep feedback (mark read) ──────────────────────────────
+app.post('/feedback/read', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !ids.length) return res.json({ success: true });
+    await pool.query(
+      'UPDATE session_feedback SET read_at = NOW() WHERE id = ANY($1::int[])',
+      [ids]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Mark read error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Legacy scorecard ──────────────────────────────────────
+app.post('/scorecard', async (req, res) => {
   try {
     const { sessionId } = req.body || {};
     const session = getSession(sessionId || 'default');
-    if (session.history.length === 0) {
-      return res.status(400).json({ error: 'No conversation to analyze.' });
-    }
+    if (session.history.length === 0) return res.status(400).json({ error: 'No conversation to score yet.' });
     const conversationText = session.history
       .map(m => `${m.role === 'user' ? 'SALES REP' : 'HOMEOWNER/COACH'}: ${m.content}`)
       .join('\n\n');
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: `You are an expert door-to-door sales coach. Analyze this roofing sales practice session and return ONLY a valid JSON object — no markdown, no extra text.\n\nConversation:\n${conversationText}\n\nReturn exactly this structure:\n{\n  "overall": <integer 0-100>,\n  "breakdown": {\n    "opening":           { "score": <0-100>, "feedback": "<one sentence>" },\n    "objectionHandling": { "score": <0-100>, "feedback": "<one sentence>" },\n    "rapport":           { "score": <0-100>, "feedback": "<one sentence>" },\n    "tonality":          { "score": <0-100>, "feedback": "<one sentence>" },\n    "timing":            { "score": <0-100>, "feedback": "<one sentence>" },\n    "closing":           { "score": <0-100>, "feedback": "<one sentence>" }\n  },\n  "summary": "<2-3 sentences>",\n  "keyStrength": "<one specific thing they did well>",\n  "keyImprovement": "<one specific thing to work on>"\n}\n\nUse any [Voice: ...] metrics to inform tonality and timing scores. Ideal pace is 130-150 WPM.`,
-      }],
+      messages: [{ role: 'user', content: `Conversation:\n\n${conversationText}\n\nRate the rep 1-10 on each:\n\nOpening: [score]/10 — [feedback]\nObjection Handling: [score]/10 — [feedback]\nRapport: [score]/10 — [feedback]\nClosing Attempt: [score]/10 — [feedback]\nOverall: [score]/10 — [summary]` }],
+    });
+    res.json({ scorecard: response.content[0].text });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Legacy analyze ────────────────────────────────────────
+app.post('/analyze', async (req, res) => {
+  try {
+    const { sessionId } = req.body || {};
+    const session = getSession(sessionId || 'default');
+    if (session.history.length === 0) return res.status(400).json({ error: 'No conversation to analyze.' });
+    const conversationText = session.history
+      .map(m => `${m.role === 'user' ? 'SALES REP' : 'HOMEOWNER/COACH'}: ${m.content}`)
+      .join('\n\n');
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: `Analyze and return JSON only:\n\n${conversationText}\n\n{"overall":<0-100>,"breakdown":{"opening":{"score":<0-100>,"feedback":""},"objectionHandling":{"score":<0-100>,"feedback":""},"rapport":{"score":<0-100>,"feedback":""},"tonality":{"score":<0-100>,"feedback":""},"timing":{"score":<0-100>,"feedback":""},"closing":{"score":<0-100>,"feedback":""}},"summary":"","keyStrength":"","keyImprovement":""}` }],
     });
     const raw = response.content[0].text.trim();
-    const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
-    const jsonStr = jsonMatch ? jsonMatch[1] : raw;
-    const objMatch = jsonStr.match(/\{[\s\S]*\}/);
-    const analysis = JSON.parse(objMatch ? objMatch[0] : jsonStr);
+    const objMatch = raw.match(/\{[\s\S]*\}/);
+    const analysis = JSON.parse(objMatch ? objMatch[0] : raw);
     res.json({ analysis });
   } catch (err) {
-    console.error('Analyze error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -287,7 +400,6 @@ app.post('/save-session', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    console.error('Save session error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -301,44 +413,28 @@ app.get('/sessions', async (req, res) => {
       'SELECT * FROM sessions WHERE LOWER(rep_name) = LOWER($1) ORDER BY created_at DESC LIMIT 100',
       [name.trim()]
     );
-    const sessions = result.rows.map(row => ({
-      id: row.id, date: row.created_at, duration: row.duration,
-      repMessages: row.rep_messages, analysis: row.analysis,
-    }));
-    res.json({ sessions });
+    res.json({ sessions: result.rows.map(r => ({ id: r.id, date: r.created_at, duration: r.duration, repMessages: r.rep_messages, analysis: r.analysis })) });
   } catch (err) {
-    console.error('Get sessions error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ── Knowledge file endpoints ──────────────────────────────
+// ── Knowledge files ───────────────────────────────────────
 app.post('/knowledge-file', async (req, res) => {
   try {
     const { filename, content } = req.body;
     if (!filename || !content) return res.status(400).json({ error: 'filename and content required.' });
-    const result = await pool.query(
-      'INSERT INTO knowledge_files (filename, content) VALUES ($1, $2) RETURNING id',
-      [filename.trim(), content.trim()]
-    );
+    const result = await pool.query('INSERT INTO knowledge_files (filename, content) VALUES ($1, $2) RETURNING id', [filename.trim(), content.trim()]);
     knowledgeCache = null;
     res.json({ success: true, id: result.rows[0].id });
-  } catch (err) {
-    console.error('Knowledge file error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/knowledge-files', async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT id, filename, LEFT(content, 120) AS preview, uploaded_at FROM knowledge_files ORDER BY uploaded_at DESC"
-    );
+    const result = await pool.query("SELECT id, filename, LEFT(content, 120) AS preview, uploaded_at FROM knowledge_files ORDER BY uploaded_at DESC");
     res.json({ files: result.rows });
-  } catch (err) {
-    console.error('Knowledge list error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.delete('/knowledge-file/:id', async (req, res) => {
@@ -346,16 +442,13 @@ app.delete('/knowledge-file/:id', async (req, res) => {
     await pool.query('DELETE FROM knowledge_files WHERE id = $1', [req.params.id]);
     knowledgeCache = null;
     res.json({ success: true });
-  } catch (err) {
-    console.error('Knowledge delete error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // ── Manager endpoints ─────────────────────────────────────
 function checkPin(req, res) {
   const pin = process.env.MANAGER_PIN || '1234';
-  if (req.query.pin !== pin) {
+  if (req.query.pin !== pin && req.body?.pin !== pin) {
     res.status(401).json({ error: 'Invalid PIN.' });
     return false;
   }
@@ -367,17 +460,14 @@ app.get('/manager/reps', async (req, res) => {
   try {
     const days = parseInt(req.query.days) || null;
     const result = await pool.query(
-      `SELECT
-         rep_name,
-         COUNT(*)::int AS session_count,
+      `SELECT rep_name, COUNT(*)::int AS session_count,
          ROUND(AVG((analysis->>'overall')::numeric))::int AS avg_score,
          MAX((analysis->>'overall')::numeric)::int AS best_score,
          MAX(created_at) AS last_active,
          json_agg(analysis ORDER BY created_at DESC) AS all_analyses
        FROM sessions
        ${days ? `WHERE created_at >= NOW() - ($1 || ' days')::interval` : ''}
-       GROUP BY rep_name
-       ORDER BY avg_score DESC`,
+       GROUP BY rep_name ORDER BY avg_score DESC`,
       days ? [days] : []
     );
     const reps = result.rows.map(row => {
@@ -397,24 +487,10 @@ app.get('/manager/reps', async (req, res) => {
         const vals = analyses.map(a => a.breakdown?.[k]?.score).filter(v => v != null);
         catAvgs[k] = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
       });
-      const issues = analyses.map(a => a.keyImprovement).filter(Boolean);
-      return {
-        name: row.rep_name,
-        sessionCount: row.session_count,
-        avgScore: row.avg_score,
-        bestScore: row.best_score,
-        latestScore,
-        lastActive: row.last_active,
-        improvement,
-        catAvgs,
-        topIssues: issues.slice(0, 3),
-      };
+      return { name: row.rep_name, sessionCount: row.session_count, avgScore: row.avg_score, bestScore: row.best_score, latestScore, lastActive: row.last_active, improvement, catAvgs, topIssues: analyses.map(a => a.keyImprovement).filter(Boolean).slice(0, 3) };
     });
     res.json({ reps });
-  } catch (err) {
-    console.error('Manager reps error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/manager/sessions', async (req, res) => {
@@ -424,21 +500,11 @@ app.get('/manager/sessions', async (req, res) => {
     if (!rep) return res.status(400).json({ error: 'rep query param required.' });
     const daysInt = parseInt(days) || null;
     const result = await pool.query(
-      `SELECT * FROM sessions
-       WHERE LOWER(rep_name) = LOWER($1)
-       ${daysInt ? `AND created_at >= NOW() - ($2 || ' days')::interval` : ''}
-       ORDER BY created_at DESC LIMIT 100`,
+      `SELECT * FROM sessions WHERE LOWER(rep_name) = LOWER($1) ${daysInt ? `AND created_at >= NOW() - ($2 || ' days')::interval` : ''} ORDER BY created_at DESC LIMIT 100`,
       daysInt ? [rep.trim(), daysInt] : [rep.trim()]
     );
-    const sessions = result.rows.map(row => ({
-      id: row.id, date: row.created_at, duration: row.duration,
-      repMessages: row.rep_messages, analysis: row.analysis,
-    }));
-    res.json({ sessions });
-  } catch (err) {
-    console.error('Manager sessions error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
+    res.json({ sessions: result.rows.map(r => ({ id: r.id, date: r.created_at, duration: r.duration, repMessages: r.rep_messages, analysis: r.analysis })) });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // ── Reset ─────────────────────────────────────────────────
@@ -449,6 +515,4 @@ app.post('/reset', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`D2D Roofing Sales Coach running at http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`D2D Roofing Sales Coach running at http://localhost:${PORT}`));
