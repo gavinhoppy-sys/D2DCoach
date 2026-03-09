@@ -31,7 +31,9 @@
     body {
       font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg); color: var(--text); min-height: 100vh;
+      animation: pageIn 0.15s ease;
     }
+    @keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* ── Header ── */
     .header {
@@ -510,7 +512,7 @@
 
 <script>
   // ── State ──────────────────────────────────────────────
-  let pin       = sessionStorage.getItem('mgr_pin') || '';
+  let pin       = localStorage.getItem('mgr_pin') || '';
   let allReps   = [];
   let sortKey   = 'avg';
   let daysParam = '';
@@ -546,7 +548,7 @@
       const res  = await fetch(url);
       if (res.status === 401) return false;
       const data = await res.json();
-      sessionStorage.setItem('mgr_pin', pin);
+      localStorage.setItem('mgr_pin', pin);
       allReps = data.reps || [];
       document.getElementById('pinGate').style.display   = 'none';
       document.getElementById('appShell').style.display  = 'block';
@@ -556,7 +558,7 @@
   }
 
   function logout() {
-    sessionStorage.removeItem('mgr_pin');
+    localStorage.removeItem('mgr_pin');
     pin = '';
     allReps = [];
     document.getElementById('pinGate').style.display  = 'block';

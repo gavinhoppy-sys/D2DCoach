@@ -35,6 +35,8 @@
       height: 100vh; height: 100dvh;
       display: flex; flex-direction: column; overflow: hidden;
     }
+    body { animation: pageIn 0.15s ease; }
+    @keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* ── Header ── */
     .header {
@@ -230,8 +232,8 @@
     .send-text-btn { background: var(--purple); color: #000; border: none; padding: 10px 18px; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
 
     .new-session-area { text-align: center; padding: 6px 0 2px; }
-    .new-btn { background: none; border: 1px solid var(--border2); color: var(--text2); padding: 8px 22px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-    .new-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--purple); }
+    .new-btn { background: linear-gradient(135deg, var(--purple2), var(--purple)); color: #000; border: none; padding: 12px 32px; border-radius: 50px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; transition: box-shadow 0.15s, transform 0.15s; box-shadow: 0 4px 16px var(--purple-glow); letter-spacing: -0.2px; }
+    .new-btn:hover { box-shadow: 0 6px 24px rgba(239,204,58,0.45); transform: scale(1.02); }
 
     /* ── Name modal ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
@@ -329,6 +331,32 @@
     .audio-playback audio { width: 100%; height: 36px; }
     .goal-result { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #6ee7b7; line-height: 1.5; margin: 6px 0; }
     .goal-result.missed { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); color: #fcd34d; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: rgba(16,185,129,0.95); color: white;
+      padding: 10px 22px; border-radius: 50px; font-size: 13px; font-weight: 600;
+      z-index: 200; pointer-events: none; opacity: 0;
+      transition: opacity 0.3s, transform 0.3s; white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+    }
+    .toast.show { opacity: 1; }
+
+    /* Goal chip */
+    .goal-chip {
+      display: none; text-align: center; font-size: 11px; font-weight: 600;
+      color: #fcd34d; background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 50px; padding: 4px 14px;
+    }
+
+    /* Mobile header */
+    @media (max-width: 500px) {
+      .btn-label { display: none; }
+      .end-btn { padding: 6px 10px; font-size: 11px; }
+      .header-title p { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -399,8 +427,8 @@
     </div>
   </div>
   <div class="header-actions">
-    <a href="/hub.html" class="hub-link">📋 Hub</a>
-    <button class="kb-btn" onclick="openKB()">📚 Scripts</button>
+    <a href="/hub.html" class="hub-link">📋<span class="btn-label"> Hub</span></a>
+    <button class="kb-btn" onclick="openKB()">📚<span class="btn-label"> Scripts</span></button>
     <button class="icon-btn" id="voiceBtn" onclick="toggleTTS()" title="Mute homeowner voice">🔊</button>
     <button class="stop-conv-btn" id="stopConvBtn" onclick="stopConversation()">■ Stop</button>
     <button class="end-btn" id="endBtn" onclick="endSession()">End Session</button>
@@ -410,6 +438,7 @@
 <div class="chat-area" id="chatArea"></div>
 
 <div class="conv-bar">
+  <div class="goal-chip" id="goalChip"></div>
   <div class="status-bar" id="statusBar"></div>
   <button class="conv-main-btn idle" id="mainBtn" onclick="handleMainBtn()">▶ Start Conversation</button>
   <div class="text-fallback" id="textFallback">
@@ -496,6 +525,14 @@
     showSetupPanel();
     loadRepWeakAreas();
   })();
+
+  // Spacebar push-to-talk
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !e.target.matches('input, textarea, button, select')) {
+      e.preventDefault();
+      if (convState !== 'processing') handleMainBtn();
+    }
+  });
 
   // ── Speech recognition ────────────────────────────────────
   function setupRecognition() {
@@ -733,6 +770,16 @@
         btn.textContent = 'Session Ended'; btn.className = 'conv-main-btn'; btn.disabled = true;
         break;
     }
+    // Goal chip visibility
+    const chip = document.getElementById('goalChip');
+    if (chip) {
+      if (selectedGoal && state !== 'idle' && state !== 'ended') {
+        chip.style.display = 'block';
+        chip.textContent = '🎯 ' + selectedGoal;
+      } else {
+        chip.style.display = 'none';
+      }
+    }
   }
 
   // ── Live preview ──────────────────────────────────────────
@@ -844,6 +891,7 @@
       else showError(data.error || 'Failed to generate scorecard.');
       if (data.analysis) {
         appendCoachSummary(data.analysis);
+        showToast('✓ Session saved');
         if (data.analysis.goalAchieved !== undefined) appendGoalResult(data.analysis);
         speakCoachFeedback(data.analysis);
         updateCurriculumProgress(data.analysis);
@@ -891,6 +939,15 @@
         ${analysis.keyImprovement ? `<div class="cs-box"><div class="cs-box-title">🎯 Work On</div><div class="cs-box-text">${esc(analysis.keyImprovement)}</div></div>` : ''}
       </div>`;
     chat.appendChild(card); scrollBottom();
+  }
+
+  function showToast(msg, color) {
+    const el = document.createElement('div');
+    el.className = 'toast'; el.textContent = msg;
+    if (color) el.style.background = color;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('show')); });
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2500);
   }
 
   function scoreColor(n) { return n >= 85 ? 'gold' : n >= 70 ? 'green' : n >= 50 ? 'orange' : 'red'; }

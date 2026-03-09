@@ -17,7 +17,8 @@
       --purple: #EFCC3A; --purple2: #d4a017; --purple-glow: rgba(239,204,58,0.22);
       --green: #10b981; --red: #ef4444; --amber: #f59e0b;
     }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; animation: pageIn 0.15s ease; }
+    @keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* Header */
     .header { background: rgba(22,22,22,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
@@ -203,6 +204,19 @@
     .k-file-del:hover { color: var(--red); }
     .k-empty { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
     .k-loading { text-align: center; padding: 16px; color: var(--text3); font-size: 13px; }
+
+    /* Hero CTA */
+    .hero-cta { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 28px; padding: 24px 20px; background: linear-gradient(135deg, rgba(239,204,58,0.07), rgba(239,204,58,0.02)); border: 1px solid rgba(239,204,58,0.14); border-radius: 20px; }
+    .hero-btn { background: linear-gradient(135deg, var(--purple2), var(--purple)); color: #000; text-decoration: none; padding: 14px 36px; border-radius: 50px; font-size: 16px; font-weight: 800; box-shadow: 0 6px 24px var(--purple-glow); letter-spacing: -0.3px; transition: box-shadow 0.15s, transform 0.15s; }
+    .hero-btn:hover { box-shadow: 0 8px 32px rgba(239,204,58,0.5); transform: scale(1.02); }
+    .hero-sub { font-size: 12px; color: var(--text3); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 48px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-title { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 8px; }
+    .empty-desc { font-size: 14px; color: var(--text2); line-height: 1.6; max-width: 300px; margin: 0 auto 24px; }
+    .empty-btn { display: inline-block; background: linear-gradient(135deg, var(--purple2), var(--purple)); color: #000; text-decoration: none; padding: 12px 28px; border-radius: 50px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 16px var(--purple-glow); }
   </style>
 </head>
 <body>
@@ -252,6 +266,14 @@
 </div>
 
 <div class="main">
+
+  <!-- Hero CTA -->
+  <div id="heroCta" style="display:none;">
+    <div class="hero-cta">
+      <a href="/practice.html" class="hero-btn">▶ Start Practice Session</a>
+      <p class="hero-sub" id="heroSub">Keep building your skills</p>
+    </div>
+  </div>
 
   <!-- Name prompt -->
   <div id="namePrompt" style="display:none;">
@@ -316,6 +338,7 @@
   (function init() {
     if (repName) {
       document.getElementById('repBadge').textContent = repName;
+      document.getElementById('heroCta').style.display = 'block';
       loadSessions(repName);
       loadFeedback(repName);
     } else {
@@ -350,10 +373,29 @@
   }
 
   function render() {
-    if (sessions.length > 0) {
-      document.getElementById('progressSection').style.display = 'block';
-      document.getElementById('sessionsHeader').style.display  = 'block';
+    // Always show hero CTA once rep is loaded
+    const heroCta = document.getElementById('heroCta');
+    if (heroCta) {
+      heroCta.style.display = 'block';
+      const sub = document.getElementById('heroSub');
+      if (sub) sub.textContent = sessions.length > 0
+        ? `${sessions.length} session${sessions.length !== 1 ? 's' : ''} completed — keep it up`
+        : 'Start your first session now';
     }
+
+    if (sessions.length === 0) {
+      document.getElementById('sessionsList').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🎯</div>
+          <div class="empty-title">No sessions yet</div>
+          <div class="empty-desc">Complete your first practice session to see your scores, progress chart, and coaching feedback.</div>
+          <a class="empty-btn" href="/practice.html">▶ Start First Session</a>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('progressSection').style.display = 'block';
+    document.getElementById('sessionsHeader').style.display  = 'block';
     renderStats();
     renderChart();
     renderStreakBadges();

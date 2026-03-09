@@ -34,7 +34,9 @@
       min-height: 100vh;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 24px 20px;
+      animation: pageIn 0.15s ease;
     }
+    @keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* Subtle background glow */
     body::before {
@@ -199,7 +201,13 @@
   <div class="footer">D2D Coach &mdash; Roofing Sales Training</div>
 
 <script>
-  function enterAsRep() {
+  function navigate(url) {
+    document.body.style.transition = 'opacity 0.1s';
+    document.body.style.opacity = '0';
+    setTimeout(() => window.location.href = url, 110);
+  }
+
+  async function enterAsRep() {
     const name = document.getElementById('repName').value.trim();
     if (!name) {
       const inp = document.getElementById('repName');
@@ -211,7 +219,15 @@
       return;
     }
     localStorage.setItem('d2d_rep_name', name);
-    window.location.href = '/hub.html';
+    const btn = document.querySelector('.rep .enter-btn');
+    btn.disabled = true; btn.textContent = 'Loading…';
+    try {
+      const res  = await fetch('/sessions?name=' + encodeURIComponent(name));
+      const data = await res.json();
+      navigate(data.sessions && data.sessions.length > 0 ? '/hub.html' : '/practice.html');
+    } catch (_) {
+      navigate('/hub.html');
+    }
   }
 
   async function enterAsManager() {
@@ -231,8 +247,8 @@
         shakePin();
         errEl.textContent = 'Incorrect PIN.';
       } else {
-        sessionStorage.setItem('mgr_pin', pin);
-        window.location.href = '/manager.html';
+        localStorage.setItem('mgr_pin', pin);
+        navigate('/manager.html');
       }
     } catch (_) {
       errEl.textContent = 'Connection error. Try again.';
