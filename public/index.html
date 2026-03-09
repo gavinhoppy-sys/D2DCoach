@@ -20,9 +20,9 @@
       --text:      #f0f0f0;
       --text2:     rgba(255,255,255,0.55);
       --text3:     rgba(255,255,255,0.3);
-      --purple:    #8b5cf6;
-      --purple2:   #7c3aed;
-      --purple-glow: rgba(139,92,246,0.3);
+      --purple:    #EFCC3A;
+      --purple2:   #d4a017;
+      --purple-glow: rgba(239,204,58,0.22);
       --green:     #10b981;
       --green2:    #059669;
       --green-glow: rgba(16,185,129,0.3);
@@ -40,8 +40,8 @@
     body::before {
       content: '';
       position: fixed; inset: 0; pointer-events: none;
-      background: radial-gradient(ellipse 60% 50% at 30% 40%, rgba(139,92,246,0.08) 0%, transparent 70%),
-                  radial-gradient(ellipse 50% 40% at 70% 65%, rgba(16,185,129,0.06) 0%, transparent 70%);
+      background: radial-gradient(ellipse 60% 50% at 30% 40%, rgba(239,204,58,0.07) 0%, transparent 70%),
+                  radial-gradient(ellipse 50% 40% at 70% 65%, rgba(239,204,58,0.04) 0%, transparent 70%);
     }
 
     /* ── Brand ── */
@@ -52,7 +52,7 @@
       width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 16px;
       background: linear-gradient(135deg, var(--purple2), var(--purple));
       display: flex; align-items: center; justify-content: center; font-size: 30px;
-      box-shadow: 0 12px 32px var(--purple-glow);
+      box-shadow: 0 12px 32px var(--purple-glow); filter: saturate(1.1);
     }
     .brand h1 {
       font-size: 32px; font-weight: 900; letter-spacing: -1px;
@@ -87,7 +87,7 @@
       width: 50px; height: 50px; border-radius: 14px; margin-bottom: 18px;
       display: flex; align-items: center; justify-content: center; font-size: 22px;
     }
-    .rep    .card-icon { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.25); }
+    .rep    .card-icon { background: rgba(239,204,58,0.12); border: 1px solid rgba(239,204,58,0.22); }
     .manager .card-icon { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.22); }
 
     .card-title { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 6px; }
@@ -110,7 +110,7 @@
 
     .rep .field-input:focus {
       border-color: var(--purple);
-      box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+      box-shadow: 0 0 0 3px rgba(239,204,58,0.15);
     }
     .manager .field-input:focus {
       border-color: var(--green);
@@ -129,7 +129,7 @@
 
     /* Buttons */
     .enter-btn {
-      width: 100%; padding: 13px; border-radius: 11px;
+      width: 100%; padding: 13px; border-radius: 50px;
       border: none; font-size: 15px; font-weight: 700;
       cursor: pointer; font-family: inherit;
       transition: box-shadow 0.15s, opacity 0.15s;
@@ -138,10 +138,10 @@
 
     .rep .enter-btn {
       background: linear-gradient(135deg, var(--purple2), var(--purple));
-      color: white;
+      color: #000;
       box-shadow: 0 4px 16px var(--purple-glow);
     }
-    .rep .enter-btn:hover:not(:disabled) { box-shadow: 0 6px 22px rgba(139,92,246,0.5); }
+    .rep .enter-btn:hover:not(:disabled) { box-shadow: 0 6px 22px rgba(239,204,58,0.45); }
 
     .manager .enter-btn {
       background: linear-gradient(135deg, var(--green2), var(--green));

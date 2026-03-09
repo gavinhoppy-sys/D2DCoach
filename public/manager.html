@@ -20,9 +20,9 @@
       --text:      #f0f0f0;
       --text2:     rgba(255,255,255,0.55);
       --text3:     rgba(255,255,255,0.3);
-      --purple:    #8b5cf6;
-      --purple2:   #7c3aed;
-      --purple-glow: rgba(139,92,246,0.3);
+      --purple:    #EFCC3A;
+      --purple2:   #d4a017;
+      --purple-glow: rgba(239,204,58,0.22);
       --green:     #10b981;
       --red:       #ef4444;
       --amber:     #f59e0b;
@@ -45,7 +45,7 @@
     .header-brand { display: flex; align-items: center; gap: 10px; }
     .brand-dot {
       width: 8px; height: 8px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--purple), #ec4899);
+      background: linear-gradient(135deg, var(--purple2), var(--purple));
       box-shadow: 0 0 10px var(--purple-glow);
     }
     .header-title h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
@@ -104,7 +104,7 @@
       padding: 12px 14px; font-size: 18px; outline: none;
       font-family: inherit; letter-spacing: 4px; text-align: center;
     }
-    .pin-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
+    .pin-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(239,204,58,0.15); }
     .pin-input.shake {
       animation: shake 0.35s ease;
       border-color: var(--red);
@@ -117,12 +117,12 @@
     }
     .pin-submit {
       background: linear-gradient(135deg, var(--purple2), var(--purple));
-      color: white; border: none;
-      padding: 12px 20px; border-radius: 10px; font-size: 14px;
-      font-weight: 600; cursor: pointer; font-family: inherit;
+      color: #000; border: none;
+      padding: 12px 20px; border-radius: 50px; font-size: 14px;
+      font-weight: 700; cursor: pointer; font-family: inherit;
       box-shadow: 0 4px 14px var(--purple-glow);
     }
-    .pin-submit:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
+    .pin-submit:hover { box-shadow: 0 6px 20px rgba(239,204,58,0.5); }
     .pin-error { font-size: 12px; color: var(--red); margin-top: 10px; min-height: 16px; }
 
     /* ── Section title ── */
@@ -238,7 +238,7 @@
     }
     .loading-spinner {
       width: 28px; height: 28px; border-radius: 50%;
-      border: 2px solid rgba(139,92,246,0.2); border-top-color: var(--purple);
+      border: 2px solid rgba(239,204,58,0.2); border-top-color: #EFCC3A;
       animation: spin 0.8s linear infinite; margin: 0 auto 16px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -322,12 +322,12 @@
 
     /* Feedback button */
     .feedback-btn {
-      background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3);
+      background: rgba(239,204,58,0.1); border: 1px solid rgba(239,204,58,0.3);
       color: var(--purple); font-size: 11px; font-weight: 600;
-      padding: 5px 10px; border-radius: 7px; cursor: pointer;
+      padding: 5px 12px; border-radius: 50px; cursor: pointer;
       font-family: inherit; flex-shrink: 0; transition: all 0.15s;
     }
-    .feedback-btn:hover { background: rgba(139,92,246,0.22); border-color: var(--purple); }
+    .feedback-btn:hover { background: rgba(239,204,58,0.2); border-color: var(--purple); }
 
     /* Transcript viewer */
     .transcript-section { margin-top: 14px; }
@@ -368,7 +368,7 @@
       color: var(--text); border-radius: 10px;
       padding: 12px; font-size: 13px; font-family: inherit; outline: none; line-height: 1.6;
     }
-    .modal-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
+    .modal-textarea:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(239,204,58,0.15); }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
     .modal-cancel {
       background: var(--surface); border: 1px solid var(--border); color: var(--text2);
@@ -378,11 +378,11 @@
     .modal-cancel:hover { background: var(--surface2); color: var(--text); }
     .modal-send {
       background: linear-gradient(135deg, var(--purple2), var(--purple));
-      color: white; border: none; padding: 9px 22px; border-radius: 9px;
-      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+      color: #000; border: none; padding: 9px 22px; border-radius: 50px;
+      font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
       box-shadow: 0 4px 12px var(--purple-glow);
     }
-    .modal-send:hover { box-shadow: 0 6px 18px rgba(139,92,246,0.5); }
+    .modal-send:hover { box-shadow: 0 6px 18px rgba(239,204,58,0.5); }
     .modal-send:disabled { opacity: 0.6; cursor: not-allowed; }
     .modal-success { color: var(--green); font-size: 13px; margin-top: 10px; text-align: center; display: none; }
 
@@ -771,12 +771,12 @@
       <svg class="trend" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
         <defs>
           <linearGradient id="grad2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3"/>
-            <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+            <stop offset="0%" stop-color="#EFCC3A" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#EFCC3A" stop-opacity="0"/>
           </linearGradient>
         </defs>
         <polygon points="${area}" fill="url(#grad2)"/>
-        <polyline fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="round" points="${polyline}"/>
+        <polyline fill="none" stroke="#EFCC3A" stroke-width="2" stroke-linejoin="round" points="${polyline}"/>
         ${dots}
       </svg>
       <div class="chart-label"><span>Oldest</span><span>Most Recent</span></div>`;
