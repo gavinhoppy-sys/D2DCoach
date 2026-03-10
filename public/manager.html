@@ -443,6 +443,7 @@
         <button class="filter-tab" data-days="30" onclick="setDays(this)">30 Days</button>
         <button class="filter-tab" data-days="7" onclick="setDays(this)">7 Days</button>
       </div>
+      <button class="icon-btn" onclick="exportCSV()">⬇ CSV</button>
       <a href="/" class="icon-btn" style="text-decoration:none;">← Home</a>
       <button class="icon-btn" onclick="logout()">Logout</button>
     </div>
@@ -454,6 +455,7 @@
     <div id="leaderboardView">
       <div class="section-title">Team Overview</div>
       <div class="stats-row" id="teamStatsRow"></div>
+      <div id="weeklyDigest" style="display:none;margin-bottom:20px;"></div>
 
       <div class="sort-bar">
         <label>Sort by</label>
@@ -472,10 +474,11 @@
     <div id="detailView" style="display:none;">
       <div class="detail-header">
         <button class="back-btn" onclick="showLeaderboard()">← Team</button>
-        <div>
+        <div style="flex:1;">
           <div class="detail-name" id="detailName"></div>
           <div class="detail-sub" id="detailSub"></div>
         </div>
+        <button class="icon-btn" onclick="openGoalModal()" style="flex-shrink:0;">🎯 Set Goal</button>
       </div>
 
       <div class="section-title">Progress</div>
@@ -493,6 +496,23 @@
       <div class="sessions-section" id="detailSessionsList"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- Goal Modal -->
+<div class="modal-overlay" id="goalModal" style="display:none;" onclick="if(event.target===this)closeGoalModal()">
+  <div class="modal-box">
+    <div class="modal-title">Set Goal for <span id="goalModalName"></span></div>
+    <div class="modal-sub">Assign a focus goal and/or target score. The rep will see the goal loaded automatically next session.</div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;">Goal (optional)</div>
+    <input class="modal-textarea" id="goalInput" type="text" placeholder="e.g. No filler words, Ask for appointment every turn…" style="min-height:auto;padding:11px 14px;font-size:13px;resize:none;width:100%;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:10px;outline:none;font-family:inherit;margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;">Target Score (0–100, optional)</div>
+    <input class="modal-textarea" id="targetScoreInput" type="number" min="0" max="100" placeholder="e.g. 75" style="min-height:auto;padding:11px 14px;font-size:13px;resize:none;width:100%;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:10px;outline:none;font-family:inherit;margin-bottom:12px;">
+    <div class="modal-success" id="goalSuccess">✓ Goal saved!</div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeGoalModal()">Cancel</button>
+      <button class="modal-send" id="goalSendBtn" onclick="submitGoal()">Save Goal</button>
+    </div>
   </div>
 </div>
 
@@ -572,6 +592,7 @@
     document.querySelectorAll('#dayFilter .filter-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     daysParam = btn.dataset.days;
+    document.getElementById('weeklyDigest').style.display = 'none';
     tryLoadReps();
   }
 
@@ -611,6 +632,7 @@
   function renderLeaderboard() {
     renderTeamStats();
     renderRepList();
+    loadWeeklyDigest();
   }
 
   function renderTeamStats() {
@@ -903,6 +925,86 @@
       alert('Network error. Please try again.');
       btn.disabled = false; btn.textContent = 'Send Feedback';
     }
+  }
+
+  // ── CSV Export ─────────────────────────────────────────
+  function exportCSV() {
+    window.location.href = '/manager/export-csv?pin=' + encodeURIComponent(pin) + (daysParam ? '&days=' + daysParam : '');
+  }
+
+  // ── Goal Modal ─────────────────────────────────────────
+  let goalTarget = '';
+
+  function openGoalModal() {
+    const name = document.getElementById('detailName').textContent;
+    goalTarget = name;
+    document.getElementById('goalModalName').textContent = name;
+    document.getElementById('goalInput').value = '';
+    document.getElementById('targetScoreInput').value = '';
+    document.getElementById('goalSuccess').style.display = 'none';
+    const btn = document.getElementById('goalSendBtn');
+    btn.disabled = false; btn.textContent = 'Save Goal';
+    document.getElementById('goalModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('goalInput').focus(), 50);
+    // Pre-fill if goal exists
+    fetch('/rep-goal?name=' + encodeURIComponent(name))
+      .then(r => r.json())
+      .then(d => {
+        if (d.goal) document.getElementById('goalInput').value = d.goal;
+        if (d.target_score) document.getElementById('targetScoreInput').value = d.target_score;
+      }).catch(() => {});
+  }
+
+  function closeGoalModal() {
+    document.getElementById('goalModal').style.display = 'none';
+  }
+
+  async function submitGoal() {
+    const goal = document.getElementById('goalInput').value.trim();
+    const targetScore = parseInt(document.getElementById('targetScoreInput').value) || null;
+    const btn = document.getElementById('goalSendBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const res = await fetch('/manager/rep-goal?pin=' + encodeURIComponent(pin), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repName: goalTarget, goal: goal || null, targetScore }),
+      });
+      if (res.ok) {
+        document.getElementById('goalSuccess').style.display = 'block';
+        setTimeout(closeGoalModal, 1400);
+      } else {
+        alert('Failed to save goal.'); btn.disabled = false; btn.textContent = 'Save Goal';
+      }
+    } catch (_) {
+      alert('Network error.'); btn.disabled = false; btn.textContent = 'Save Goal';
+    }
+  }
+
+  // ── Weekly Digest ──────────────────────────────────────
+  async function loadWeeklyDigest() {
+    if (daysParam) return; // only show in All Time view
+    try {
+      const res  = await fetch('/manager/reps?pin=' + encodeURIComponent(pin) + '&days=7');
+      const data = await res.json();
+      const reps = data.reps || [];
+      if (reps.length === 0) return;
+      const totalSessions = reps.reduce((a, r) => a + r.sessionCount, 0);
+      const teamAvg = Math.round(reps.reduce((a, r) => a + r.avgScore, 0) / reps.length);
+      const topRep = [...reps].sort((a, b) => b.avgScore - a.avgScore)[0];
+      const el = document.getElementById('weeklyDigest');
+      el.style.display = 'block';
+      el.innerHTML = `
+        <div style="background:rgba(239,204,58,0.06);border:1px solid rgba(239,204,58,0.18);border-radius:14px;padding:14px 18px;">
+          <div class="section-title" style="margin-bottom:10px;">This Week's Snapshot</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div class="stat-box" style="flex:1;min-width:80px;"><div class="stat-num">${totalSessions}</div><div class="stat-label">Sessions</div></div>
+            <div class="stat-box" style="flex:1;min-width:80px;"><div class="stat-num">${reps.length}</div><div class="stat-label">Active Reps</div></div>
+            <div class="stat-box" style="flex:1;min-width:80px;"><div class="stat-num ${scoreColor(teamAvg)}">${teamAvg}%</div><div class="stat-label">Avg Score</div></div>
+            <div class="stat-box" style="flex:1;min-width:80px;"><div class="stat-num green" style="font-size:14px;padding-top:4px;">${esc(topRep?.name || '—')}</div><div class="stat-label">Top Rep</div></div>
+          </div>
+        </div>`;
+    } catch (_) {}
   }
 
   // ── Transcript ─────────────────────────────────────────

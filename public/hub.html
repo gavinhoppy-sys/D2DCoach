@@ -163,6 +163,21 @@
     .goal-tag.achieved { background: rgba(16,185,129,0.1); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
     .goal-tag.missed   { background: rgba(245,158,11,0.1);  color: #fcd34d;  border: 1px solid rgba(245,158,11,0.2); }
 
+    /* Copy btn */
+    .copy-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text3); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 50px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .copy-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+    /* Session notes */
+    .notes-section { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .notes-input { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 8px 12px; font-size: 12px; line-height: 1.5; font-family: inherit; resize: none; outline: none; }
+    .notes-input:focus { border-color: var(--purple); }
+    .notes-save-btn { align-self: flex-end; background: var(--surface); border: 1px solid var(--border2); color: var(--text2); font-size: 11px; font-weight: 600; padding: 4px 14px; border-radius: 50px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .notes-save-btn:hover { background: var(--surface2); color: var(--text); }
+
+    /* Load more */
+    .load-more-btn { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text2); font-size: 13px; font-weight: 500; padding: 12px; border-radius: 12px; cursor: pointer; font-family: inherit; transition: all 0.15s; margin-top: 4px; }
+    .load-more-btn:hover { background: var(--surface2); border-color: var(--border2); color: var(--text); }
+
     /* Loading */
     .loading { text-align: center; padding: 60px 20px; color: var(--text3); font-size: 14px; }
     .loading-spinner { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(239,204,58,0.2); border-top-color: #EFCC3A; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
@@ -401,6 +416,7 @@
     renderStreakBadges();
     renderTodaysFocus();
     renderSessions();
+    renderStreakReminder();
   }
 
   // ── Helpers ──────────────────────────────────────────────
@@ -551,13 +567,16 @@
   }
 
   // ── Sessions list ─────────────────────────────────────────
+  let visibleCount = 10;
+
   function renderSessions() {
     const list = document.getElementById('sessionsList');
     if (sessions.length === 0) {
       list.innerHTML = `<div class="no-data"><strong>No sessions yet</strong>Head to Practice, finish a session, and it'll appear here.</div>`;
       return;
     }
-    list.innerHTML = sessions.map((s, i) => {
+    const visible = sessions.slice(0, visibleCount);
+    list.innerHTML = visible.map((s, i) => {
       const a  = s.analysis;
       const cl = scoreColor(a.overall);
       const bd = a.breakdown || {};
@@ -573,8 +592,12 @@
         </div>`).join('');
       const meta = [fmt(s.date), s.repMessages ? `${s.repMessages} turn${s.repMessages!==1?'s':''}` : '', fmtDuration(s.duration)].filter(Boolean).join(' · ');
       const goalTag = a.goalAchieved !== undefined ? `<div class="goal-tag ${a.goalAchieved?'achieved':'missed'}">${a.goalAchieved?'✅':'❌'} ${esc(a.sessionGoal||'')}</div>` : '';
+      const notes = localStorage.getItem('d2d_note_' + s.id) || '';
       const transcriptHtml = a.transcript ? `
-        <div class="transcript-toggle" onclick="toggleTranscript(${i}, event)">📄 View transcript</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+          <div class="transcript-toggle" onclick="toggleTranscript(${i}, event)">📄 View transcript</div>
+          <button class="copy-btn" onclick="copyTranscript(${i},event)" title="Copy transcript">📋 Copy</button>
+        </div>
         <div class="transcript-block" id="tr-${i}">${formatTranscript(a.transcript)}</div>` : '';
       return `
         <div class="session-card" id="card-${i}" onclick="toggleCard(${i})">
@@ -595,12 +618,50 @@
             </div>
             <div class="breakdown-grid">${barsHtml}</div>
             ${transcriptHtml}
+            <div class="notes-section" onclick="event.stopPropagation()">
+              <textarea class="notes-input" id="notes-${s.id}" placeholder="Add session notes…" rows="2">${esc(notes)}</textarea>
+              <button class="notes-save-btn" onclick="saveNote(${s.id})">Save Note</button>
+            </div>
           </div>
         </div>`;
     }).join('');
+
+    if (sessions.length > visibleCount) {
+      list.innerHTML += `<button class="load-more-btn" onclick="loadMore()">Load ${Math.min(10, sessions.length - visibleCount)} More Sessions</button>`;
+    }
+  }
+
+  function loadMore() {
+    visibleCount += 10;
+    renderSessions();
   }
 
   function toggleCard(i) { document.getElementById(`card-${i}`).classList.toggle('open'); }
+
+  function copyTranscript(i, e) {
+    e.stopPropagation();
+    const s = sessions[i];
+    if (!s?.analysis?.transcript) return;
+    navigator.clipboard.writeText(s.analysis.transcript).then(() => {
+      showToast('✓ Transcript copied');
+    }).catch(() => {});
+  }
+
+  function saveNote(sessionId) {
+    const ta = document.getElementById('notes-' + sessionId);
+    if (!ta) return;
+    localStorage.setItem('d2d_note_' + sessionId, ta.value);
+    showToast('✓ Note saved');
+  }
+
+  function showToast(msg) {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(16,185,129,0.95);color:#fff;padding:8px 20px;border-radius:50px;font-size:13px;font-weight:600;z-index:200;pointer-events:none;opacity:0;transition:opacity 0.3s;white-space:nowrap;';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => { requestAnimationFrame(() => el.style.opacity = '1'); });
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 2000);
+  }
 
   function toggleTranscript(i, e) {
     e.stopPropagation();
@@ -614,6 +675,25 @@
       if (line.startsWith('COACH:'))    return `<span class="t-coach">${esc(line)}</span>`;
       return esc(line);
     }).join('\n');
+  }
+
+  // ── Streak reminder ───────────────────────────────────────
+  function renderStreakReminder() {
+    if (sessions.length === 0) return;
+    const lastDate = new Date(sessions[0].date);
+    const now = new Date();
+    const hoursAgo = (now - lastDate) / (1000 * 60 * 60);
+    if (hoursAgo < 20) return; // practiced recently, no reminder
+    const el = document.getElementById('streakReminderBanner');
+    if (!el) {
+      const banner = document.createElement('div');
+      banner.id = 'streakReminderBanner';
+      banner.style.cssText = 'background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:12px;font-size:13px;color:#fcd34d;';
+      const daysText = hoursAgo > 48 ? `${Math.floor(hoursAgo/24)} days` : 'a day';
+      banner.innerHTML = `<span style="font-size:20px;">⏰</span><div><strong>Time to practice!</strong> You haven't had a session in ${daysText}. <a href="/practice.html" style="color:var(--purple);font-weight:700;text-decoration:none;">Go now →</a></div>`;
+      const main = document.querySelector('.main');
+      if (main) main.insertBefore(banner, main.firstChild);
+    }
   }
 
   // ── Feedback ─────────────────────────────────────────────

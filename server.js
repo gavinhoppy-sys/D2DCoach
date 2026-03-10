@@ -44,6 +44,14 @@ async function initDB() {
       read_at    TIMESTAMPTZ
     )
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS rep_goals (
+      rep_name     TEXT PRIMARY KEY,
+      goal         TEXT,
+      target_score INTEGER,
+      set_at       TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
   console.log('Database ready.');
 }
 initDB().catch(err => console.error('DB init error:', err.message));
@@ -74,6 +82,7 @@ function getSession(id) {
       drillObjection: null,
       sessionGoal: null,
       curriculumLesson: null,
+      difficulty: 'normal',
       lastActivity: Date.now(),
     });
   }
@@ -118,7 +127,7 @@ const CURRICULUM = {
 
 // ── Build system prompt ───────────────────────────────────
 async function buildSystemPrompt(persona = 'standard', scenario = 'cold-knock', weakAreas = [], opts = {}) {
-  const { drillObjection, sessionGoal, curriculumLesson } = opts;
+  const { drillObjection, sessionGoal, curriculumLesson, difficulty } = opts;
 
   const personaTxt  = PERSONAS[persona]   || PERSONAS.standard;
   const scenarioTxt = SCENARIOS[scenario] || SCENARIOS['cold-knock'];
@@ -137,12 +146,18 @@ async function buildSystemPrompt(persona = 'standard', scenario = 'cold-knock', 
 
   const currNote = curriculumLesson ? (CURRICULUM[curriculumLesson] || '') : '';
 
+  const difficultyNote = difficulty === 'hard'
+    ? '\n\n[ADAPTIVE DIFFICULTY: This rep has been performing well (recent scores 80%+). Raise your resistance significantly — be more skeptical, throw stronger objections, give fewer natural openings.]'
+    : difficulty === 'easy'
+    ? '\n\n[ADAPTIVE DIFFICULTY: This rep is still developing. Allow slightly more patience and give natural recovery moments after mistakes — but still be realistic.]'
+    : '';
+
   const base = `You are roleplaying as a homeowner. ${scenarioTxt} ${personaTxt}
 
 After each rep message, respond in character as the homeowner, then on a new line add:
 COACH: [2-3 sentences of direct, specific feedback. Quote the exact words or phrases the rep just used. Always end your feedback with a suggested alternative — format it as: Try instead: "[exact phrase to use]". If voice metrics are present (WPM, energy, filler words), address them explicitly — ideal pace: 130-150 WPM, filler words kill credibility, monotone delivery loses attention. Reference training materials when relevant.]
 
-Adjust your skepticism dynamically: if the rep builds genuine rapport and handles your concerns well, warm up gradually. If they fumble objections, sound scripted, or ignore your concerns, increase your resistance.${weakAreaNote}${drillNote}${goalNote}${currNote}`;
+Adjust your skepticism dynamically: if the rep builds genuine rapport and handles your concerns well, warm up gradually. If they fumble objections, sound scripted, or ignore your concerns, increase your resistance.${weakAreaNote}${drillNote}${goalNote}${currNote}${difficultyNote}`;
 
   const files = await getKnowledgeBase();
   if (files.length === 0) return base;
@@ -164,7 +179,7 @@ Adjust your skepticism dynamically: if the rep builds genuine rapport and handle
 // ── Chat ──────────────────────────────────────────────────
 app.post('/chat', async (req, res) => {
   try {
-    const { message, sessionId, persona, scenario, weakAreas, drillObjection, sessionGoal, curriculumLesson } = req.body;
+    const { message, sessionId, persona, scenario, weakAreas, drillObjection, sessionGoal, curriculumLesson, difficulty } = req.body;
     if (!message || !message.trim()) return res.status(400).json({ error: 'Message is required.' });
 
     const session = getSession(sessionId || 'default');
@@ -174,6 +189,7 @@ app.post('/chat', async (req, res) => {
     if (drillObjection !== undefined) session.drillObjection = drillObjection;
     if (sessionGoal !== undefined)    session.sessionGoal    = sessionGoal;
     if (curriculumLesson !== undefined) session.curriculumLesson = curriculumLesson;
+    if (difficulty !== undefined)     session.difficulty     = difficulty;
 
     session.history.push({ role: 'user', content: message });
 
@@ -181,6 +197,7 @@ app.post('/chat', async (req, res) => {
       drillObjection:  session.drillObjection,
       sessionGoal:     session.sessionGoal,
       curriculumLesson: session.curriculumLesson,
+      difficulty:      session.difficulty,
     });
 
     const response = await client.messages.create({
@@ -215,6 +232,15 @@ app.post('/end-session', async (req, res) => {
       ? `\nThe rep set this session goal: "${sessionGoal}". Also include in your JSON: "goalAchieved": <true or false>, "goalFeedback": "<one sentence on whether/how they met it>"`
       : '';
 
+    const kbFiles = await getKnowledgeBase();
+    const hasKB = kbFiles.length > 0;
+    const complianceField = hasKB
+      ? `,\n    "scriptCompliance": { "score": <0-100>, "feedback": "<one sentence about whether they used key talking points from the training materials>" }`
+      : '';
+    const complianceInstruction = hasKB
+      ? '\n\nAlso score "scriptCompliance": how well did the rep reference or apply the key talking points and techniques from the training materials? 100 = they used the scripts naturally, 0 = completely ignored training materials.'
+      : '';
+
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
@@ -235,14 +261,14 @@ Return exactly this structure:
     "rapport":           { "score": <0-100>, "feedback": "<one sentence>" },
     "tonality":          { "score": <0-100>, "feedback": "<one sentence>" },
     "timing":            { "score": <0-100>, "feedback": "<one sentence>" },
-    "closing":           { "score": <0-100>, "feedback": "<one sentence>" }
+    "closing":           { "score": <0-100>, "feedback": "<one sentence>" }${complianceField}
   },
   "summary": "<2-3 sentences describing how the session went>",
   "keyStrength": "<one specific thing they did well>",
   "keyImprovement": "<one specific thing to work on next time>"${goalInstruction ? ',\n  "goalAchieved": <true/false>,\n  "goalFeedback": "<one sentence>"' : ''}
 }
 
-Use any [Voice: ...] metrics in the rep's messages to inform tonality and timing scores. Ideal pace is 130-150 WPM.${goalInstruction}`,
+Use any [Voice: ...] metrics in the rep's messages to inform tonality and timing scores. Ideal pace is 130-150 WPM.${goalInstruction}${complianceInstruction}`,
       }],
     });
 
@@ -290,6 +316,76 @@ app.get('/leaderboard', async (req, res) => {
     res.json({ leaderboard: result.rows });
   } catch (err) {
     console.error('Leaderboard error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Rep goal (public read) ────────────────────────────────
+app.get('/rep-goal', async (req, res) => {
+  try {
+    const { name } = req.query;
+    if (!name) return res.status(400).json({ error: 'name required.' });
+    const result = await pool.query(
+      'SELECT goal, target_score FROM rep_goals WHERE LOWER(rep_name) = LOWER($1)',
+      [name.trim()]
+    );
+    res.json(result.rows[0] || { goal: null, target_score: null });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Manager: set rep goal / target ───────────────────────
+app.post('/manager/rep-goal', async (req, res) => {
+  if (!checkPin(req, res)) return;
+  try {
+    const { repName, goal, targetScore } = req.body;
+    if (!repName) return res.status(400).json({ error: 'repName required.' });
+    await pool.query(
+      `INSERT INTO rep_goals (rep_name, goal, target_score)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (rep_name) DO UPDATE SET goal = $2, target_score = $3, set_at = NOW()`,
+      [repName.trim(), goal || null, targetScore || null]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Manager: CSV export ───────────────────────────────────
+app.get('/manager/export-csv', async (req, res) => {
+  if (!checkPin(req, res)) return;
+  try {
+    const days = parseInt(req.query.days) || null;
+    const result = await pool.query(
+      `SELECT rep_name, created_at, duration, rep_messages, analysis
+       FROM sessions
+       ${days ? `WHERE created_at >= NOW() - ($1 || ' days')::interval` : ''}
+       ORDER BY rep_name, created_at DESC`,
+      days ? [days] : []
+    );
+    const rows = result.rows;
+    const header = 'Rep,Date,Duration(s),Turns,Overall%,Opening,ObjHandling,Rapport,Tonality,Timing,Closing,ScriptCompliance,Summary,Strength,Improvement';
+    const lines = rows.map(r => {
+      const a = r.analysis || {};
+      const bd = a.breakdown || {};
+      const d = new Date(r.created_at).toISOString().slice(0, 10);
+      const csv = (v) => `"${String(v || '').replace(/"/g, '""')}"`;
+      return [
+        csv(r.rep_name), d, r.duration || 0, r.rep_messages || 0,
+        a.overall || 0,
+        bd.opening?.score || '', bd.objectionHandling?.score || '',
+        bd.rapport?.score || '', bd.tonality?.score || '',
+        bd.timing?.score || '', bd.closing?.score || '',
+        bd.scriptCompliance?.score || '',
+        csv(a.summary || ''), csv(a.keyStrength || ''), csv(a.keyImprovement || ''),
+      ].join(',');
+    });
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="d2d-sessions.csv"');
+    res.send([header, ...lines].join('\n'));
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

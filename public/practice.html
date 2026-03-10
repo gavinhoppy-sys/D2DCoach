@@ -343,6 +343,23 @@
     }
     .toast.show { opacity: 1; }
 
+    /* Session comparison delta */
+    .cs-delta { text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+    .cs-delta.up   { color: #34d399; }
+    .cs-delta.down { color: #f87171; }
+    .cs-delta.flat { color: var(--text3); }
+
+    /* Coach summary action buttons */
+    .cs-action-btn {
+      background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text2); padding: 6px 14px; border-radius: 50px;
+      font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+      transition: all 0.15s;
+    }
+    .cs-action-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+    .cs-action-btn.drill { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); color: #fcd34d; }
+    .cs-action-btn.drill:hover { background: rgba(245,158,11,0.2); }
+
     /* Goal chip */
     .goal-chip {
       display: none; text-align: center; font-size: 11px; font-weight: 600;
@@ -465,6 +482,9 @@
   let sessionTranscript  = [];
   let allAudioChunks     = [];
   let mediaRecorder      = null;
+  let sessionDifficulty  = 'normal';
+  let lastSessionScore   = null;
+  let bestSessionScore   = null;
 
   // Read curriculum lesson from URL param
   (function readUrlParams() {
@@ -524,6 +544,8 @@
     }
     showSetupPanel();
     loadRepWeakAreas();
+    retrySavedSessions();
+    checkSessionRecovery();
   })();
 
   // Spacebar push-to-talk
@@ -663,6 +685,7 @@
     repMessageCount++;
     appendRepMsg(text, metrics); showTyping();
     sessionTranscript.push({ role: 'rep', text });
+    saveRecoverySnapshot();
     const body = { message: fullMsg, sessionId };
     if (!sessionContextSent) {
       body.persona          = selectedPersona;
@@ -671,6 +694,7 @@
       body.sessionGoal      = selectedGoal || null;
       body.drillObjection   = drillMode ? selectedObjection : null;
       body.curriculumLesson = curriculumLesson || null;
+      body.difficulty       = sessionDifficulty;
       sessionContextSent = true;
     }
     try {
@@ -810,6 +834,7 @@
       body.sessionGoal      = selectedGoal || null;
       body.drillObjection   = drillMode ? selectedObjection : null;
       body.curriculumLesson = curriculumLesson || null;
+      body.difficulty       = sessionDifficulty;
       sessionContextSent = true;
     }
     try {
@@ -891,7 +916,16 @@
       else showError(data.error || 'Failed to generate scorecard.');
       if (data.analysis) {
         appendCoachSummary(data.analysis);
-        showToast('✓ Session saved');
+        // Personal best celebration
+        const score = data.analysis.overall;
+        if (bestSessionScore !== null && score > bestSessionScore) {
+          showToast('🏆 New Personal Best: ' + score + '%!', 'linear-gradient(135deg,#d4a017,#EFCC3A)');
+          setTimeout(() => showToast('✓ Session saved'), 3000);
+        } else {
+          showToast('✓ Session saved');
+        }
+        // Clear recovery snapshot on successful save
+        localStorage.removeItem('d2d_recovery');
         if (data.analysis.goalAchieved !== undefined) appendGoalResult(data.analysis);
         speakCoachFeedback(data.analysis);
         updateCurriculumProgress(data.analysis);
@@ -899,7 +933,22 @@
         showError('Could not generate analysis — session not saved. (' + (data.error || 'unknown error') + ')');
       }
       showAudioPlayback();
-    } catch (_) { removeTyping(); showError('Could not reach the server.'); }
+    } catch (_) {
+      removeTyping();
+      showError('Could not reach the server. Your session data has been saved locally and will sync when you reconnect.');
+      // Queue for offline retry
+      try {
+        const sessionDuration = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 1000) : 0;
+        const transcriptText = sessionTranscript.map(t => {
+          const lines = [t.role === 'rep' ? `REP: ${t.text}` : `HOMEOWNER: ${t.text}`];
+          if (t.coach) lines.push(`COACH: ${t.coach}`);
+          return lines.join('\n');
+        }).join('\n\n');
+        const pending = JSON.parse(localStorage.getItem('d2d_pending_saves') || '[]');
+        pending.push({ repName: repName || 'Unknown', duration: sessionDuration, repMessages: repMessageCount, transcript: transcriptText || null, sessionGoal: selectedGoal || null, curriculumLesson: curriculumLesson || null });
+        localStorage.setItem('d2d_pending_saves', JSON.stringify(pending));
+      } catch (_2) {}
+    }
     const chat = document.getElementById('chatArea');
     const area = document.createElement('div'); area.className = 'new-session-area';
     area.innerHTML = '<button class="new-btn" onclick="newSession()">↩ Start New Session</button>';
@@ -926,19 +975,48 @@
   }
 
   function appendCoachSummary(analysis) {
-    const chat = document.getElementById('chatArea');
+    const chat  = document.getElementById('chatArea');
     const color = scoreColor(analysis.overall);
+    const score = analysis.overall;
+
+    // Session comparison
+    const deltaHtml = lastSessionScore !== null
+      ? `<div class="cs-delta ${score > lastSessionScore ? 'up' : score < lastSessionScore ? 'down' : 'flat'}">
+           ${score > lastSessionScore ? '▲' : score < lastSessionScore ? '▼' : '—'} ${score > lastSessionScore ? '+' : ''}${score - lastSessionScore}% vs last session
+         </div>`
+      : '';
+
+    // Script compliance
+    const sc = analysis.breakdown?.scriptCompliance;
+    const scHtml = sc
+      ? `<div class="cs-box"><div class="cs-box-title">📋 Script Compliance</div><div class="cs-box-text">${sc.score}% — ${esc(sc.feedback || '')}</div></div>`
+      : '';
+
+    const shareText = `D2D Coach Session — ${score}% overall\n${analysis.summary || ''}\n💪 ${analysis.keyStrength || ''}\n🎯 ${analysis.keyImprovement || ''}`;
+
     const card = document.createElement('div'); card.className = 'coach-summary';
     card.innerHTML = `
       <h3>Coach Analysis</h3>
-      <div class="cs-score ${color}">${analysis.overall}%</div>
+      <div class="cs-score ${color}">${score}%</div>
       <div class="cs-label">Overall Score</div>
+      ${deltaHtml}
       <div class="cs-summary">${esc(analysis.summary || '')}</div>
       <div class="cs-row">
         ${analysis.keyStrength    ? `<div class="cs-box"><div class="cs-box-title">💪 Strength</div><div class="cs-box-text">${esc(analysis.keyStrength)}</div></div>` : ''}
         ${analysis.keyImprovement ? `<div class="cs-box"><div class="cs-box-title">🎯 Work On</div><div class="cs-box-text">${esc(analysis.keyImprovement)}</div></div>` : ''}
+        ${scHtml}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <button class="cs-action-btn" onclick="navigator.clipboard.writeText(${JSON.stringify(shareText)}).then(()=>showToast('✓ Copied to clipboard'))">📤 Copy Summary</button>
+        ${repWeakAreas.length > 0 ? `<button class="cs-action-btn drill" onclick="startDrillMode()">🎯 Drill Weak Areas</button>` : ''}
       </div>`;
     chat.appendChild(card); scrollBottom();
+  }
+
+  function startDrillMode() {
+    if (!confirm('Start a drill session focused on your weak areas?')) return;
+    drillMode = true;
+    newSession();
   }
 
   function showToast(msg, color) {
@@ -1132,18 +1210,92 @@
       const res  = await fetch('/sessions?name=' + encodeURIComponent(repName));
       const data = await res.json();
       const recent = (data.sessions || []).slice(0, 10);
-      if (recent.length < 3) return;
-      const catKeys = ['opening', 'objectionHandling', 'rapport', 'tonality', 'timing', 'closing'];
-      const avgs = {};
-      catKeys.forEach(k => {
-        const vals = recent.map(s => s.analysis?.breakdown?.[k]?.score).filter(v => v != null);
-        avgs[k] = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      // Track scores for adaptive difficulty + comparison
+      const scores = recent.map(s => s.analysis?.overall).filter(v => v != null);
+      if (scores.length > 0) {
+        lastSessionScore = scores[0];
+        bestSessionScore = Math.max(...scores);
+        const last5avg = scores.slice(0, 5).reduce((a, b) => a + b, 0) / Math.min(scores.length, 5);
+        sessionDifficulty = last5avg >= 80 ? 'hard' : (last5avg < 45) ? 'easy' : 'normal';
+      }
+      if (recent.length >= 3) {
+        const catKeys = ['opening', 'objectionHandling', 'rapport', 'tonality', 'timing', 'closing'];
+        const avgs = {};
+        catKeys.forEach(k => {
+          const vals = recent.map(s => s.analysis?.breakdown?.[k]?.score).filter(v => v != null);
+          avgs[k] = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+        });
+        repWeakAreas = catKeys
+          .filter(k => avgs[k] !== null && avgs[k] < 60)
+          .sort((a, b) => avgs[a] - avgs[b])
+          .slice(0, 2);
+        showWeakAreasNote();
+      }
+    } catch (_) {}
+    // Load manager-assigned goal
+    try {
+      const gr = await fetch('/rep-goal?name=' + encodeURIComponent(repName));
+      const gd = await gr.json();
+      if (gd.goal && !selectedGoal) {
+        selectedGoal = gd.goal;
+        const sel = document.getElementById('goalSelect');
+        if (sel) sel.value = selectedGoal;
+      }
+    } catch (_) {}
+  }
+
+  // ── Session recovery ──────────────────────────────────────
+  function saveRecoverySnapshot() {
+    if (sessionTranscript.length === 0) return;
+    localStorage.setItem('d2d_recovery', JSON.stringify({
+      sessionId, repName, transcript: sessionTranscript,
+      repMessageCount, ts: Date.now(),
+    }));
+  }
+
+  function checkSessionRecovery() {
+    try {
+      const raw = localStorage.getItem('d2d_recovery');
+      if (!raw) return;
+      const r = JSON.parse(raw);
+      if (!r || !r.transcript || r.transcript.length < 2) { localStorage.removeItem('d2d_recovery'); return; }
+      if (r.repName !== repName) { localStorage.removeItem('d2d_recovery'); return; }
+      if (Date.now() - r.ts > 4 * 60 * 60 * 1000) { localStorage.removeItem('d2d_recovery'); return; }
+      if (!confirm(`You have an unfinished session (${r.transcript.length} turns). Resume it?`)) {
+        localStorage.removeItem('d2d_recovery'); return;
+      }
+      sessionId        = r.sessionId;
+      sessionTranscript = r.transcript;
+      repMessageCount  = r.repMessageCount || 0;
+      sessionContextSent = true;
+      sessionStartTime = Date.now();
+      document.getElementById('chatArea').innerHTML = '';
+      r.transcript.forEach(t => {
+        if (t.role === 'rep') appendRepMsg(t.text, '');
+        else appendHomeownerResponse(t.text + (t.coach ? '\nCOACH: ' + t.coach : ''));
       });
-      repWeakAreas = catKeys
-        .filter(k => avgs[k] !== null && avgs[k] < 60)
-        .sort((a, b) => avgs[a] - avgs[b])
-        .slice(0, 2);
-      showWeakAreasNote();
+      localStorage.removeItem('d2d_recovery');
+      setConvState('listening'); openMic();
+    } catch (_) {}
+  }
+
+  // ── Offline save retry ─────────────────────────────────────
+  async function retrySavedSessions() {
+    try {
+      const pending = JSON.parse(localStorage.getItem('d2d_pending_saves') || '[]');
+      if (pending.length === 0) return;
+      const stillPending = [];
+      for (const p of pending) {
+        try {
+          const r = await fetch('/end-session', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(p),
+          });
+          if (!r.ok) stillPending.push(p);
+        } catch (_) { stillPending.push(p); }
+      }
+      localStorage.setItem('d2d_pending_saves', JSON.stringify(stillPending));
+      if (pending.length !== stillPending.length) showToast(`✓ ${pending.length - stillPending.length} saved session${pending.length - stillPending.length !== 1 ? 's' : ''} synced`);
     } catch (_) {}
   }
 
