@@ -516,6 +516,7 @@
   let energySamples = [], freqSamples = [], recordStart = 0;
 
   const isMobile  = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  const isIOS     = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   const hasSpeech = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
   let recognition = null;
 
@@ -562,31 +563,63 @@
   function setupRecognition() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SR();
-    recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-US';
+    recognition.lang = 'en-US';
 
-    recognition.onresult = (e) => {
-      let final = '', interim = '';
-      for (let i = 0; i < e.results.length; i++) {
-        e.results[i].isFinal ? (final += e.results[i][0].transcript + ' ') : (interim += e.results[i][0].transcript);
-      }
-      currentTranscript = (final + interim).trim();
-      updateLivePreview(currentTranscript);
+    if (isIOS) {
+      // iOS Safari requires non-continuous mode — one utterance at a time,
+      // restarted after each result so the rep can keep talking in turns.
+      recognition.continuous     = false;
+      recognition.interimResults = false;
 
-      // ── Silence-based auto-send ──
-      // Reset the timer on ANY speech activity (interim or final).
-      // Only fires after 5 seconds of true silence — won't cut you off mid-sentence.
-      const wordCount = currentTranscript.trim().split(/\s+/).filter(Boolean).length;
-      if (wordCount >= 3) {
-        clearTimeout(sendDebounce);
-        sendDebounce = setTimeout(() => {
-          if (convState === 'listening') triggerAutoSend();
-        }, 5000);
-      }
-    };
+      recognition.onresult = (e) => {
+        let final = '';
+        for (let i = 0; i < e.results.length; i++) {
+          if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
+        }
+        final = final.trim();
+        if (final) {
+          currentTranscript = final;
+          updateLivePreview(currentTranscript);
+          // Auto-send after short pause (iOS ends recognition naturally after silence)
+          clearTimeout(sendDebounce);
+          sendDebounce = setTimeout(() => {
+            if (convState === 'listening') triggerAutoSend();
+          }, 1200);
+        }
+      };
+
+      recognition.onend = () => {
+        // Restart immediately so the rep can keep speaking without tapping again
+        if (convState === 'listening') { try { recognition.start(); } catch (_) {} }
+      };
+
+    } else {
+      // Desktop / Android: full continuous mode with interim results
+      recognition.continuous     = true;
+      recognition.interimResults = true;
+
+      recognition.onresult = (e) => {
+        let final = '', interim = '';
+        for (let i = 0; i < e.results.length; i++) {
+          e.results[i].isFinal ? (final += e.results[i][0].transcript + ' ') : (interim += e.results[i][0].transcript);
+        }
+        currentTranscript = (final + interim).trim();
+        updateLivePreview(currentTranscript);
+
+        const wordCount = currentTranscript.trim().split(/\s+/).filter(Boolean).length;
+        if (wordCount >= 3) {
+          clearTimeout(sendDebounce);
+          sendDebounce = setTimeout(() => {
+            if (convState === 'listening') triggerAutoSend();
+          }, 5000);
+        }
+      };
+
+      recognition.onend = () => { if (convState === 'listening') { try { recognition.start(); } catch (_) {} } };
+    }
 
     recognition.onerror = (e) => {
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-        // Mic permission denied or not supported — fall back to text input
         document.getElementById('textFallback').style.display = 'flex';
         document.getElementById('mainBtn').style.display = 'none';
         document.getElementById('statusBar').style.display = 'none';
@@ -594,7 +627,6 @@
         console.error('SR:', e.error);
       }
     };
-    recognition.onend   = () => { if (convState === 'listening') { try { recognition.start(); } catch (_) {} } };
   }
 
   // ── Main button ───────────────────────────────────────────
