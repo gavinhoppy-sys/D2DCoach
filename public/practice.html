@@ -702,7 +702,10 @@
       const data = await res.json();
       removeTyping();
       if (data.error) { showError(data.error); setConvState('idle'); }
-      else { appendHomeownerResponse(data.response); setConvState('speaking'); speakHomeowner(data.response); }
+      else {
+        appendHomeownerResponse(data.response); setConvState('speaking'); speakHomeowner(data.response);
+        if (checkDoorClosed(data.response)) { handleDoorClosed(); return; }
+      }
     } catch (_) { removeTyping(); showError('Could not reach the server.'); setConvState('idle'); }
   }
 
@@ -842,8 +845,39 @@
       const data = await res.json();
       removeTyping();
       if (data.error) showError(data.error);
-      else appendHomeownerResponse(data.response);
+      else {
+        appendHomeownerResponse(data.response);
+        if (checkDoorClosed(data.response)) { handleDoorClosed(); return; }
+      }
     } catch (_) { removeTyping(); showError('Could not reach the server.'); }
+  }
+
+  // ── Door-closed detection ─────────────────────────────────
+  function checkDoorClosed(response) {
+    const homeownerText = response.indexOf('COACH:') !== -1
+      ? response.slice(0, response.indexOf('COACH:')).toLowerCase()
+      : response.toLowerCase();
+    const patterns = [
+      /\*[^*]*(close|slam|shut)[^*]*door[^*]*\*/i,
+      /\*[^*]*door[^*]*(close|slam|shut)[^*]*\*/i,
+      /closes?\s+the\s+door/i,
+      /slams?\s+the\s+door/i,
+      /shuts?\s+the\s+door/i,
+      /door\s+(closes?|slams?|shuts?)/i,
+    ];
+    return patterns.some(p => p.test(homeownerText));
+  }
+
+  function handleDoorClosed() {
+    if (convState === 'ended') return;
+    const chat = document.getElementById('chatArea');
+    const notice = document.createElement('div');
+    notice.className = 'error-msg';
+    notice.style.cssText = 'background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.3);color:#c4b5fd;';
+    notice.textContent = '🚪 The homeowner closed the door — generating your scorecard…';
+    chat.appendChild(notice);
+    scrollBottom();
+    setTimeout(() => endSession(), 1200);
   }
 
   // ── DOM helpers ───────────────────────────────────────────
