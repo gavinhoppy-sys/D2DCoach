@@ -515,6 +515,7 @@
   let audioCtx = null, analyser = null, micStream = null, analysisInterval = null;
   let energySamples = [], freqSamples = [], recordStart = 0;
 
+  const isMobile  = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   const hasSpeech = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
   let recognition = null;
 
@@ -535,7 +536,8 @@
     }
     if (hasSpeech) {
       setupRecognition();
-      document.getElementById('textFallback').style.display = 'none';
+      // On mobile: show text input alongside voice so it's always usable
+      document.getElementById('textFallback').style.display = isMobile ? 'flex' : 'none';
     } else {
       document.getElementById('textFallback').style.display = 'flex';
       document.getElementById('mainBtn').style.display = 'none';
@@ -582,7 +584,16 @@
       }
     };
 
-    recognition.onerror = (e) => { if (e.error !== 'no-speech' && e.error !== 'aborted') console.error('SR:', e.error); };
+    recognition.onerror = (e) => {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        // Mic permission denied or not supported — fall back to text input
+        document.getElementById('textFallback').style.display = 'flex';
+        document.getElementById('mainBtn').style.display = 'none';
+        document.getElementById('statusBar').style.display = 'none';
+      } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        console.error('SR:', e.error);
+      }
+    };
     recognition.onend   = () => { if (convState === 'listening') { try { recognition.start(); } catch (_) {} } };
   }
 
