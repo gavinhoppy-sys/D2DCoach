@@ -351,6 +351,71 @@
     .t-owner { color: #f9a8d4; }
     .t-coach { color: #6ee7b7; font-style: italic; }
 
+    /* Session viewer modal */
+    .sv-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(6px);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 24px 16px; overflow-y: auto;
+    }
+    .sv-box {
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 20px; width: 100%; max-width: 680px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sv-header {
+      padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 16px;
+    }
+    .sv-score { font-size: 28px; font-weight: 800; flex-shrink: 0; }
+    .sv-meta { flex: 1; }
+    .sv-meta-name { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+    .sv-meta-sub  { font-size: 12px; color: var(--text3); }
+    .sv-close {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text2); border-radius: 8px; padding: 6px 12px;
+      font-size: 13px; cursor: pointer; flex-shrink: 0; font-family: inherit;
+    }
+    .sv-close:hover { background: var(--surface2); color: var(--text); }
+    .sv-listen-bar {
+      padding: 12px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .sv-listen-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; }
+    .sv-play-btn {
+      background: linear-gradient(135deg, var(--purple2), var(--purple));
+      border: none; color: #000; font-weight: 700; font-size: 12px;
+      border-radius: 8px; padding: 7px 16px; cursor: pointer; font-family: inherit;
+    }
+    .sv-play-btn:hover { opacity: 0.85; }
+    .sv-stop-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text2); font-size: 12px; font-weight: 600;
+      border-radius: 8px; padding: 7px 14px; cursor: pointer; font-family: inherit;
+    }
+    .sv-stop-btn:hover { background: var(--surface2); color: var(--text); }
+    .sv-no-transcript { font-size: 12px; color: var(--text3); font-style: italic; }
+    .sv-progress { font-size: 11px; color: var(--text3); margin-left: auto; }
+    .sv-body {
+      padding: 20px 24px; overflow-y: auto; max-height: 60vh;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .sv-line {
+      padding: 8px 12px; border-radius: 10px;
+      font-size: 13px; line-height: 1.6; transition: background 0.2s;
+    }
+    .sv-line.active { outline: 2px solid var(--purple); background: rgba(239,204,58,0.06); }
+    .sv-line-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 3px; }
+    .sv-rep   { background: rgba(167,139,250,0.06); }
+    .sv-rep   .sv-line-label { color: #a78bfa; }
+    .sv-owner { background: rgba(249,168,212,0.06); }
+    .sv-owner .sv-line-label { color: #f9a8d4; }
+    .sv-coach { background: rgba(110,231,183,0.05); }
+    .sv-coach .sv-line-label { color: #6ee7b7; }
+    .sv-coach .sv-line-text  { color: var(--text3); font-style: italic; }
+    .sv-line-text { color: var(--text); }
+
     /* Feedback modal */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 100;
@@ -496,6 +561,27 @@
       <div class="sessions-section" id="detailSessionsList"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- Session Viewer Modal -->
+<div class="sv-overlay" id="sessionViewer" style="display:none;" onclick="if(event.target===this)closeSessionViewer()">
+  <div class="sv-box">
+    <div class="sv-header">
+      <div class="sv-score" id="sv-score"></div>
+      <div class="sv-meta">
+        <div class="sv-meta-name" id="sv-name"></div>
+        <div class="sv-meta-sub"  id="sv-sub"></div>
+      </div>
+      <button class="sv-close" onclick="closeSessionViewer()">✕ Close</button>
+    </div>
+    <div class="sv-listen-bar" id="sv-listen-bar">
+      <span class="sv-listen-label">🎧 Listen</span>
+      <button class="sv-play-btn" id="sv-play-btn" onclick="svTogglePlay()">▶ Play</button>
+      <button class="sv-stop-btn" id="sv-stop-btn" onclick="svStop()" style="display:none;">■ Stop</button>
+      <span class="sv-progress" id="sv-progress"></span>
+    </div>
+    <div class="sv-body" id="sv-body"></div>
   </div>
 </div>
 
@@ -859,6 +945,7 @@
               <div class="card-turns">${meta}</div>
               <div class="card-summary">${esc(a.summary || '')}</div>
             </div>
+            <button class="feedback-btn" onclick="event.stopPropagation();openSessionViewer(${i})" style="background:var(--surface);border-color:var(--border2);color:var(--text2);">▶ View</button>
             <button class="feedback-btn" onclick="event.stopPropagation();openFeedbackModal('${esc(repName)}',${s.id})">Leave Feedback</button>
             <div class="expand-icon">⌄</div>
           </div>
@@ -1024,6 +1111,124 @@
       if (line.startsWith('COACH:'))     return `<div class="t-line t-coach"><strong>COACH:</strong>${esc(line.slice(6))}</div>`;
       return `<div class="t-line" style="color:var(--text3)">${esc(line)}</div>`;
     }).join('');
+  }
+
+  // ── Session Viewer ─────────────────────────────────────
+  let svLines = [];
+  let svIdx   = -1;
+  let svPlaying = false;
+
+  function parseTranscriptLines(raw) {
+    if (!raw) return [];
+    return raw.split('\n').filter(l => l.trim()).map(line => {
+      if (line.startsWith('REP:'))       return { type: 'rep',   text: line.slice(4).trim() };
+      if (line.startsWith('HOMEOWNER:')) return { type: 'owner', text: line.slice(10).trim() };
+      if (line.startsWith('COACH:'))     return { type: 'coach', text: line.slice(6).trim() };
+      return null;
+    }).filter(Boolean);
+  }
+
+  function openSessionViewer(idx) {
+    const s = currentRepSessions[idx];
+    if (!s) return;
+    const a  = s.analysis;
+    const cl = scoreColor(a.overall);
+    document.getElementById('sv-score').textContent = a.overall + '%';
+    document.getElementById('sv-score').className   = 'sv-score ' + cl;
+    const repDisplayName = document.getElementById('detailName').textContent;
+    document.getElementById('sv-name').textContent = repDisplayName;
+    const meta = [fmt(s.date), s.repMessages ? s.repMessages + ' turns' : '', fmtDuration(s.duration)].filter(Boolean).join(' · ');
+    document.getElementById('sv-sub').textContent  = meta;
+
+    svLines  = parseTranscriptLines(a.transcript);
+    svIdx    = -1;
+    svPlaying = false;
+
+    const noTranscript = svLines.length === 0;
+    document.getElementById('sv-play-btn').style.display = noTranscript ? 'none' : '';
+    document.getElementById('sv-play-btn').textContent   = '▶ Play';
+    document.getElementById('sv-stop-btn').style.display = 'none';
+    document.getElementById('sv-progress').textContent   = noTranscript ? '' : '0 / ' + svLines.length;
+
+    const body = document.getElementById('sv-body');
+    if (svLines.length === 0) {
+      body.innerHTML = '<div style="color:var(--text3);font-style:italic;font-size:13px;padding:8px 0;">No transcript recorded for this session.</div>';
+    } else {
+      body.innerHTML = svLines.map((l, i) => `
+        <div class="sv-line sv-${l.type}" id="svl-${i}">
+          <div class="sv-line-label">${l.type === 'rep' ? 'Rep' : l.type === 'owner' ? 'Homeowner' : 'Coach'}</div>
+          <div class="sv-line-text">${esc(l.text)}</div>
+        </div>`).join('');
+    }
+
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    document.getElementById('sessionViewer').style.display = 'flex';
+  }
+
+  function closeSessionViewer() {
+    svStop();
+    document.getElementById('sessionViewer').style.display = 'none';
+  }
+
+  function svTogglePlay() {
+    if (svPlaying) {
+      svPlaying = false;
+      if (window.speechSynthesis) speechSynthesis.cancel();
+      document.getElementById('sv-play-btn').textContent = '▶ Resume';
+    } else {
+      svPlaying = true;
+      document.getElementById('sv-play-btn').textContent = '⏸ Pause';
+      document.getElementById('sv-stop-btn').style.display = '';
+      if (svIdx < 0) svIdx = 0;
+      svSpeakNext();
+    }
+  }
+
+  function svStop() {
+    svPlaying = false;
+    svIdx     = -1;
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    document.getElementById('sv-play-btn').textContent   = '▶ Play';
+    document.getElementById('sv-stop-btn').style.display = 'none';
+    document.getElementById('sv-progress').textContent   = svLines.length ? '0 / ' + svLines.length : '';
+    document.querySelectorAll('.sv-line.active').forEach(el => el.classList.remove('active'));
+  }
+
+  function svSpeakNext() {
+    if (!svPlaying || svIdx >= svLines.length) {
+      if (svIdx >= svLines.length) svStop();
+      return;
+    }
+    const line = svLines[svIdx];
+    document.querySelectorAll('.sv-line.active').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById(`svl-${svIdx}`);
+    if (el) { el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    document.getElementById('sv-progress').textContent = (svIdx + 1) + ' / ' + svLines.length;
+
+    if (!window.speechSynthesis) { svIdx++; svSpeakNext(); return; }
+
+    const voices = speechSynthesis.getVoices();
+    const utt    = new SpeechSynthesisUtterance(line.text);
+    utt.rate  = 0.92;
+    if (line.type === 'rep') {
+      const v = voices.find(v => v.name === 'Google US English') ||
+                voices.find(v => v.lang === 'en-US' && /male/i.test(v.name)) ||
+                voices.find(v => v.lang === 'en-US');
+      if (v) utt.voice = v;
+      utt.pitch = 1.0;
+    } else if (line.type === 'owner') {
+      const v = voices.find(v => v.name === 'Google UK English Female') ||
+                voices.find(v => v.lang.startsWith('en') && /female/i.test(v.name)) ||
+                voices.find(v => v.lang === 'en-GB');
+      if (v) utt.voice = v;
+      utt.pitch = 1.1;
+    } else {
+      utt.rate  = 0.88;
+      utt.pitch = 0.95;
+    }
+    utt.onend = () => { svIdx++; svSpeakNext(); };
+    utt.onerror = () => { svIdx++; svSpeakNext(); };
+    speechSynthesis.speak(utt);
   }
 </script>
 </body>
